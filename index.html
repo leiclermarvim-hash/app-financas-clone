@@ -817,7 +817,6 @@
           </div>
           <label>Onde criar lembretes de vencimento?</label>
           <select id="cfgIntegracao" onchange="salvarPreferenciasLocal()">
-            <option value="nenhum">Nenhum (sem lembretes)</option>
             <option value="agenda">Google Agenda</option>
             <option value="tasks">Google Tasks</option>
             <option value="ambos">Agenda + Tasks</option>
@@ -1330,7 +1329,8 @@
     return syncIds.join("|");
   }
 
-  function integ() { return localStorage.getItem("mfp_integracao") || "nenhum"; }
+  function integ() { const v = localStorage.getItem("mfp_integracao"); return (!v || v === "nenhum") ? "agenda" : v; }
+  function modoSync() { return integ(); }
   function dataISO(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
   function hojeISO() { return dataISO(new Date()); }
   function sanitizarDb() {
@@ -1955,7 +1955,7 @@
     document.getElementById('txFone').value = '';
     document.getElementById('txRepeticao').value = 'unica';
     document.getElementById('boxParcelas').classList.add('hidden');
-    document.getElementById('txCriarAgendaTask').checked = document.getElementById('cfgAutoSyncAgenda').checked && integ() !== 'nenhum';
+    document.getElementById('txCriarAgendaTask').checked = document.getElementById('cfgAutoSyncAgenda').checked;
 
     prepararSelectsModal();
     selecionarTipoTx('despesa', document.querySelector('#tabsTipoTx .sub-tab'));
@@ -1991,6 +1991,7 @@
     if (dest) document.getElementById('txContaDestino').value = dest;
     document.getElementById('txStatus').value = status === 'Pago' ? 'Efetivado' : status;
     document.getElementById('txFone').value = fone || '';
+    document.getElementById('txCriarAgendaTask').checked = !modoOffline && !!item.cols[12];
 
     document.getElementById('modalLancamento').classList.remove('hidden');
   }
@@ -2013,8 +2014,11 @@
     document.getElementById('boxCartao').classList.toggle('hidden', tipo !== 'cartao');
     document.getElementById('boxStatus').classList.toggle('hidden', tipo === 'cartao');
     document.getElementById('boxContatoZap').classList.toggle('hidden', tipo !== 'receita');
-    document.getElementById('boxSyncGoogle').classList.toggle('hidden', modoOffline || tipo === 'transferencia' || integ() === 'nenhum');
-    document.getElementById('txtSync').innerText = { agenda: 'Google Agenda', tasks: 'Google Tasks', ambos: 'Google Agenda e Tasks' }[integ()] || '';
+    document.getElementById('boxSyncGoogle').classList.toggle('hidden', tipo === 'transferencia');
+    const cbSync = document.getElementById('txCriarAgendaTask');
+    cbSync.disabled = modoOffline;
+    if (modoOffline) cbSync.checked = false;
+    document.getElementById('txtSync').innerText = modoOffline ? 'Google Agenda (requer login Google)' : ({ agenda: 'Google Agenda', tasks: 'Google Tasks', ambos: 'Google Agenda e Tasks' }[integ()]);
     document.getElementById('lblContaOrigem').innerText = tipo === 'transferencia' ? 'Conta de Origem:' : 'Conta:';
   }
 
@@ -2080,7 +2084,7 @@
     const qtdParcelas = rep === 'parcelada' ? (parseInt(document.getElementById('txParcelas').value) || 2) : (rep === 'fixa' ? 12 : 1);
     const status = tipoTxAtual === 'cartao' ? 'Aberto' : document.getElementById('txStatus').value;
     const fone = document.getElementById('txFone').value.trim();
-    const criarSync = document.getElementById('txCriarAgendaTask').checked && !modoOffline && integ() !== 'nenhum';
+    const criarSync = document.getElementById('txCriarAgendaTask').checked && !modoOffline;
 
     if (!desc || !valorTotal || !data) return alert("Preencha descrição, valor e data!");
     if (tipoTxAtual === 'cartao' && !cartao) return alert("Cadastre um cartão de crédito primeiro!");
@@ -2097,11 +2101,20 @@
       const origem = tipoTxAtual === 'cartao' ? cartao : conta;
       const dest = tipoTxAtual === 'transferencia' ? contaDest : '';
       const statusFinal = tipoTxAtual === 'cartao' ? (antigo[9] === 'Pago' ? 'Pago' : 'Aberto') : status;
+      let syncIdFinal = antigo[12] || '';
+      const mudou = antigo[2] !== desc || parseFloat(antigo[3]) !== parseFloat(valorTotal.toFixed(2)) || antigo[4] !== data;
+      if (!modoOffline) {
+        if (!criarSync && syncIdFinal) { await removerSync(syncIdFinal); syncIdFinal = ''; }
+        else if (criarSync && (!syncIdFinal || mudou)) {
+          await removerSync(syncIdFinal);
+          syncIdFinal = await criarEventoAgendaETask(desc, valorTotal, data, tipoTxAtual);
+        }
+      }
 
       const novaLinha = [
         antigo[0], tipoTxAtual, desc, valorTotal.toFixed(2),
         data, mesFatura, tipoTxAtual === 'transferencia' ? 'Transferência' : cat,
-        origem, dest, statusFinal, antigo[10] || '1/1', fone, antigo[12] || ''
+        origem, dest, statusFinal, antigo[10] || '1/1', fone, syncIdFinal
       ];
       await atualizarLinhaLancamento(rowParaEditar, novaLinha);
       mostrarToast("Lançamento atualizado!");
@@ -2125,7 +2138,7 @@
       const tituloItem = qtdParcelas > 1 ? `${desc} (${infoParcela})` : desc;
 
       let syncId = "";
-      if (criarSync && (statusItem === "Pendente" || i > 0)) {
+      if (criarSync) {
         syncId = await criarEventoAgendaETask(tituloItem, valorParcela, dataParcela, tipoTxAtual);
       }
 
@@ -2281,7 +2294,7 @@
   }
 
   function carregarPreferenciasLocal() {
-    document.getElementById('cfgAutoSyncAgenda').checked = localStorage.getItem("mfp_auto_sync_agenda") === "true";
+    document.getElementById('cfgAutoSyncAgenda').checked = localStorage.getItem("mfp_auto_sync_agenda") !== "false";
     document.getElementById('cfgIntegracao').value = integ();
     const hora = localStorage.getItem("mfp_hora_lembrete");
     if (hora) document.getElementById('cfgHoraLembrete').value = hora;
