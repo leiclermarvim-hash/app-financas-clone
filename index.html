@@ -117,9 +117,7 @@
 
     .btn-offline:hover { background: var(--card-hover); color: var(--text); }
 
-    .sidebar {
-      display: none;
-    }
+    .sidebar { display: none; }
 
     @media (min-width: 900px) {
       body { padding-bottom: 24px; }
@@ -317,59 +315,16 @@
     }
     .cat-accordion:hover { border-color: var(--blue); }
 
-    .cat-header {
-      padding: 12px 14px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .cat-header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.88rem;
-      margin-bottom: 6px;
-    }
-
-    .cat-chevron {
-      display: inline-block;
-      transition: transform 0.25s ease;
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-left: 6px;
-    }
+    .cat-header { padding: 12px 14px; cursor: pointer; user-select: none; }
+    .cat-header-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; margin-bottom: 6px; }
+    .cat-chevron { display: inline-block; transition: transform 0.25s ease; font-size: 0.75rem; color: var(--muted); margin-left: 6px; }
     .cat-accordion.open .cat-chevron { transform: rotate(180deg); color: var(--blue); }
-
-    .cat-details {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-      background: rgba(9, 14, 26, 0.65);
-      border-top: 0 solid var(--border);
-    }
-    .cat-accordion.open .cat-details {
-      max-height: 1200px;
-      border-top-width: 1px;
-    }
-
-    .cat-expense-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
-      font-size: 0.82rem;
-    }
+    .cat-details { max-height: 0; overflow: hidden; transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(9, 14, 26, 0.65); border-top: 0 solid var(--border); }
+    .cat-accordion.open .cat-details { max-height: 1200px; border-top-width: 1px; }
+    .cat-expense-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid rgba(51, 65, 85, 0.5); font-size: 0.82rem; }
     .cat-expense-row:last-child { border-bottom: none; }
 
-    .credit-card-ui {
-      border-radius: 16px;
-      padding: 16px;
-      color: #fff;
-      margin-bottom: 12px;
-      position: relative;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    }
+    .credit-card-ui { border-radius: 16px; padding: 16px; color: #fff; margin-bottom: 12px; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
     .cc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
     .cc-flag { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; background: rgba(255,255,255,0.22); padding: 3px 8px; border-radius: 6px; }
     .cc-dates { font-size: 0.74rem; opacity: 0.92; display: flex; justify-content: space-between; margin-top: 10px; }
@@ -868,7 +823,7 @@
 
           <div class="box-share">
             <strong>👥 Compartilhar esta conta</strong>
-            <p style="color:var(--muted); font-size:0.78rem; margin:4px 0 8px;">Envie o acesso ao aplicativo e a chave para edição em conjunto.</p>
+            <p style="color:var(--muted); font-size:0.78rem; margin:4px 0 8px;">Cada lançamento fica identificado com o nome de quem o criou.</p>
             <label>Chave de compartilhamento da conta:</label>
             <div style="display:flex; gap:6px;"><input type="text" id="shCodigo" readonly><button class="btn-mini" style="background:#334155; color:#fff;" onclick="copiarCodigoConta()">Copiar Chave</button></div>
             <label>Convidar por e-mail (conta Google):</label>
@@ -903,10 +858,10 @@
   <!-- MODAL CADASTRAR PESSOA -->
   <div id="modalPessoa" class="modal-overlay hidden">
     <div class="modal-box">
-      <div class="modal-header"><h3 id="tituloModalPessoa" style="margin:0; font-size:1.05rem;">👤 Cadastrar Pessoa</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalPessoa')">✕</button></div>
-      <label>Nome da pessoa:</label><input type="text" id="pesNome" placeholder="Ex: João Silva">
-      <label>Telefone / WhatsApp com DDD:</label><input type="tel" id="pesFone" placeholder="22999998888">
-      <label>Observação:</label><textarea id="pesObs" placeholder="Ex: Cliente regular, vizinho..."></textarea>
+      <div class="modal-header"><h3 style="margin:0; font-size:1.05rem;">👤 Cadastrar Pessoa</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalPessoa')">✕</button></div>
+      <label>Nome:</label><input type="text" id="pesNome" placeholder="Ex: João Silva">
+      <label>Telefone:</label><input type="tel" id="pesFone" placeholder="22999998888">
+      <label>Observação:</label><textarea id="pesObs" placeholder="Detalhes da pessoa..."></textarea>
       <button class="btn-primary" style="background:var(--blue);" onclick="salvarPessoa()">Salvar Pessoa</button>
     </div>
   </div>
@@ -915,21 +870,21 @@
   <div id="modalDevedor" class="modal-overlay hidden">
     <div class="modal-box">
       <div class="modal-header"><h3 style="margin:0; font-size:1.05rem;">💰 Adicionar Nova Cobrança</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalDevedor')">✕</button></div>
-      <label>Selecionar Devedor Cadastrado:</label>
+      <label>Devedor / Pessoa:</label>
       <select id="devPessoaSelect" onchange="preencherDadosDevedor()"></select>
       <div id="boxInfoDevedor" style="background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; margin-top:8px; font-size:0.82rem; color:var(--muted);">
         Telefone: <strong id="lblDevFone" style="color:var(--text);">-</strong><br>
         Obs: <strong id="lblDevObs" style="color:var(--text);">-</strong>
       </div>
-      <label>Descrição sobre a dívida:</label><input type="text" id="devDesc" placeholder="Ex: Empréstimo, venda de produto...">
-      <label>Observação (se necessário):</label><textarea id="devObs" placeholder="Detalhes adicionais..."></textarea>
+      <label>Descrição sobre a dívida:</label><input type="text" id="devDesc" placeholder="Ex: Empréstimo, Venda de equipamento...">
+      <label>Observação (se necessário):</label><textarea id="devObs" placeholder="Observações específicas desta dívida..."></textarea>
       <div class="grid-2">
-        <div><label>Valor total (R$):</label><input type="text" id="devValor" inputmode="decimal" placeholder="0,00"></div>
-        <div><label>Qtd. de parcelas:</label><input type="number" id="devParcelas" min="1" max="60" value="1"></div>
+        <div><label>Valor Total (R$):</label><input type="text" id="devValor" inputmode="decimal" placeholder="0,00"></div>
+        <div><label>Quantidade de Parcelas:</label><input type="number" id="devParcelas" min="1" max="60" value="1"></div>
       </div>
       <label>Vencimento do pagamento ou 1ª parcela:</label><input type="date" id="devVenc">
       <label class="checkbox-row"><input type="checkbox" id="devAgenda"><span style="font-size:0.82rem;">📅 Criar lembrete no <strong>Google Agenda</strong> para cada parcela</span></label>
-      <button class="btn-primary" style="background:var(--amber); color:#1c1300;" onclick="salvarDevedor()">Criar Evento de Cobrança</button>
+      <button class="btn-primary" style="background:var(--amber); color:#1c1300;" onclick="salvarDevedor()">Criar Eventos de Cobrança</button>
     </div>
   </div>
 
@@ -1181,8 +1136,8 @@
     lancamentos: [],
     orcamentos: [],
     metas: [],
-    devedores: [],   // Cobranças ativas
-    pessoas: [],     // Cadastro de pessoas/devedores
+    devedores: [],
+    pessoas: [],
     itens: [],
     listas: []
   };
@@ -1878,7 +1833,6 @@
       const tot = num(totS) || 0, n = Math.max(1, parseInt(parcS) || 1), pagas = Math.min(n, parseInt(pagasS) || 0);
       const vp = tot / n, aberto = Math.max(0, tot - vp * pagas), quit = pagas >= n;
       totalAberto += aberto;
-      const prox = quit ? null : vencParcela(venc, pagas);
 
       el.innerHTML += `
         <div class="section-card">
