@@ -542,6 +542,17 @@
     .hidden { display: none !important; }
     #loading { text-align: center; padding: 9px; color: var(--blue); font-size: 0.82rem; font-weight: 600; background: var(--blue-soft); border-radius: 10px; margin-bottom: 12px; }
     #toast { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 0.84rem; font-weight: 700; z-index: 60; display: none; box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
+
+    .evo{display:flex;gap:10px;align-items:flex-end;height:110px}
+    .evo-col{flex:1;text-align:center}
+    .evo-bars{height:90px;display:flex;gap:3px;align-items:flex-end;justify-content:center}
+    .evo-bars i{width:42%;max-width:18px;border-radius:5px 5px 0 0;min-height:2px;transition:height .4s}
+    .evo-col small{color:var(--muted);font-size:.68rem}
+    .alerta-atraso{background:var(--red-soft);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:12px 14px;border-radius:14px;margin-bottom:12px;font-size:.84rem;font-weight:600;cursor:pointer}
+    strong,.valor-grande,.tx-val{font-variant-numeric:tabular-nums}
+    nav.bottom-nav{padding-bottom:env(safe-area-inset-bottom,0)}
+    .btn-primary:active,.btn-mini:active,.nav-btn:active{transform:scale(.97)}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
@@ -641,6 +652,11 @@
 
         <div class="desktop-grid-2">
           <div>
+            <div id="dashAtrasados"></div>
+            <div class="section-card">
+              <div class="section-title"><span>📈 Últimos 6 meses</span><small style="color:var(--muted)"><span style="color:var(--green)">■</span> Receitas <span style="color:var(--red)">■</span> Despesas</small></div>
+              <div id="dashEvolucao"></div>
+            </div>
             <!-- Despesas por Categoria (Acordeão Clicável) -->
             <div class="section-card">
               <div class="section-title">
@@ -718,6 +734,17 @@
           <button class="btn-primary" onclick="salvarOrcamento()">Salvar Orçamento</button>
         </div>
         <div id="listaOrcamentos" class="desktop-grid-2"></div>
+        <div class="section-card">
+          <h3 style="margin:0 0 8px; font-size:0.95rem;">🐷 Metas de Economia (Reserva, Viagem, Carro...)</h3>
+          <div class="grid-2">
+            <div><label>Nome da meta:</label><input type="text" id="metaNome" placeholder="Ex: Reserva de emergência"></div>
+            <div><label>Valor alvo (R$):</label><input type="number" id="metaAlvo" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+          </div>
+          <label>Prazo (opcional):</label>
+          <input type="date" id="metaPrazo">
+          <button class="btn-primary" onclick="salvarMeta()">Criar Meta</button>
+        </div>
+        <div id="listaMetas" class="desktop-grid-2"></div>
       </div>
 
       <!-- ABA 5: CONFIGURAÇÕES GERAIS -->
@@ -788,14 +815,22 @@
             <span>Status da Conexão</span>
             <strong id="infoStatusConexao" style="color:var(--green);">Conectado ao Google Drive, Agenda e Tasks</strong>
           </div>
+          <label>Onde criar lembretes de vencimento?</label>
+          <select id="cfgIntegracao" onchange="salvarPreferenciasLocal()">
+            <option value="nenhum">Nenhum (sem lembretes)</option>
+            <option value="agenda">Google Agenda</option>
+            <option value="tasks">Google Tasks</option>
+            <option value="ambos">Agenda + Tasks</option>
+          </select>
           <label class="checkbox-row">
             <input type="checkbox" id="cfgAutoSyncAgenda" onchange="salvarPreferenciasLocal()">
-            <span style="font-size:0.84rem;">Marcar automaticamente "Criar lembrete no Google Agenda & Tasks" para lançamentos futuros</span>
+            <span style="font-size:0.84rem;">Já deixar o lembrete marcado em novos lançamentos</span>
           </label>
           <label>Horário padrão dos lembretes na Agenda:</label>
           <input type="time" id="cfgHoraLembrete" value="09:00" onchange="salvarPreferenciasLocal()">
 
           <button class="btn-primary" style="background:#334155;" onclick="exportarCSV()">📥 Exportar Planilha Completa (CSV)</button>
+          <button class="btn-primary" style="background:#334155;" onclick="exportarBackup()">💾 Baixar Backup Completo (JSON)</button>
           <button class="btn-primary" style="background:#7f1d1d;" onclick="resetarBancoDados()">⚠️ Recriar Estrutura do Banco</button>
         </div>
       </div>
@@ -883,7 +918,7 @@
 
       <label class="checkbox-row" id="boxSyncGoogle">
         <input type="checkbox" id="txCriarAgendaTask">
-        <span style="font-size:0.82rem;">📅 Criar lembrete no <strong>Google Agenda</strong> e tarefa no <strong>Google Tasks</strong></span>
+        <span style="font-size:0.82rem;">📅 Criar lembrete no <strong id="txtSync">Google Agenda</strong></span>
       </label>
 
       <button class="btn-primary" id="btnSalvarTx" onclick="salvarLancamento()">Salvar Lançamento</button>
@@ -981,7 +1016,8 @@
     cartoes: [],     // [ID, Nome, Bandeira, Cor, Limite, Fechamento, Vencimento, ContaPadrao]
     categorias: [],  // [ID, Tipo, Nome]
     lancamentos: [], // [ID, Tipo, Descricao, Valor, Data, MesFatura, Categoria, ContaOuCartao, ContaDestino, Status, Parcela, Telefone, GoogleSyncId]
-    orcamentos: []   // [ID, Categoria, Limite]
+    orcamentos: [], // [ID, Categoria, Limite]
+    metas: []        // [ID, Nome, Alvo, Guardado, Prazo]
   };
 
   // PWA Manifest
@@ -1209,14 +1245,16 @@
           cartoes: localData.cartoes || [],
           categorias: localData.categorias || [],
           lancamentos: localData.lancamentos || [],
-          orcamentos: localData.orcamentos || []
+          orcamentos: localData.orcamentos || [],
+          metas: localData.metas || []
         };
       } else {
         const metaRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
         const meta = await metaRes.json();
         meta.sheets.forEach(s => { sheetIdsMap[s.properties.title] = s.properties.sheetId; });
+        await garantirAbas();
 
-        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:H&ranges=Categorias!A2:C&ranges=Lancamentos!A2:M&ranges=Orcamentos!A2:C";
+        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:H&ranges=Categorias!A2:C&ranges=Lancamentos!A2:M&ranges=Orcamentos!A2:C&ranges=Metas!A2:E";
         const valRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
         const valData = await valRes.json();
 
@@ -1225,7 +1263,9 @@
         db.categorias = (valData.valueRanges[2].values || []).map((r, i) => ({ row: i + 2, cols: r }));
         db.lancamentos = (valData.valueRanges[3].values || []).map((r, i) => ({ row: i + 2, cols: r }));
         db.orcamentos = (valData.valueRanges[4].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.metas = (valData.valueRanges[5].values || []).map((r, i) => ({ row: i + 2, cols: r }));
       }
+      sanitizarDb();
       renderizarTudo();
     } catch (e) {
       console.error(e);
@@ -1243,17 +1283,21 @@
     const description = `Lançamento gerado pelo app Minhas Finanças Pro.\nValor: ${formatarMoeda(valor)}\nTipo: ${tipo.toUpperCase()}`;
 
     let syncIds = [];
+    const modo = integ();
+    if (modo === "nenhum") return "";
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Sao_Paulo";
 
     try {
-      const startDateTime = `${dataStr}T${hora}:00-03:00`;
+      const startDateTime = `${dataStr}T${hora}:00`;
       const endHour = String(Math.min(23, parseInt(hora.split(':')[0]) + 1)).padStart(2, '0');
-      const endDateTime = `${dataStr}T${endHour}:${hora.split(':')[1]}:00-03:00`;
+      const endDateTime = `${dataStr}T${endHour}:${hora.split(':')[1]}:00`;
 
+      if (modo === "agenda" || modo === "ambos") {
       const calRes = await fetchGoogle("https://www.googleapis.com/calendar/v3/calendars/primary/events", "POST", {
         summary,
         description,
-        start: { dateTime: startDateTime, timeZone: "America/Sao_Paulo" },
-        end: { dateTime: endDateTime, timeZone: "America/Sao_Paulo" },
+        start: { dateTime: startDateTime, timeZone: tz },
+        end: { dateTime: endDateTime, timeZone: tz },
         reminders: {
           useDefault: false,
           overrides: [
@@ -1266,7 +1310,9 @@
         const calData = await calRes.json();
         syncIds.push("CAL:" + calData.id);
       }
+      }
 
+      if (modo === "tasks" || modo === "ambos") {
       const taskRes = await fetchGoogle("https://tasks.googleapis.com/tasks/v1/lists/@default/tasks", "POST", {
         title: summary,
         notes: description,
@@ -1276,11 +1322,46 @@
         const taskData = await taskRes.json();
         syncIds.push("TSK:" + taskData.id);
       }
+      }
     } catch (err) {
       console.error("Erro ao sincronizar Agenda/Tasks:", err);
     }
 
     return syncIds.join("|");
+  }
+
+  function integ() { return localStorage.getItem("mfp_integracao") || "nenhum"; }
+  function dataISO(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+  function hojeISO() { return dataISO(new Date()); }
+  function sanitizarDb() {
+    Object.values(db).forEach(tab => tab.forEach(r => { r.cols = r.cols.map(c => String(c).replace(/</g, '&lt;').replace(/>/g, '&gt;')); }));
+  }
+  async function garantirAbas() {
+    if (sheetIdsMap["Metas"] !== undefined) return;
+    const r = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, "POST", { requests: [{ addSheet: { properties: { title: "Metas" } } }] });
+    const j = await r.json();
+    sheetIdsMap["Metas"] = j.replies[0].addSheet.properties.sheetId;
+    await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Metas!A1:E1?valueInputOption=RAW`, "PUT", { values: [["ID", "Nome", "Alvo", "Guardado", "Prazo"]] });
+  }
+  async function removerSync(syncId) {
+    if (!syncId || modoOffline) return;
+    for (const p of syncId.split("|")) {
+      const [k, id] = p.split(":");
+      try {
+        if (k === "CAL") await fetchGoogle(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${id}`, "DELETE");
+        if (k === "TSK") await fetchGoogle(`https://tasks.googleapis.com/tasks/v1/lists/@default/tasks/${id}`, "DELETE");
+      } catch (e) { console.error(e); }
+    }
+  }
+  async function atualizarCelula(aba, row, col, idx, valor) {
+    if (modoOffline) {
+      const ld = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+      const it = (ld[aba.toLowerCase()] || []).find(x => x.row === row);
+      if (it) it.cols[idx] = valor;
+      localStorage.setItem("mfp_local_db", JSON.stringify(ld));
+    } else {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!${col}${row}?valueInputOption=USER_ENTERED`, "PUT", { values: [[valor]] });
+    }
   }
 
   // Navegação Temporal
@@ -1652,6 +1733,85 @@
 
     renderizarExtrato();
     popularSelects();
+    renderizarEvolucao();
+    renderizarMetas();
+  }
+
+  function renderizarEvolucao() {
+    const meses = [];
+    for (let i = 5; i >= 0; i--) meses.push(getChaveMes(new Date(mesAtual.getFullYear(), mesAtual.getMonth() - i, 1)));
+    const rec = {}, des = {};
+    meses.forEach(m => { rec[m] = 0; des[m] = 0; });
+    db.lancamentos.forEach(l => {
+      const [id, t, d, v, dt, mf] = l.cols;
+      const val = parseFloat(v) || 0, m = (dt || '').substring(0, 7);
+      if (t === 'receita' && rec[m] !== undefined) rec[m] += val;
+      if (t === 'despesa' && des[m] !== undefined && !(d || '').startsWith('Fatura ')) des[m] += val;
+      if (t === 'cartao' && des[mf] !== undefined) des[mf] += val;
+    });
+    const max = Math.max(1, ...meses.map(m => Math.max(rec[m], des[m])));
+    document.getElementById('dashEvolucao').innerHTML = '<div class="evo">' + meses.map(m =>
+      `<div class="evo-col"><div class="evo-bars"><i style="height:${rec[m] / max * 100}%;background:var(--green)"></i><i style="height:${des[m] / max * 100}%;background:var(--red)"></i></div><small>${m.substring(5)}/${m.substring(2, 4)}</small></div>`).join('') + '</div>';
+
+    const hoje = hojeISO();
+    const atr = db.lancamentos.filter(l => l.cols[9] === 'Pendente' && (l.cols[4] || '') < hoje && ['receita', 'despesa'].includes(l.cols[1]));
+    const aPagar = atr.filter(l => l.cols[1] === 'despesa').reduce((a, l) => a + (parseFloat(l.cols[3]) || 0), 0);
+    document.getElementById('dashAtrasados').innerHTML = atr.length === 0 ? '' :
+      `<div class="alerta-atraso" onclick="navegar('telaTransacoes')">⚠️ ${atr.length} lançamento(s) vencido(s) e pendente(s)${aPagar > 0 ? ' • ' + formatarMoeda(aPagar) + ' a pagar' : ''} — toque para ver</div>`;
+  }
+
+  function renderizarMetas() {
+    const el = document.getElementById('listaMetas');
+    el.innerHTML = db.metas.length === 0 ? '<p style="color:var(--muted); font-size:0.82rem;">Nenhuma meta criada ainda.</p>' : '';
+    db.metas.forEach(m => {
+      const [id, nome, alvoS, guardS, prazo] = m.cols;
+      const alvo = parseFloat(alvoS) || 0, guard = parseFloat(guardS) || 0;
+      const pct = alvo > 0 ? Math.min(100, guard / alvo * 100) : 0;
+      el.innerHTML += `
+        <div class="section-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>🐷 ${nome}</strong>
+            <div style="display:flex; gap:4px;">
+              <button class="btn-mini" style="background:var(--green); color:#fff;" onclick="depositarMeta(${m.row})">+ Guardar</button>
+              <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Metas', ${m.row})">✕</button>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:6px; color:var(--muted);">
+            <span>Guardado: <strong style="color:var(--green)">${formatarMoeda(guard)}</strong> (${pct.toFixed(0)}%)</span>
+            <span>Alvo: ${formatarMoeda(alvo)}${prazo ? ' • até ' + prazo.split('-').reverse().join('/') : ''}</span>
+          </div>
+          <div class="progress-bg" style="background:var(--bg);"><div class="progress-fill" style="width:${pct}%; background:var(--green);"></div></div>
+        </div>`;
+    });
+  }
+
+  async function salvarMeta() {
+    const nome = document.getElementById('metaNome').value.trim();
+    const alvo = parseFloat(document.getElementById('metaAlvo').value);
+    const prazo = document.getElementById('metaPrazo').value;
+    if (!nome || !alvo) return alert("Informe o nome e o valor alvo da meta!");
+    await adicionarLinhas("Metas", [[Date.now().toString(), nome, alvo, 0, prazo]]);
+    ['metaNome', 'metaAlvo', 'metaPrazo'].forEach(i => document.getElementById(i).value = '');
+    mostrarToast("Meta criada!");
+  }
+
+  async function depositarMeta(row) {
+    const m = db.metas.find(x => x.row === row);
+    const v = parseFloat((prompt("Quanto deseja guardar nesta meta? (use negativo para retirar)", "100") || "").replace(',', '.'));
+    if (!m || isNaN(v)) return;
+    const novo = Math.max(0, (parseFloat(m.cols[3]) || 0) + v);
+    document.getElementById('loading').classList.remove('hidden');
+    await atualizarCelula("Metas", row, "D", 3, novo);
+    mostrarToast("Meta atualizada!");
+    await carregarTodosDados();
+  }
+
+  function exportarBackup() {
+    const blob = new Blob([JSON.stringify({ exportadoEm: new Date().toISOString(), db }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `Backup_Financas_${hojeISO()}.json`;
+    a.click();
   }
 
   function renderizarExtrato() {
@@ -1789,13 +1949,13 @@
     editandoRow = null;
     document.getElementById('tituloModalTx').innerText = "Novo Lançamento";
     document.getElementById('boxRepeticao').classList.remove('hidden');
-    document.getElementById('txData').value = new Date().toISOString().split('T')[0];
+    document.getElementById('txData').value = hojeISO();
     document.getElementById('txDesc').value = '';
     document.getElementById('txValor').value = '';
     document.getElementById('txFone').value = '';
     document.getElementById('txRepeticao').value = 'unica';
     document.getElementById('boxParcelas').classList.add('hidden');
-    document.getElementById('txCriarAgendaTask').checked = document.getElementById('cfgAutoSyncAgenda').checked;
+    document.getElementById('txCriarAgendaTask').checked = document.getElementById('cfgAutoSyncAgenda').checked && integ() !== 'nenhum';
 
     prepararSelectsModal();
     selecionarTipoTx('despesa', document.querySelector('#tabsTipoTx .sub-tab'));
@@ -1853,7 +2013,8 @@
     document.getElementById('boxCartao').classList.toggle('hidden', tipo !== 'cartao');
     document.getElementById('boxStatus').classList.toggle('hidden', tipo === 'cartao');
     document.getElementById('boxContatoZap').classList.toggle('hidden', tipo !== 'receita');
-    document.getElementById('boxSyncGoogle').classList.toggle('hidden', modoOffline || tipo === 'transferencia');
+    document.getElementById('boxSyncGoogle').classList.toggle('hidden', modoOffline || tipo === 'transferencia' || integ() === 'nenhum');
+    document.getElementById('txtSync').innerText = { agenda: 'Google Agenda', tasks: 'Google Tasks', ambos: 'Google Agenda e Tasks' }[integ()] || '';
     document.getElementById('lblContaOrigem').innerText = tipo === 'transferencia' ? 'Conta de Origem:' : 'Conta:';
   }
 
@@ -1919,7 +2080,7 @@
     const qtdParcelas = rep === 'parcelada' ? (parseInt(document.getElementById('txParcelas').value) || 2) : (rep === 'fixa' ? 12 : 1);
     const status = tipoTxAtual === 'cartao' ? 'Aberto' : document.getElementById('txStatus').value;
     const fone = document.getElementById('txFone').value.trim();
-    const criarSync = document.getElementById('txCriarAgendaTask').checked && !modoOffline;
+    const criarSync = document.getElementById('txCriarAgendaTask').checked && !modoOffline && integ() !== 'nenhum';
 
     if (!desc || !valorTotal || !data) return alert("Preencha descrição, valor e data!");
     if (tipoTxAtual === 'cartao' && !cartao) return alert("Cadastre um cartão de crédito primeiro!");
@@ -1953,8 +2114,9 @@
     const linhas = [];
 
     for (let i = 0; i < qtdParcelas; i++) {
-      const d = new Date(ano, mes - 1 + i, dia);
-      const dataParcela = d.toISOString().split('T')[0];
+      const d = new Date(ano, mes - 1 + i, 1);
+      d.setDate(Math.min(dia, new Date(ano, mes + i, 0).getDate()));
+      const dataParcela = dataISO(d);
       const mesFatura = tipoTxAtual === 'cartao' ? calcularMesFatura(data, cartao, i) : dataParcela.substring(0, 7);
       const infoParcela = qtdParcelas > 1 ? `${i + 1}/${qtdParcelas}` : '1/1';
       const statusItem = (i === 0) ? status : (tipoTxAtual === 'cartao' ? 'Aberto' : 'Pendente');
@@ -2030,7 +2192,7 @@
       }
     }
 
-    const hoje = new Date().toISOString().split('T')[0];
+    const hoje = hojeISO();
     await adicionarLinhas("Lancamentos", [[
       Date.now().toString(), "despesa", `Fatura ${nomeCartao} (${chaveMesSel})`,
       valorFatura.toFixed(2), hoje, chaveMesSel, "Cartão de Crédito",
@@ -2087,6 +2249,10 @@
   async function deletarLinha(aba, row) {
     if (!confirm("Excluir este registro permanentemente?")) return;
     document.getElementById('loading').classList.remove('hidden');
+    if (aba === 'Lancamentos') {
+      const it = db.lancamentos.find(x => x.row === row);
+      if (it) await removerSync(it.cols[12]);
+    }
 
     if (modoOffline) {
       const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
@@ -2110,11 +2276,13 @@
   function salvarPreferenciasLocal() {
     localStorage.setItem("mfp_auto_sync_agenda", document.getElementById('cfgAutoSyncAgenda').checked);
     localStorage.setItem("mfp_hora_lembrete", document.getElementById('cfgHoraLembrete').value);
+    localStorage.setItem("mfp_integracao", document.getElementById('cfgIntegracao').value);
     mostrarToast("Preferências salvas!");
   }
 
   function carregarPreferenciasLocal() {
     document.getElementById('cfgAutoSyncAgenda').checked = localStorage.getItem("mfp_auto_sync_agenda") === "true";
+    document.getElementById('cfgIntegracao').value = integ();
     const hora = localStorage.getItem("mfp_hora_lembrete");
     if (hora) document.getElementById('cfgHoraLembrete').value = hora;
   }
