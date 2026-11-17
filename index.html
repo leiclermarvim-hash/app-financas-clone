@@ -5,60 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0f172a">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>Minhas Finanças</title>
+  <title>Minhas Finanças Pro</title>
   <link id="manifest-link" rel="manifest">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
-      --bg: #0f172a; --card: #1e293b; --card-alt: #263348; --text: #f8fafc; --muted: #94a3b8;
+      --bg: #0b1120; --card: #1e293b; --card-hover: #263348; --text: #f8fafc; --muted: #94a3b8;
       --green: #10b981; --red: #ef4444; --blue: #3b82f6; --purple: #8b5cf6; --amber: #f59e0b; --border: #334155;
     }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; background: var(--bg); color: var(--text); padding-bottom: 88px; }
+    body { margin: 0; background: var(--bg); color: var(--text); padding-bottom: 86px; }
 
-    /* Login */
+    /* Tela de Login */
     #telaLogin { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center; }
-    .login-card { background: var(--card); padding: 32px 24px; border-radius: 20px; max-width: 400px; width: 100%; border: 1px solid var(--border); box-shadow: 0 12px 30px rgba(0,0,0,0.45); }
+    .login-card { background: var(--card); padding: 32px 24px; border-radius: 20px; max-width: 420px; width: 100%; border: 1px solid var(--border); box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
     .btn-google { background: #fff; color: #1e293b; border: none; padding: 14px 20px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; width: 100%; margin-top: 20px; }
+    .btn-offline { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 11px 16px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; cursor: pointer; width: 100%; margin-top: 10px; }
 
-    /* Header & Seletor de Mês */
+    /* Header & Navegação de Mês */
     header { background: var(--card); padding: 12px 14px; position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--border); }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     h1 { margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 6px; }
+    .badge-mode { font-size: 0.65rem; padding: 2px 7px; border-radius: 10px; background: rgba(16,185,129,0.2); color: #6ee7b7; font-weight: 700; }
     .header-actions { display: flex; gap: 6px; }
     .btn-top { background: #334155; color: #fff; border: none; padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; width: auto; margin: 0; }
     .btn-install { background: var(--blue); display: none; }
 
-    .month-nav { display: flex; align-items: center; justify-content: space-between; background: var(--bg); padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); }
-    .month-btn { background: none; border: none; color: var(--text); font-size: 1.1rem; font-weight: 700; cursor: pointer; width: 36px; padding: 4px; margin: 0; }
-    .month-label { font-weight: 700; font-size: 0.92rem; text-transform: capitalize; }
+    .month-nav { display: flex; align-items: center; justify-content: space-between; background: var(--bg); padding: 5px 10px; border-radius: 10px; border: 1px solid var(--border); }
+    .month-btn { background: none; border: none; color: var(--text); font-size: 1.2rem; font-weight: 700; cursor: pointer; width: 38px; padding: 2px; margin: 0; }
+    .month-label { font-weight: 700; font-size: 0.92rem; text-transform: capitalize; cursor: pointer; }
 
-    .container { padding: 14px 12px; max-width: 640px; margin: 0 auto; }
+    .container { padding: 14px 12px; max-width: 660px; margin: 0 auto; }
 
     /* Cards Dashboard */
-    .saldo-hero { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
-    .saldo-hero small { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
-    .saldo-hero .valor-grande { font-size: 1.65rem; font-weight: 800; margin: 4px 0 12px; }
+    .saldo-hero { background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+    .saldo-hero small { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .saldo-hero .valor-grande { font-size: 1.75rem; font-weight: 800; margin: 4px 0 12px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .mini-stat { background: rgba(15, 23, 42, 0.7); padding: 10px; border-radius: 10px; border: 1px solid var(--border); }
-    .mini-stat span { display: block; font-size: 0.7rem; color: var(--muted); }
-    .mini-stat strong { font-size: 0.95rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .mini-stat { background: rgba(11, 17, 32, 0.75); padding: 10px; border-radius: 10px; border: 1px solid var(--border); }
+    .mini-stat span { display: block; font-size: 0.68rem; color: var(--muted); margin-bottom: 2px; }
+    .mini-stat strong { font-size: 0.92rem; }
 
     .section-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
     .section-title { display: flex; justify-content: space-between; align-items: center; margin: 0 0 10px; font-size: 0.92rem; font-weight: 700; }
 
-    /* Listas de Contas e Cartões */
+    /* Cartão Visual */
+    .credit-card-ui { border-radius: 14px; padding: 15px; color: #fff; margin-bottom: 12px; position: relative; box-shadow: 0 6px 16px rgba(0,0,0,0.35); }
+    .cc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .cc-flag { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 6px; }
+    .cc-dates { font-size: 0.72rem; opacity: 0.9; display: flex; justify-content: space-between; margin-top: 8px; }
+
+    /* Listas & Progresso */
     .row-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
     .row-item:last-child { border-bottom: none; padding-bottom: 0; }
     .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-
-    /* Barra de Progresso (Orçamentos e Limite Cartão) */
-    .progress-bg { width: 100%; height: 8px; background: var(--bg); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    .progress-bg { width: 100%; height: 8px; background: rgba(0,0,0,0.35); border-radius: 99px; overflow: hidden; margin-top: 6px; }
     .progress-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
 
-    /* Lançamentos / Extrato */
-    .filter-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; }
-    .pill { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; cursor: pointer; width: auto; margin: 0; }
+    /* Extrato / Lançamentos */
+    .search-box { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 0.88rem; margin-bottom: 10px; }
+    .filter-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; }
+    .pill { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 20px; font-size: 0.76rem; font-weight: 600; white-space: nowrap; cursor: pointer; width: auto; margin: 0; }
     .pill.active { background: var(--blue); color: #fff; border-color: var(--blue); }
 
     .tx-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); }
@@ -66,14 +74,15 @@
     .tx-card.despesa { border-left-color: var(--red); }
     .tx-card.cartao { border-left-color: var(--purple); }
     .tx-card.transferencia { border-left-color: var(--amber); }
-    .tx-card.pendente { opacity: 0.85; border-style: dashed; border-width: 1px 1px 1px 4px; border-color: var(--border); }
+    .tx-card.pendente { opacity: 0.88; border-style: dashed; border-width: 1px 1px 1px 4px; border-color: var(--border); }
 
     .tx-info { flex: 1; padding-right: 8px; }
     .tx-info h4 { margin: 0 0 3px; font-size: 0.92rem; }
-    .tx-info p { margin: 0; font-size: 0.75rem; color: var(--muted); }
+    .tx-info p { margin: 0; font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
     .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; margin-left: 4px; }
     .badge-ok { background: rgba(16,185,129,0.2); color: #6ee7b7; }
     .badge-pend { background: rgba(245,158,11,0.2); color: #fcd34d; }
+    .badge-cal { background: rgba(59,130,246,0.2); color: #93c5fd; }
 
     .tx-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
     .tx-val { font-weight: 700; font-size: 0.92rem; }
@@ -83,26 +92,28 @@
     label { font-size: 0.78rem; color: var(--muted); margin-top: 10px; display: block; }
     input, select, button { width: 100%; padding: 11px; margin-top: 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.92rem; }
     button.btn-primary { background: var(--blue); border: none; font-weight: 700; margin-top: 14px; cursor: pointer; }
-    .sub-tabs { display: flex; gap: 6px; margin-bottom: 12px; background: var(--card); padding: 4px; border-radius: 12px; }
-    .sub-tab { flex: 1; text-align: center; padding: 8px 4px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; color: var(--muted); cursor: pointer; }
+    .checkbox-row { display: flex; align-items: center; gap: 10px; background: var(--bg); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); margin-top: 12px; cursor: pointer; }
+    .checkbox-row input { width: 18px; height: 18px; margin: 0; accent-color: var(--blue); }
+
+    .sub-tabs { display: flex; gap: 5px; margin-bottom: 12px; background: var(--card); padding: 4px; border-radius: 12px; overflow-x: auto; }
+    .sub-tab { flex: 1; text-align: center; padding: 8px 6px; border-radius: 8px; font-size: 0.76rem; font-weight: 700; color: var(--muted); cursor: pointer; white-space: nowrap; }
     .sub-tab.active { background: var(--blue); color: #fff; }
 
     /* FAB + Navegação Inferior */
-    .fab { position: fixed; bottom: 72px; right: 18px; width: 54px; height: 54px; border-radius: 50%; background: var(--blue); color: #fff; border: none; font-size: 1.8rem; font-weight: 700; box-shadow: 0 6px 18px rgba(59,130,246,0.5); cursor: pointer; z-index: 35; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; }
+    .fab { position: fixed; bottom: 72px; right: 18px; width: 56px; height: 56px; border-radius: 50%; background: var(--blue); color: #fff; border: none; font-size: 1.9rem; font-weight: 700; box-shadow: 0 6px 20px rgba(59,130,246,0.55); cursor: pointer; z-index: 35; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; }
 
     nav.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 6px 2px 8px; z-index: 30; }
     .nav-btn { flex: 1; background: none; border: none; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.68rem; font-weight: 600; padding: 4px; margin: 0; cursor: pointer; }
     .nav-btn.active { color: var(--blue); }
     .nav-icon { font-size: 1.15rem; }
 
-    /* Modal Novo Lançamento */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
     .modal-box { background: var(--card); width: 100%; max-width: 600px; border-radius: 20px 20px 0 0; padding: 18px 16px 28px; max-height: 92vh; overflow-y: auto; border-top: 1px solid var(--border); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 
     .hidden { display: none !important; }
     #loading { text-align: center; padding: 8px; color: var(--blue); font-size: 0.8rem; font-weight: 600; background: rgba(59,130,246,0.12); border-radius: 8px; margin-bottom: 10px; }
-    #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; padding: 9px 18px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; z-index: 60; display: none; }
+    #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; padding: 9px 18px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; z-index: 60; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
   </style>
 </head>
 <body>
@@ -113,14 +124,15 @@
 <div id="telaLogin">
   <div class="login-card">
     <div style="font-size:3rem; margin-bottom:10px;">📊</div>
-    <h2 style="margin:0 0 8px;">Minhas Finanças</h2>
-    <p style="color:var(--muted); font-size:0.88rem; line-height:1.45; margin:0;">
-      Controle completo de contas, cartões de crédito, faturas, orçamentos e fluxo de caixa sincronizado diretamente na sua planilha do Google Drive.
+    <h2 style="margin:0 0 8px;">Minhas Finanças Pro</h2>
+    <p style="color:var(--muted); font-size:0.86rem; line-height:1.45; margin:0;">
+      Conecte sua conta Google para criar automaticamente seu banco de dados no <strong>Google Drive</strong> e sincronizar vencimentos com o <strong>Google Agenda</strong> e <strong>Google Tasks</strong>.
     </p>
     <button class="btn-google" onclick="fazerLoginGoogle()">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      Entrar com Google
+      Entrar com Google (Drive + Agenda + Tasks)
     </button>
+    <button class="btn-offline" onclick="entrarModoLocal()">Usar Modo Local Offline (Sem Google)</button>
     <p id="statusLogin" style="color:var(--blue); font-size:0.8rem; margin-top:14px;"></p>
   </div>
 </div>
@@ -129,27 +141,27 @@
 <div id="appPrincipal" class="hidden">
   <header>
     <div class="header-top">
-      <h1>📊 Minhas Finanças</h1>
+      <h1>📊 Minhas Finanças <span id="badgeModoApp" class="badge-mode">CLOUD</span></h1>
       <div class="header-actions">
         <button id="btnInstall" class="btn-top btn-install" onclick="instalarApp()">📲 Instalar</button>
-        <button class="btn-top" onclick="carregarTodosDados()">↻</button>
+        <button class="btn-top" onclick="carregarTodosDados()" title="Sincronizar">↻</button>
         <button class="btn-top" style="background:#7f1d1d;" onclick="sairConta()">Sair</button>
       </div>
     </div>
     <div class="month-nav">
       <button class="month-btn" onclick="alterarMes(-1)">‹</button>
-      <span class="month-label" id="labelMesAtual">Novembro 2026</span>
+      <span class="month-label" id="labelMesAtual" onclick="irParaHoje()">Novembro 2026</span>
       <button class="month-btn" onclick="alterarMes(1)">›</button>
     </div>
   </header>
 
   <div class="container">
-    <div id="loading" class="hidden">Sincronizando dados com Google Sheets...</div>
+    <div id="loading" class="hidden">Sincronizando banco de dados...</div>
 
     <!-- ABA 1: VISÃO GERAL (DASHBOARD) -->
     <div id="telaResumo">
       <div class="saldo-hero">
-        <small>Saldo Atual em Contas</small>
+        <small>Saldo Consolidado em Contas</small>
         <div class="valor-grande" id="dashSaldoAtual">R$ 0,00</div>
         <div class="grid-2">
           <div class="mini-stat">
@@ -157,12 +169,12 @@
             <strong id="dashReceitas" style="color:var(--green)">R$ 0,00</strong>
           </div>
           <div class="mini-stat">
-            <span>Despesas (Mês)</span>
+            <span>Despesas + Faturas</span>
             <strong id="dashDespesas" style="color:var(--red)">R$ 0,00</strong>
           </div>
           <div class="mini-stat">
-            <span>Faturas Cartões</span>
-            <strong id="dashFaturas" style="color:var(--purple)">R$ 0,00</strong>
+            <span>Balanço do Mês</span>
+            <strong id="dashBalanco" style="color:var(--text)">R$ 0,00</strong>
           </div>
           <div class="mini-stat">
             <span>Previsão Fim do Mês</span>
@@ -171,11 +183,20 @@
         </div>
       </div>
 
+      <!-- Próximos Vencimentos / Agenda -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>🔔 Contas a Pagar / Receber (Pendentes)</span>
+          <a href="#" onclick="navegar('telaTransacoes', document.querySelectorAll('.nav-btn')[1]); return false;" style="color:var(--blue); font-size:0.78rem; text-decoration:none;">Ver Tudo</a>
+        </div>
+        <div id="dashPendentes"></div>
+      </div>
+
       <!-- Resumo Contas -->
       <div class="section-card">
         <div class="section-title">
           <span>🏦 Minhas Contas</span>
-          <a href="#" onclick="navegar('telaAjustes', document.querySelectorAll('.nav-btn')[4]); return false;" style="color:var(--blue); font-size:0.78rem; text-decoration:none;">Gerenciar</a>
+          <a href="#" onclick="navegar('telaAjustes', document.querySelectorAll('.nav-btn')[4]); return false;" style="color:var(--blue); font-size:0.78rem; text-decoration:none;">+ Conta</a>
         </div>
         <div id="dashListaContas"></div>
       </div>
@@ -184,20 +205,21 @@
       <div class="section-card">
         <div class="section-title">
           <span>💳 Cartões de Crédito</span>
-          <a href="#" onclick="navegar('telaCartoes', document.querySelectorAll('.nav-btn')[2]); return false;" style="color:var(--blue); font-size:0.78rem; text-decoration:none;">Ver Faturas</a>
+          <a href="#" onclick="navegar('telaCartoes', document.querySelectorAll('.nav-btn')[2]); return false;" style="color:var(--blue); font-size:0.78rem; text-decoration:none;">+ Cartão / Faturas</a>
         </div>
         <div id="dashListaCartoes"></div>
       </div>
 
       <!-- Despesas por Categoria -->
       <div class="section-card">
-        <div class="section-title"><span>🍩 Gastos por Categoria (Mês)</span></div>
+        <div class="section-title"><span>🍩 Despesas por Categoria (Mês)</span></div>
         <div id="dashCategorias"></div>
       </div>
     </div>
 
-    <!-- ABA 2: TRANSAÇÕES (EXTRATO) -->
+    <!-- ABA 2: EXTRATO / TRANSAÇÕES -->
     <div id="telaTransacoes" class="hidden">
+      <input type="text" id="buscaTx" class="search-box" placeholder="🔍 Buscar por descrição, categoria ou conta..." oninput="renderizarExtrato()">
       <div class="filter-pills">
         <button class="pill active" onclick="filtrarTx('TODOS', this)">Todos</button>
         <button class="pill" onclick="filtrarTx('receita', this)">Receitas</button>
@@ -208,76 +230,102 @@
       <div id="listaTransacoes"></div>
     </div>
 
-    <!-- ABA 3: CARTÕES & FATURAS -->
+    <!-- ABA 3: CARTÕES DE CRÉDITO & FATURAS -->
     <div id="telaCartoes" class="hidden">
+      <button class="btn-primary" style="background:var(--purple); margin-top:0; margin-bottom:12px;" onclick="abrirModalCartao()">+ Adicionar Novo Cartão de Crédito</button>
       <div id="listaFaturasDetalhadas"></div>
     </div>
 
     <!-- ABA 4: ORÇAMENTOS / METAS -->
     <div id="telaOrcamentos" class="hidden">
       <div class="section-card">
-        <h3 style="margin:0 0 10px; font-size:0.95rem;">Definir Meta Mensal de Gasto</h3>
+        <h3 style="margin:0 0 8px; font-size:0.95rem;">🎯 Definir Orçamento Mensal</h3>
         <label>Categoria de Despesa:</label>
         <select id="orcCategoria"></select>
         <label>Limite Mensal (R$):</label>
         <input type="number" id="orcValor" step="0.01" inputmode="decimal" placeholder="0,00">
-        <button class="btn-primary" onclick="salvarOrcamento()">Salvar Meta</button>
+        <button class="btn-primary" onclick="salvarOrcamento()">Salvar Orçamento</button>
       </div>
       <div id="listaOrcamentos"></div>
     </div>
 
-    <!-- ABA 5: CONTAS, CARTÕES E CATEGORIAS -->
+    <!-- ABA 5: CONFIGURAÇÕES GERAIS -->
     <div id="telaAjustes" class="hidden">
       <div class="sub-tabs">
-        <div class="sub-tab active" onclick="mudarSubAba('cadContas', this)">Contas</div>
-        <div class="sub-tab" onclick="mudarSubAba('cadCartoes', this)">Cartões</div>
-        <div class="sub-tab" onclick="mudarSubAba('cadCats', this)">Categorias</div>
+        <div class="sub-tab active" onclick="mudarSubAba('cfgContas', this)">Contas</div>
+        <div class="sub-tab" onclick="mudarSubAba('cfgCartoes', this)">Cartões</div>
+        <div class="sub-tab" onclick="mudarSubAba('cfgCats', this)">Categorias</div>
+        <div class="sub-tab" onclick="mudarSubAba('cfgSistema', this)">Google & Backup</div>
       </div>
 
-      <!-- Cadastro Contas -->
-      <div id="cadContas" class="section-card">
-        <h3 style="margin:0 0 8px; font-size:0.95rem;">Nova Conta / Carteira</h3>
+      <!-- Contas -->
+      <div id="cfgContas" class="section-card">
+        <h3 style="margin:0 0 8px; font-size:0.95rem;">🏦 Adicionar Conta / Carteira</h3>
         <label>Nome da Conta:</label>
-        <input type="text" id="contaNome" placeholder="Ex: Nubank, Carteira, Itaú">
-        <label>Saldo Inicial (R$):</label>
-        <input type="number" id="contaSaldo" step="0.01" inputmode="decimal" value="0">
-        <button class="btn-primary" onclick="salvarConta()">Adicionar Conta</button>
+        <input type="text" id="contaNome" placeholder="Ex: Nubank, Banco do Brasil, Carteira">
+        <div class="grid-2">
+          <div>
+            <label>Tipo:</label>
+            <select id="contaTipo">
+              <option value="Conta Corrente">Conta Corrente</option>
+              <option value="Carteira">Dinheiro / Carteira</option>
+              <option value="Poupança">Poupança / Invest.</option>
+            </select>
+          </div>
+          <div>
+            <label>Saldo Inicial (R$):</label>
+            <input type="number" id="contaSaldo" step="0.01" inputmode="decimal" value="0">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="salvarConta()">Salvar Conta</button>
         <div id="listaCadContas" style="margin-top:14px;"></div>
       </div>
 
-      <!-- Cadastro Cartões -->
-      <div id="cadCartoes" class="section-card hidden">
-        <h3 style="margin:0 0 8px; font-size:0.95rem;">Novo Cartão de Crédito</h3>
-        <label>Nome do Cartão:</label>
-        <input type="text" id="cartaoNome" placeholder="Ex: Nubank Roxinho, Inter Black">
-        <label>Limite Total (R$):</label>
-        <input type="number" id="cartaoLimite" step="0.01" inputmode="decimal" placeholder="2000,00">
-        <div class="grid-2">
-          <div>
-            <label>Dia Fechamento:</label>
-            <input type="number" id="cartaoFech" min="1" max="31" value="5">
-          </div>
-          <div>
-            <label>Dia Vencimento:</label>
-            <input type="number" id="cartaoVenc" min="1" max="31" value="12">
-          </div>
+      <!-- Cartões -->
+      <div id="cfgCartoes" class="section-card hidden">
+        <div class="section-title">
+          <span>💳 Meus Cartões de Crédito</span>
+          <button class="btn-mini" style="background:var(--purple); color:#fff;" onclick="abrirModalCartao()">+ Novo Cartão</button>
         </div>
-        <button class="btn-primary" style="background:var(--purple)" onclick="salvarCartao()">Adicionar Cartão</button>
-        <div id="listaCadCartoes" style="margin-top:14px;"></div>
+        <div id="listaCadCartoes"></div>
       </div>
 
-      <!-- Cadastro Categorias -->
-      <div id="cadCats" class="section-card hidden">
-        <h3 style="margin:0 0 8px; font-size:0.95rem;">Nova Categoria</h3>
-        <label>Tipo:</label>
-        <select id="catTipo">
-          <option value="despesa">Despesa</option>
-          <option value="receita">Receita</option>
-        </select>
-        <label>Nome da Categoria:</label>
-        <input type="text" id="catNome" placeholder="Ex: Mercado, Combustível, Salário">
+      <!-- Categorias -->
+      <div id="cfgCats" class="section-card hidden">
+        <h3 style="margin:0 0 8px; font-size:0.95rem;">🏷️ Nova Categoria</h3>
+        <div class="grid-2">
+          <div>
+            <label>Tipo:</label>
+            <select id="catTipo">
+              <option value="despesa">Despesa</option>
+              <option value="receita">Receita</option>
+            </select>
+          </div>
+          <div>
+            <label>Nome:</label>
+            <input type="text" id="catNome" placeholder="Ex: Energia, Internet, Freela">
+          </div>
+        </div>
         <button class="btn-primary" onclick="salvarCategoria()">Adicionar Categoria</button>
         <div id="listaCadCats" style="margin-top:14px;"></div>
+      </div>
+
+      <!-- Google & Sistema -->
+      <div id="cfgSistema" class="section-card hidden">
+        <h3 style="margin:0 0 10px; font-size:0.95rem;">☁️ Integração Google & Preferências</h3>
+        <div class="mini-stat" style="margin-bottom:10px;">
+          <span>Status da Conexão</span>
+          <strong id="infoStatusConexao" style="color:var(--green);">Conectado ao Google Drive, Agenda e Tasks</strong>
+        </div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="cfgAutoSyncAgenda" onchange="salvarPreferenciasLocal()">
+          <span style="font-size:0.84rem;">Sincronizar automaticamente lançamentos pendentes com Google Agenda e Google Tasks</span>
+        </label>
+        <label>Horário padrão dos lembretes na Agenda:</label>
+        <input type="time" id="cfgHoraLembrete" value="09:00" onchange="salvarPreferenciasLocal()">
+
+        <button class="btn-primary" style="background:#334155;" onclick="exportarCSV()">📥 Exportar Planilha Completa (CSV)</button>
+        <button class="btn-primary" style="background:#7f1d1d;" onclick="resetarBancoDados()">⚠️ Recriar Estrutura do Banco</button>
       </div>
     </div>
   </div>
@@ -285,15 +333,15 @@
   <!-- BOTÃO FLUTUANTE (+) -->
   <button class="fab" onclick="abrirModalLancamento()">+</button>
 
-  <!-- MODAL NOVO LANÇAMENTO -->
+  <!-- MODAL NOVO / EDITAR LANÇAMENTO -->
   <div id="modalLancamento" class="modal-overlay hidden">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="margin:0; font-size:1.05rem;">Novo Lançamento</h3>
-        <button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModalLancamento()">✕</button>
+        <h3 id="tituloModalTx" style="margin:0; font-size:1.05rem;">Novo Lançamento</h3>
+        <button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalLancamento')">✕</button>
       </div>
 
-      <div class="sub-tabs">
+      <div class="sub-tabs" id="tabsTipoTx">
         <div class="sub-tab active" onclick="selecionarTipoTx('despesa', this)">Despesa</div>
         <div class="sub-tab" onclick="selecionarTipoTx('receita', this)">Receita</div>
         <div class="sub-tab" onclick="selecionarTipoTx('cartao', this)">Cartão</div>
@@ -301,7 +349,7 @@
       </div>
 
       <label>Descrição:</label>
-      <input type="text" id="txDesc" placeholder="Ex: Supermercado, Salário, Aluguel...">
+      <input type="text" id="txDesc" placeholder="Ex: Mercado, Conta de Luz, Salário...">
 
       <div class="grid-2">
         <div>
@@ -334,7 +382,7 @@
         <select id="txCartao"></select>
       </div>
 
-      <div class="grid-2">
+      <div class="grid-2" id="rowRepeticao">
         <div>
           <label>Repetição:</label>
           <select id="txRepeticao" onchange="toggleParcelas()">
@@ -351,7 +399,7 @@
           <label>Situação:</label>
           <select id="txStatus">
             <option value="Efetivado">Pago / Recebido</option>
-            <option value="Pendente">Pendente</option>
+            <option value="Pendente">Pendente (Agendar)</option>
           </select>
         </div>
       </div>
@@ -361,7 +409,68 @@
         <input type="tel" id="txFone" placeholder="Ex: 22999998888">
       </div>
 
+      <!-- Integração Google Agenda & Google Tasks -->
+      <label class="checkbox-row" id="boxSyncGoogle">
+        <input type="checkbox" id="txCriarAgendaTask">
+        <span style="font-size:0.82rem;">📅 Criar lembrete no <strong>Google Agenda</strong> e tarefa no <strong>Google Tasks</strong></span>
+      </label>
+
       <button class="btn-primary" id="btnSalvarTx" onclick="salvarLancamento()">Salvar Lançamento</button>
+    </div>
+  </div>
+
+  <!-- MODAL ADICIONAR / EDITAR CARTÃO DE CRÉDITO -->
+  <div id="modalCartao" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:1.05rem;">💳 Configurar Cartão de Crédito</h3>
+        <button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalCartao')">✕</button>
+      </div>
+
+      <label>Nome do Cartão:</label>
+      <input type="text" id="ccNome" placeholder="Ex: Nubank Ultravioleta, Inter, Itaú">
+
+      <div class="grid-2">
+        <div>
+          <label>Bandeira:</label>
+          <select id="ccBandeira">
+            <option value="Mastercard">Mastercard</option>
+            <option value="Visa">Visa</option>
+            <option value="Elo">Elo</option>
+            <option value="Amex">American Express</option>
+            <option value="Hipercard">Hipercard</option>
+          </select>
+        </div>
+        <div>
+          <label>Cor do Cartão:</label>
+          <select id="ccCor">
+            <option value="linear-gradient(135deg, #6d28d9, #4c1d95)">Roxo (Nubank)</option>
+            <option value="linear-gradient(135deg, #ea580c, #9a3412)">Laranja (Inter/Itaú)</option>
+            <option value="linear-gradient(135deg, #0284c7, #1e3a8a)">Azul (Caixa/BB)</option>
+            <option value="linear-gradient(135deg, #1e293b, #090d16)">Black (Carbon)</option>
+            <option value="linear-gradient(135deg, #059669, #064e3b)">Verde (Sicredi)</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Limite Total (R$):</label>
+      <input type="number" id="ccLimite" step="0.01" inputmode="decimal" placeholder="5000,00">
+
+      <div class="grid-2">
+        <div>
+          <label>Dia de Fechamento:</label>
+          <input type="number" id="ccFechamento" min="1" max="31" value="5">
+        </div>
+        <div>
+          <label>Dia de Vencimento:</label>
+          <input type="number" id="ccVencimento" min="1" max="31" value="12">
+        </div>
+      </div>
+
+      <label>Conta Padrão para Pagamento da Fatura:</label>
+      <select id="ccContaPadrao"></select>
+
+      <button class="btn-primary" style="background:var(--purple);" onclick="salvarCartao()">Salvar Cartão de Crédito</button>
     </div>
   </div>
 
@@ -377,31 +486,37 @@
 
 <script>
   const CLIENT_ID = "484331620797-5eva98kl1vhk31jnl6m83ofpr6425ro2.apps.googleusercontent.com";
-  const SCOPES = "https://www.googleapis.com/auth/drive.file";
+  // Escopos completos: Google Drive (Planilha DB) + Google Calendar (Agenda) + Google Tasks (Tarefas)
+  const SCOPES = [
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/tasks"
+  ].join(" ");
 
   let tokenClient;
-  let accessToken = localStorage.getItem("mf_gdrive_token") || "";
-  let spreadsheetId = localStorage.getItem("mf_gdrive_sheet_id") || "";
+  let accessToken = localStorage.getItem("mfp_gdrive_token") || "";
+  let spreadsheetId = localStorage.getItem("mfp_gdrive_sheet_id") || "";
+  let modoOffline = localStorage.getItem("mfp_offline_mode") === "true";
   let sheetIdsMap = {};
   let deferredPrompt;
 
-  // Estado Global do App
-  let mesAtual = new Date(); // Controla o mês visualizado
+  // Estado Global
+  let mesAtual = new Date();
   let tipoTxAtual = "despesa";
   let filtroTxAtual = "TODOS";
 
   let db = {
-    contas: [],      // [ID, Nome, SaldoInicial]
-    cartoes: [],     // [ID, Nome, Limite, Fechamento, Vencimento]
+    contas: [],      // [ID, Nome, Tipo, SaldoInicial]
+    cartoes: [],     // [ID, Nome, Bandeira, Cor, Limite, Fechamento, Vencimento, ContaPadrao]
     categorias: [],  // [ID, Tipo, Nome]
-    lancamentos: [], // [ID, Tipo, Descricao, Valor, Data, MesFatura, Categoria, ContaOuCartao, ContaDestino, Status, ParcelaInfo, Telefone]
+    lancamentos: [], // [ID, Tipo, Descricao, Valor, Data, MesFatura, Categoria, ContaOuCartao, ContaDestino, Status, Parcela, Telefone, GoogleEventId]
     orcamentos: []   // [ID, Categoria, Limite]
   };
 
   // PWA Manifest
   const manifestData = {
-    name: "Minhas Finanças", short_name: "Finanças", start_url: ".", display: "standalone",
-    background_color: "#0f172a", theme_color: "#0f172a",
+    name: "Minhas Finanças Pro", short_name: "Finanças", start_url: ".", display: "standalone",
+    background_color: "#0b1120", theme_color: "#0b1120",
     icons: [{
       src: "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#1e293b"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="240" fill="#10b981" font-family="sans-serif" font-weight="bold">R$</text></svg>'),
       sizes: "512x512", type: "image/svg+xml"
@@ -421,37 +536,78 @@
     deferredPrompt = null;
   }
 
-  // Autenticação Google
   window.onload = () => {
     atualizarLabelMes();
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: async (resp) => {
-        if (resp.error) {
-          document.getElementById('statusLogin').innerText = "Erro no login: " + resp.error;
-          return;
-        }
-        accessToken = resp.access_token;
-        localStorage.setItem("mf_gdrive_token", accessToken);
-        await prepararEstruturaDrive();
-      }
-    });
+    carregarPreferenciasLocal();
 
-    if (accessToken && spreadsheetId) {
+    if (typeof google !== "undefined" && google.accounts) {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: async (resp) => {
+          if (resp.error) {
+            document.getElementById('statusLogin').innerText = "Erro no login: " + resp.error;
+            return;
+          }
+          modoOffline = false;
+          localStorage.setItem("mfp_offline_mode", "false");
+          accessToken = resp.access_token;
+          localStorage.setItem("mfp_gdrive_token", accessToken);
+          await prepararEstruturaDrive();
+        }
+      });
+    }
+
+    if (modoOffline) {
+      iniciarAppLogado();
+    } else if (accessToken && spreadsheetId) {
       iniciarAppLogado();
     }
   };
 
   function fazerLoginGoogle() {
-    document.getElementById('statusLogin').innerText = "Conectando ao Google...";
+    if (!tokenClient) {
+      alert("A biblioteca do Google ainda não carregou ou você está sem internet. Você pode usar o Modo Local Offline.");
+      return;
+    }
+    document.getElementById('statusLogin').innerText = "Solicitando acesso ao Drive, Agenda e Tasks...";
     tokenClient.requestAccessToken({ prompt: 'consent' });
   }
 
+  function entrarModoLocal() {
+    modoOffline = true;
+    localStorage.setItem("mfp_offline_mode", "true");
+    if (!localStorage.getItem("mfp_local_db")) {
+      const dbInicial = {
+        contas: [
+          { row: 2, cols: ["1", "Carteira", "Carteira", "0"] },
+          { row: 3, cols: ["2", "Conta Corrente", "Conta Corrente", "0"] }
+        ],
+        cartoes: [
+          { row: 2, cols: ["1", "Cartão Principal", "Mastercard", "linear-gradient(135deg, #6d28d9, #4c1d95)", "3000", "5", "12", "Conta Corrente"] }
+        ],
+        categorias: [
+          { row: 2, cols: ["1", "despesa", "Alimentação"] },
+          { row: 3, cols: ["2", "despesa", "Moradia & Contas"] },
+          { row: 4, cols: ["3", "despesa", "Transporte"] },
+          { row: 5, cols: ["4", "despesa", "Lazer"] },
+          { row: 6, cols: ["5", "despesa", "Saúde"] },
+          { row: 7, cols: ["6", "receita", "Salário"] },
+          { row: 8, cols: ["7", "receita", "Renda Extra"] }
+        ],
+        lancamentos: [],
+        orcamentos: []
+      };
+      localStorage.setItem("mfp_local_db", JSON.stringify(dbInicial));
+    }
+    iniciarAppLogado();
+  }
+
   function sairConta() {
-    localStorage.removeItem("mf_gdrive_token");
-    localStorage.removeItem("mf_gdrive_sheet_id");
-    accessToken = ""; spreadsheetId = "";
+    localStorage.removeItem("mfp_gdrive_token");
+    localStorage.removeItem("mfp_gdrive_sheet_id");
+    localStorage.removeItem("mfp_offline_mode");
+    accessToken = ""; spreadsheetId = ""; modoOffline = false;
     document.getElementById('appPrincipal').classList.add('hidden');
     document.getElementById('telaLogin').classList.remove('hidden');
   }
@@ -465,38 +621,38 @@
     const res = await fetch(url, opts);
     if (res.status === 401) {
       tokenClient.requestAccessToken({ prompt: '' });
-      throw new Error("Sessão expirada, renovando...");
+      throw new Error("Sessão expirada, renovando token...");
     }
     return res;
   }
 
-  // Cria Pasta e Planilha no formato Minhas Finanças
+  // Criação Automática do Banco de Dados no Google Drive + Sheets
   async function prepararEstruturaDrive() {
     const statusEl = document.getElementById('statusLogin');
     statusEl.innerText = "Verificando banco de dados no Google Drive...";
 
     try {
-      const q = encodeURIComponent("name = 'Minhas Financas App DB' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false");
+      const q = encodeURIComponent("name = 'Minhas Financas DB v2' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false");
       const searchRes = await fetchGoogle(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
       const searchData = await searchRes.json();
 
       if (searchData.files && searchData.files.length > 0) {
         spreadsheetId = searchData.files[0].id;
-        localStorage.setItem("mf_gdrive_sheet_id", spreadsheetId);
+        localStorage.setItem("mfp_gdrive_sheet_id", spreadsheetId);
         iniciarAppLogado();
         return;
       }
 
-      statusEl.innerText = "Criando pasta 'Minhas Finanças' no seu Drive...";
+      statusEl.innerText = "Criando pasta 'Minhas Finanças Pro' no Google Drive...";
       const folderRes = await fetchGoogle("https://www.googleapis.com/drive/v3/files", "POST", {
-        name: "Minhas Finanças",
+        name: "Minhas Finanças Pro",
         mimeType: "application/vnd.google-apps.folder"
       });
       const folder = await folderRes.json();
 
-      statusEl.innerText = "Configurando planilhas de Contas, Cartões e Lançamentos...";
+      statusEl.innerText = "Criando tabelas (Contas, Cartões, Lançamentos, Metas)...";
       const sheetRes = await fetchGoogle("https://sheets.googleapis.com/v4/spreadsheets", "POST", {
-        properties: { title: "Minhas Financas App DB" },
+        properties: { title: "Minhas Financas DB v2" },
         sheets: [
           { properties: { title: "Contas" } },
           { properties: { title: "Cartoes" } },
@@ -507,36 +663,37 @@
       });
       const sheet = await sheetRes.json();
       spreadsheetId = sheet.spreadsheetId;
-      localStorage.setItem("mf_gdrive_sheet_id", spreadsheetId);
+      localStorage.setItem("mfp_gdrive_sheet_id", spreadsheetId);
 
       await fetchGoogle(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?addParents=${folder.id}&removeParents=root`, "PATCH");
 
       await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
         valueInputOption: "USER_ENTERED",
         data: [
-          { range: "Contas!A1:C3", values: [
-            ["ID", "Nome", "SaldoInicial"],
-            ["1", "Carteira", "0"],
-            ["2", "Conta Corrente", "0"]
+          { range: "Contas!A1:D3", values: [
+            ["ID", "Nome", "Tipo", "SaldoInicial"],
+            ["1", "Carteira", "Carteira", "0"],
+            ["2", "Conta Corrente", "Conta Corrente", "0"]
           ]},
-          { range: "Cartoes!A1:E2", values: [
-            ["ID", "Nome", "Limite", "Fechamento", "Vencimento"],
-            ["1", "Cartão Principal", "3000", "5", "12"]
+          { range: "Cartoes!A1:H2", values: [
+            ["ID", "Nome", "Bandeira", "Cor", "Limite", "Fechamento", "Vencimento", "ContaPadrao"],
+            ["1", "Cartão Principal", "Mastercard", "linear-gradient(135deg, #6d28d9, #4c1d95)", "3000", "5", "12", "Conta Corrente"]
           ]},
-          { range: "Categorias!A1:C10", values: [
+          { range: "Categorias!A1:C11", values: [
             ["ID", "Tipo", "Nome"],
             ["1", "despesa", "Alimentação"],
             ["2", "despesa", "Moradia & Contas"],
             ["3", "despesa", "Transporte"],
             ["4", "despesa", "Lazer"],
             ["5", "despesa", "Saúde"],
-            ["6", "despesa", "Outros Gastos"],
-            ["7", "receita", "Salário"],
-            ["8", "receita", "Renda Extra / Cobranças"],
-            ["9", "receita", "Investimentos"]
+            ["6", "despesa", "Educação"],
+            ["7", "despesa", "Cartão de Crédito"],
+            ["8", "receita", "Salário"],
+            ["9", "receita", "Renda Extra / Cobranças"],
+            ["10", "receita", "Investimentos"]
           ]},
-          { range: "Lancamentos!A1:L1", values: [
-            ["ID", "Tipo", "Descricao", "Valor", "Data", "MesFatura", "Categoria", "ContaOuCartao", "ContaDestino", "Status", "Parcela", "Telefone"]
+          { range: "Lancamentos!A1:M1", values: [
+            ["ID", "Tipo", "Descricao", "Valor", "Data", "MesFatura", "Categoria", "ContaOuCartao", "ContaDestino", "Status", "Parcela", "Telefone", "GoogleSyncId"]
           ]},
           { range: "Orcamentos!A1:C1", values: [
             ["ID", "Categoria", "Limite"]
@@ -546,13 +703,27 @@
 
       iniciarAppLogado();
     } catch (err) {
-      statusEl.innerText = "Erro: " + err.message;
+      statusEl.innerText = "Erro ao configurar Drive: " + err.message;
     }
   }
 
   function iniciarAppLogado() {
     document.getElementById('telaLogin').classList.add('hidden');
     document.getElementById('appPrincipal').classList.remove('hidden');
+
+    const badge = document.getElementById('badgeModoApp');
+    const infoCon = document.getElementById('infoStatusConexao');
+    if (modoOffline) {
+      badge.innerText = "OFFLINE LOCAL";
+      badge.style.background = "rgba(245,158,11,0.2)";
+      badge.style.color = "#fcd34d";
+      infoCon.innerText = "Modo Local Offline (Sem sincronização Google)";
+      infoCon.style.color = "var(--amber)";
+    } else {
+      badge.innerText = "GOOGLE SYNC";
+      infoCon.innerText = "Conectado ao Google Drive, Agenda e Tasks";
+    }
+
     carregarTodosDados();
   }
 
@@ -560,20 +731,30 @@
     const loading = document.getElementById('loading');
     loading.classList.remove('hidden');
     try {
-      const metaRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
-      const meta = await metaRes.json();
-      meta.sheets.forEach(s => { sheetIdsMap[s.properties.title] = s.properties.sheetId; });
+      if (modoOffline) {
+        const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+        db = {
+          contas: localData.contas || [],
+          cartoes: localData.cartoes || [],
+          categorias: localData.categorias || [],
+          lancamentos: localData.lancamentos || [],
+          orcamentos: localData.orcamentos || []
+        };
+      } else {
+        const metaRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
+        const meta = await metaRes.json();
+        meta.sheets.forEach(s => { sheetIdsMap[s.properties.title] = s.properties.sheetId; });
 
-      const ranges = "ranges=Contas!A2:C&ranges=Cartoes!A2:E&ranges=Categorias!A2:C&ranges=Lancamentos!A2:L&ranges=Orcamentos!A2:C";
-      const valRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
-      const valData = await valRes.json();
+        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:H&ranges=Categorias!A2:C&ranges=Lancamentos!A2:M&ranges=Orcamentos!A2:C";
+        const valRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
+        const valData = await valRes.json();
 
-      db.contas = (valData.valueRanges[0].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-      db.cartoes = (valData.valueRanges[1].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-      db.categorias = (valData.valueRanges[2].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-      db.lancamentos = (valData.valueRanges[3].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-      db.orcamentos = (valData.valueRanges[4].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-
+        db.contas = (valData.valueRanges[0].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.cartoes = (valData.valueRanges[1].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.categorias = (valData.valueRanges[2].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.lancamentos = (valData.valueRanges[3].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.orcamentos = (valData.valueRanges[4].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+      }
       renderizarTudo();
     } catch (e) {
       console.error(e);
@@ -582,20 +763,74 @@
     }
   }
 
-  // Controle de Mês
+  // Integração Real com Google Calendar (Agenda) e Google Tasks
+  async function criarEventoAgendaETask(titulo, valor, dataStr, tipo) {
+    if (modoOffline || !accessToken) return "";
+    const hora = document.getElementById('cfgHoraLembrete').value || "09:00";
+    const prefixo = tipo === "receita" ? "💰 Receber:" : "💸 Pagar:";
+    const summary = `${prefixo} ${titulo} (${formatarMoeda(valor)})`;
+    const description = `Lançamento gerado pelo app Minhas Finanças Pro.\nValor: ${formatarMoeda(valor)}\nTipo: ${tipo.toUpperCase()}`;
+
+    let syncIds = [];
+
+    try {
+      // 1. Cria Evento no Google Calendar (Agenda)
+      const startDateTime = `${dataStr}T${hora}:00-03:00`;
+      const endHour = String(Math.min(23, parseInt(hora.split(':')[0]) + 1)).padStart(2, '0');
+      const endDateTime = `${dataStr}T${endHour}:${hora.split(':')[1]}:00-03:00`;
+
+      const calRes = await fetchGoogle("https://www.googleapis.com/calendar/v3/calendars/primary/events", "POST", {
+        summary,
+        description,
+        start: { dateTime: startDateTime, timeZone: "America/Sao_Paulo" },
+        end: { dateTime: endDateTime, timeZone: "America/Sao_Paulo" },
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: "popup", minutes: 60 },
+            { method: "popup", minutes: 1440 } // 1 dia antes
+          ]
+        }
+      });
+      if (calRes.ok) {
+        const calData = await calRes.json();
+        syncIds.push("CAL:" + calData.id);
+      }
+
+      // 2. Cria Tarefa no Google Tasks (@default)
+      const taskRes = await fetchGoogle("https://tasks.googleapis.com/tasks/v1/lists/@default/tasks", "POST", {
+        title: summary,
+        notes: description,
+        due: `${dataStr}T00:00:00.000Z`
+      });
+      if (taskRes.ok) {
+        const taskData = await taskRes.json();
+        syncIds.push("TSK:" + taskData.id);
+      }
+    } catch (err) {
+      console.error("Erro ao sincronizar Agenda/Tasks:", err);
+    }
+
+    return syncIds.join("|");
+  }
+
+  // Navegação Temporal
   function getChaveMes(dateObj) {
-    const y = dateObj.getFullYear();
-    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-    return `${y}-${m}`;
+    return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
   }
 
   function atualizarLabelMes() {
-    const label = mesAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    document.getElementById('labelMesAtual').innerText = label;
+    document.getElementById('labelMesAtual').innerText = mesAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   }
 
   function alterarMes(delta) {
     mesAtual.setMonth(mesAtual.getMonth() + delta);
+    atualizarLabelMes();
+    renderizarTudo();
+  }
+
+  function irParaHoje() {
+    mesAtual = new Date();
     atualizarLabelMes();
     renderizarTudo();
   }
@@ -607,17 +842,17 @@
   function mostrarToast(msg) {
     const t = document.getElementById('toast');
     t.innerText = msg; t.style.display = 'block';
-    setTimeout(() => { t.style.display = 'none'; }, 2200);
+    setTimeout(() => { t.style.display = 'none'; }, 2400);
   }
 
-  // Cálculo e Renderização Geral
+  // Renderização Completa
   function renderizarTudo() {
     const chaveMesSel = getChaveMes(mesAtual);
 
-    // 1. Calcular saldo atual real de cada conta (Saldo Inicial + Receitas Efetivadas - Despesas Efetivadas +- Transferências)
+    // 1. Saldo das Contas
     const saldosContas = {};
     db.contas.forEach(c => {
-      saldosContas[c.cols[1]] = parseFloat(c.cols[2]) || 0;
+      saldosContas[c.cols[1]] = parseFloat(c.cols[3]) || 0;
     });
 
     db.lancamentos.forEach(l => {
@@ -633,20 +868,25 @@
       }
     });
 
-    const saldoTotalContas = Object.values(saldosContas).reduce((acc, v) => acc + v, 0);
+    const saldoTotalContas = Object.values(saldosContas).reduce((a, b) => a + b, 0);
 
-    // 2. Calcular indicadores do mês selecionado
+    // 2. Indicadores do Mês
     let receitasMes = 0, receitasPendMes = 0;
     let despesasMes = 0, despesasPendMes = 0;
-    let faturasMesTotal = 0;
+    let faturasMesAberto = 0;
     const gastosPorCat = {};
-    const faturasPorCartao = {}; // { NomeCartao: { total: 0, itens: [], pago: false } }
+    const pendentesLista = [];
+    const faturasPorCartao = {};
 
     db.cartoes.forEach(c => {
       faturasPorCartao[c.cols[1]] = {
-        limite: parseFloat(c.cols[2]) || 0,
-        fech: c.cols[3],
-        venc: c.cols[4],
+        row: c.row,
+        bandeira: c.cols[2] || "Mastercard",
+        cor: c.cols[3] || "linear-gradient(135deg, #6d28d9, #4c1d95)",
+        limite: parseFloat(c.cols[4]) || 0,
+        fech: parseInt(c.cols[5]) || 5,
+        venc: parseInt(c.cols[6]) || 12,
+        contaPadrao: c.cols[7] || "",
         faturaMes: 0,
         usoTotalLimite: 0,
         itens: []
@@ -658,24 +898,29 @@
       const val = parseFloat(valStr) || 0;
       const mesData = (data || "").substring(0, 7);
 
-      // Uso total do limite do cartão (compras pendentes/não pagas)
       if (tipo === "cartao" && faturasPorCartao[contaOuCartao] && status !== "Pago") {
         faturasPorCartao[contaOuCartao].usoTotalLimite += val;
       }
 
       if (tipo === "receita" && mesData === chaveMesSel) {
         receitasMes += val;
-        if (status === "Pendente") receitasPendMes += val;
+        if (status === "Pendente") {
+          receitasPendMes += val;
+          pendentesLista.push(l);
+        }
       }
 
       if (tipo === "despesa" && mesData === chaveMesSel) {
         despesasMes += val;
-        if (status === "Pendente") despesasPendMes += val;
+        if (status === "Pendente") {
+          despesasPendMes += val;
+          pendentesLista.push(l);
+        }
         gastosPorCat[cat] = (gastosPorCat[cat] || 0) + val;
       }
 
       if (tipo === "cartao" && mesFat === chaveMesSel) {
-        if (status !== "Pago") faturasMesTotal += val;
+        if (status !== "Pago") faturasMesAberto += val;
         gastosPorCat[cat] = (gastosPorCat[cat] || 0) + val;
         if (faturasPorCartao[contaOuCartao]) {
           faturasPorCartao[contaOuCartao].faturaMes += val;
@@ -684,37 +929,63 @@
       }
     });
 
-    const previsaoFimMes = saldoTotalContas + receitasPendMes - despesasPendMes - faturasMesTotal;
+    const totalDespesasGeral = despesasMes + faturasMesAberto;
+    const balancoMes = receitasMes - totalDespesasGeral;
+    const previsaoFimMes = saldoTotalContas + receitasPendMes - despesasPendMes - faturasMesAberto;
 
-    // Atualiza Dashboard Hero
     document.getElementById('dashSaldoAtual').innerText = formatarMoeda(saldoTotalContas);
     document.getElementById('dashSaldoAtual').style.color = saldoTotalContas >= 0 ? 'var(--green)' : 'var(--red)';
     document.getElementById('dashReceitas').innerText = formatarMoeda(receitasMes);
-    document.getElementById('dashDespesas').innerText = formatarMoeda(despesasMes + faturasMesTotal);
-    document.getElementById('dashFaturas').innerText = formatarMoeda(faturasMesTotal);
+    document.getElementById('dashDespesas').innerText = formatarMoeda(totalDespesasGeral);
+    document.getElementById('dashBalanco').innerText = formatarMoeda(balancoMes);
+    document.getElementById('dashBalanco').style.color = balancoMes >= 0 ? 'var(--green)' : 'var(--red)';
     document.getElementById('dashPrevisao').innerText = formatarMoeda(previsaoFimMes);
 
-    // Renderiza Contas no Dashboard e Ajustes
+    // 3. Pendentes no Dashboard
+    const dashPend = document.getElementById('dashPendentes');
+    pendentesLista.sort((a, b) => (a.cols[4] || "").localeCompare(b.cols[4] || ""));
+    dashPend.innerHTML = pendentesLista.length === 0 ? '<p style="color:var(--muted); font-size:0.8rem; margin:0;">Nenhuma pendência neste mês.</p>' : '';
+    pendentesLista.slice(0, 5).forEach(l => {
+      const [id, tipo, desc, val, data] = l.cols;
+      const dataBr = data ? data.split('-').reverse().join('/') : '';
+      dashPend.innerHTML += `
+        <div class="row-item">
+          <div>
+            <strong style="font-size:0.86rem;">${desc}</strong><br>
+            <small style="color:var(--muted);">${dataBr} • ${tipo === 'receita' ? 'A receber' : 'A pagar'}</small>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <strong style="font-size:0.86rem; color:${tipo === 'receita' ? 'var(--green)' : 'var(--red)'}">${formatarMoeda(val)}</strong>
+            <button class="btn-mini" style="background:var(--green); color:#fff;" onclick="efetivarLancamento(${l.row})">✔</button>
+          </div>
+        </div>`;
+    });
+
+    // 4. Contas no Dashboard e Ajustes
     const dashContas = document.getElementById('dashListaContas');
     const cadContas = document.getElementById('listaCadContas');
     dashContas.innerHTML = ''; cadContas.innerHTML = '';
 
     db.contas.forEach(c => {
       const nome = c.cols[1];
+      const tipo = c.cols[2] || "Conta";
       const saldo = saldosContas[nome] || 0;
       dashContas.innerHTML += `
         <div class="row-item">
-          <span><span class="dot" style="background:var(--blue)"></span>${nome}</span>
+          <div>
+            <span><span class="dot" style="background:var(--blue)"></span><strong>${nome}</strong></span>
+            <small style="color:var(--muted); display:block; margin-left:18px; font-size:0.72rem;">${tipo}</small>
+          </div>
           <strong style="color:${saldo >= 0 ? 'var(--text)' : 'var(--red)'}">${formatarMoeda(saldo)}</strong>
         </div>`;
       cadContas.innerHTML += `
         <div class="row-item">
-          <div><strong>${nome}</strong><br><small style="color:var(--muted)">Inicial: ${formatarMoeda(c.cols[2])}</small></div>
+          <div><strong>${nome}</strong> (${tipo})<br><small style="color:var(--muted)">Saldo Inicial: ${formatarMoeda(c.cols[3])} • Atual: ${formatarMoeda(saldo)}</small></div>
           <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Contas', ${c.row})">Excluir</button>
         </div>`;
     });
 
-    // Renderiza Cartões no Dashboard, Aba Cartões e Ajustes
+    // 5. Cartões no Dashboard, Aba Cartões e Ajustes
     const dashCartoes = document.getElementById('dashListaCartoes');
     const detCartoes = document.getElementById('listaFaturasDetalhadas');
     const cadCartoes = document.getElementById('listaCadCartoes');
@@ -729,17 +1000,16 @@
       dashCartoes.innerHTML += `
         <div class="row-item" style="display:block;">
           <div style="display:flex; justify-content:space-between;">
-            <strong>💳 ${nome}</strong>
+            <strong>💳 ${nome} <small style="color:var(--muted)">(${info.bandeira})</small></strong>
             <span style="color:var(--purple); font-weight:700;">Fatura: ${formatarMoeda(info.faturaMes)}</span>
           </div>
-          <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted); margin-top:3px;">
+          <div style="display:flex; justify-content:space-between; font-size:0.74rem; color:var(--muted); margin-top:3px;">
             <span>Disp: ${formatarMoeda(disp)}</span>
-            <span>Limite: ${formatarMoeda(info.limite)}</span>
+            <span>Venc: dia ${info.venc} • Limite: ${formatarMoeda(info.limite)}</span>
           </div>
-          <div class="progress-bg"><div class="progress-fill" style="width:${pct}%; background:var(--purple);"></div></div>
+          <div class="progress-bg" style="background:var(--bg);"><div class="progress-fill" style="width:${pct}%; background:var(--purple);"></div></div>
         </div>`;
 
-      // Card Detalhado na Aba Cartões
       const itensAbertos = info.itens.filter(x => x.cols[9] !== "Pago");
       const valorAberto = itensAbertos.reduce((acc, x) => acc + (parseFloat(x.cols[3]) || 0), 0);
 
@@ -757,27 +1027,44 @@
       `).join('');
 
       detCartoes.innerHTML += `
-        <div class="section-card">
-          <div class="section-title">
-            <span>💳 ${nome}</span>
-            <span style="font-size:0.75rem; color:var(--muted);">Fecha dia ${info.fech} • Vence dia ${info.venc}</span>
+        <div class="credit-card-ui" style="background:${info.cor};">
+          <div class="cc-header">
+            <strong style="font-size:1.05rem;">💳 ${nome}</strong>
+            <span class="cc-flag">${info.bandeira}</span>
           </div>
-          <div class="grid-2" style="margin-bottom:10px;">
-            <div class="mini-stat"><span>Fatura (${chaveMesSel})</span><strong style="color:var(--purple)">${formatarMoeda(info.faturaMes)}</strong></div>
-            <div class="mini-stat"><span>Limite Disponível</span><strong style="color:var(--green)">${formatarMoeda(disp)}</strong></div>
+          <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+              <small style="opacity:0.85; font-size:0.72rem;">Fatura (${chaveMesSel})</small>
+              <div style="font-size:1.35rem; font-weight:800;">${formatarMoeda(info.faturaMes)}</div>
+            </div>
+            <div style="text-align:right;">
+              <small style="opacity:0.85; font-size:0.72rem;">Limite Disponível</small>
+              <div style="font-size:1rem; font-weight:700;">${formatarMoeda(disp)}</div>
+            </div>
           </div>
-          ${valorAberto > 0 ? `<button class="btn-primary" style="background:var(--purple); margin-top:0; margin-bottom:12px;" onclick="pagarFaturaCartao('${nome}', ${valorAberto})">✔ Pagar Fatura (${formatarMoeda(valorAberto)})</button>` : '<p style="color:var(--green); font-size:0.8rem; margin:0 0 8px;">✔ Fatura quitada ou sem lançamentos em aberto.</p>'}
-          <div>${htmlItensFat || '<p style="color:var(--muted); font-size:0.8rem;">Nenhuma compra nesta fatura.</p>'}</div>
+          <div class="progress-bg"><div class="progress-fill" style="width:${pct}%; background:#fff;"></div></div>
+          <div class="cc-dates">
+            <span>Melhor compra: dia ${info.fech}</span>
+            <span>Vencimento: dia ${info.venc}</span>
+            <span>Limite: ${formatarMoeda(info.limite)}</span>
+          </div>
+        </div>
+        <div class="section-card" style="margin-top:-6px;">
+          ${valorAberto > 0 ? `<button class="btn-primary" style="background:var(--green); margin-top:0; margin-bottom:10px;" onclick="pagarFaturaCartao('${nome}', ${valorAberto}, '${info.contaPadrao}')">✔ Pagar Fatura (${formatarMoeda(valorAberto)})</button>` : '<p style="color:var(--green); font-size:0.8rem; margin:0 0 8px;">✔ Fatura quitada ou sem lançamentos em aberto.</p>'}
+          ${htmlItensFat || '<p style="color:var(--muted); font-size:0.8rem; margin:0;">Nenhuma compra nesta fatura.</p>'}
         </div>`;
 
       cadCartoes.innerHTML += `
         <div class="row-item">
-          <div><strong>${nome}</strong><br><small style="color:var(--muted)">Limite: ${formatarMoeda(info.limite)} | Venc: dia ${info.venc}</small></div>
+          <div>
+            <strong>${nome}</strong> (${info.bandeira})<br>
+            <small style="color:var(--muted)">Limite: ${formatarMoeda(info.limite)} | Fecha: ${info.fech} | Venc: ${info.venc}</small>
+          </div>
           <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Cartoes', ${c.row})">Excluir</button>
         </div>`;
     });
 
-    // Renderiza Categorias no Dashboard
+    // 6. Categorias no Dashboard
     const dashCats = document.getElementById('dashCategorias');
     const totalGastoCat = Object.values(gastosPorCat).reduce((a, b) => a + b, 0);
     const catsOrdenadas = Object.entries(gastosPorCat).sort((a, b) => b[1] - a[1]);
@@ -790,11 +1077,11 @@
             <span>${cat} (${pct}%)</span>
             <strong>${formatarMoeda(val)}</strong>
           </div>
-          <div class="progress-bg"><div class="progress-fill" style="width:${pct}%; background:var(--red);"></div></div>
+          <div class="progress-bg" style="background:var(--bg);"><div class="progress-fill" style="width:${pct}%; background:var(--red);"></div></div>
         </div>`;
     });
 
-    // Renderiza Orçamentos / Metas
+    // 7. Orçamentos
     const listaOrc = document.getElementById('listaOrcamentos');
     listaOrc.innerHTML = '';
     db.orcamentos.forEach(o => {
@@ -814,34 +1101,36 @@
             <span>Gasto: <strong style="color:${cor}">${formatarMoeda(gasto)}</strong></span>
             <span>Meta: ${formatarMoeda(limite)}</span>
           </div>
-          <div class="progress-bg"><div class="progress-fill" style="width:${pct}%; background:${cor};"></div></div>
+          <div class="progress-bg" style="background:var(--bg);"><div class="progress-fill" style="width:${pct}%; background:${cor};"></div></div>
         </div>`;
     });
 
-    // Renderiza Extrato / Transações
-    renderizarExtrato(chaveMesSel);
-
-    // Popula Selects de Ajustes e Modal
+    renderizarExtrato();
     popularSelects();
   }
 
-  function renderizarExtrato(chaveMesSel) {
+  function renderizarExtrato() {
+    const chaveMesSel = getChaveMes(mesAtual);
+    const termo = (document.getElementById('buscaTx').value || "").toLowerCase();
     const lista = document.getElementById('listaTransacoes');
+
     let txs = db.lancamentos.filter(l => {
       const [id, tipo, desc, val, data, mesFat, cat, conta, dest, status] = l.cols;
       const mesRef = tipo === "cartao" ? mesFat : (data || "").substring(0, 7);
       if (mesRef !== chaveMesSel) return false;
-      if (filtroTxAtual === "TODOS") return true;
-      if (filtroTxAtual === "PENDENTE") return status === "Pendente";
-      return tipo === filtroTxAtual;
+      if (filtroTxAtual !== "TODOS") {
+        if (filtroTxAtual === "PENDENTE" && status !== "Pendente") return false;
+        if (filtroTxAtual !== "PENDENTE" && tipo !== filtroTxAtual) return false;
+      }
+      if (termo && !`${desc} ${cat} ${conta}`.toLowerCase().includes(termo)) return false;
+      return true;
     });
 
     txs.sort((a, b) => (b.cols[4] || "").localeCompare(a.cols[4] || ""));
-
-    lista.innerHTML = txs.length === 0 ? '<p style="text-align:center; color:var(--muted); padding:20px;">Nenhum lançamento neste filtro.</p>' : '';
+    lista.innerHTML = txs.length === 0 ? '<p style="text-align:center; color:var(--muted); padding:20px;">Nenhum lançamento encontrado.</p>' : '';
 
     txs.forEach(l => {
-      const [id, tipo, desc, valStr, data, mesFat, cat, conta, dest, status, parcela, fone] = l.cols;
+      const [id, tipo, desc, valStr, data, mesFat, cat, conta, dest, status, parcela, fone, syncId] = l.cols;
       const val = parseFloat(valStr) || 0;
       const dataBr = data ? data.split('-').reverse().join('/') : '';
       const isPend = status === "Pendente";
@@ -862,6 +1151,7 @@
             <h4>${desc} ${parcela && parcela !== '1/1' ? `<small style="color:var(--muted)">(${parcela})</small>` : ''}</h4>
             <p>${dataBr} • ${cat || 'Transferência'} • <strong>${conta}</strong>${dest ? ` → ${dest}` : ''}
               <span class="badge ${isPend ? 'badge-pend' : 'badge-ok'}">${status}</span>
+              ${syncId ? '<span class="badge badge-cal" title="Sincronizado com Agenda/Tasks">📅</span>' : ''}
             </p>
           </div>
           <div class="tx-right">
@@ -877,7 +1167,6 @@
   }
 
   function popularSelects() {
-    // Select de Categorias para Orçamento e Lista de Ajustes
     const selOrc = document.getElementById('orcCategoria');
     const listaCadCats = document.getElementById('listaCadCats');
     selOrc.innerHTML = ''; listaCadCats.innerHTML = '';
@@ -913,17 +1202,29 @@
     document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
     el.classList.add('active');
     filtroTxAtual = tipo;
-    renderizarExtrato(getChaveMes(mesAtual));
+    renderizarExtrato();
   }
 
-  // Modal de Lançamento
+  function fecharModal(id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+
+  function abrirModalCartao() {
+    document.getElementById('ccNome').value = '';
+    document.getElementById('ccLimite').value = '';
+    const selConta = document.getElementById('ccContaPadrao');
+    selConta.innerHTML = '';
+    db.contas.forEach(c => selConta.innerHTML += `<option value="${c.cols[1]}">${c.cols[1]}</option>`);
+    document.getElementById('modalCartao').classList.remove('hidden');
+  }
+
   function abrirModalLancamento() {
     document.getElementById('txData').value = new Date().toISOString().split('T')[0];
     document.getElementById('txDesc').value = '';
     document.getElementById('txValor').value = '';
     document.getElementById('txFone').value = '';
+    document.getElementById('txCriarAgendaTask').checked = document.getElementById('cfgAutoSyncAgenda').checked;
 
-    // Preenche contas e cartões
     const selConta = document.getElementById('txConta');
     const selDest = document.getElementById('txContaDestino');
     const selCartao = document.getElementById('txCartao');
@@ -937,17 +1238,13 @@
       selCartao.innerHTML += `<option value="${c.cols[1]}">${c.cols[1]}</option>`;
     });
 
-    selecionarTipoTx('despesa', document.querySelector('#modalLancamento .sub-tab'));
+    selecionarTipoTx('despesa', document.querySelector('#tabsTipoTx .sub-tab'));
     document.getElementById('modalLancamento').classList.remove('hidden');
-  }
-
-  function fecharModalLancamento() {
-    document.getElementById('modalLancamento').classList.add('hidden');
   }
 
   function selecionarTipoTx(tipo, el) {
     tipoTxAtual = tipo;
-    document.querySelectorAll('#modalLancamento .sub-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#tabsTipoTx .sub-tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
 
     const selCat = document.getElementById('txCategoria');
@@ -963,6 +1260,7 @@
     document.getElementById('boxCartao').classList.toggle('hidden', tipo !== 'cartao');
     document.getElementById('boxStatus').classList.toggle('hidden', tipo === 'cartao');
     document.getElementById('boxContatoZap').classList.toggle('hidden', tipo !== 'receita');
+    document.getElementById('boxSyncGoogle').classList.toggle('hidden', modoOffline || tipo === 'transferencia');
     document.getElementById('lblContaOrigem').innerText = tipo === 'transferencia' ? 'Conta de Origem:' : 'Conta:';
   }
 
@@ -971,25 +1269,33 @@
     document.getElementById('boxParcelas').classList.toggle('hidden', rep !== 'parcelada');
   }
 
-  // Calcula em qual mês de fatura uma compra no cartão cai com base no dia de fechamento
   function calcularMesFatura(dataStr, nomeCartao, offsetMeses) {
     const [ano, mes, dia] = dataStr.split('-').map(Number);
     const cartao = db.cartoes.find(c => c.cols[1] === nomeCartao);
-    const diaFech = cartao ? (parseInt(cartao.cols[3]) || 5) : 5;
+    const diaFech = cartao ? (parseInt(cartao.cols[5]) || 5) : 5;
 
     let mesBase = mes - 1 + offsetMeses;
-    if (dia >= diaFech) mesBase += 1; // Comprou no dia ou após fechamento -> próxima fatura
+    if (dia >= diaFech) mesBase += 1;
 
-    const d = new Date(ano, mesBase, 1);
-    return getChaveMes(d);
+    return getChaveMes(new Date(ano, mesBase, 1));
   }
 
-  // Escrita no Google Sheets
+  // Persistência Unificada (Google Sheets OU LocalStorage)
   async function adicionarLinhas(aba, linhas) {
     document.getElementById('loading').classList.remove('hidden');
-    await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!A1:append?valueInputOption=USER_ENTERED`, "POST", {
-      values: linhas
-    });
+    if (modoOffline) {
+      const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+      const key = aba.toLowerCase();
+      if (!localData[key]) localData[key] = [];
+      linhas.forEach(cols => {
+        localData[key].push({ row: localData[key].length + 2, cols });
+      });
+      localStorage.setItem("mfp_local_db", JSON.stringify(localData));
+    } else {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!A1:append?valueInputOption=USER_ENTERED`, "POST", {
+        values: linhas
+      });
+    }
     await carregarTodosDados();
   }
 
@@ -1005,9 +1311,14 @@
     const qtdParcelas = rep === 'parcelada' ? (parseInt(document.getElementById('txParcelas').value) || 2) : (rep === 'fixa' ? 12 : 1);
     const status = tipoTxAtual === 'cartao' ? 'Aberto' : document.getElementById('txStatus').value;
     const fone = document.getElementById('txFone').value.trim();
+    const criarSync = document.getElementById('txCriarAgendaTask').checked && !modoOffline;
 
     if (!desc || !valorTotal || !data) return alert("Preencha descrição, valor e data!");
-    if (tipoTxAtual === 'transferencia' && conta === contaDest) return alert("Escolha contas diferentes para transferência!");
+    if (tipoTxAtual === 'cartao' && !cartao) return alert("Cadastre um cartão de crédito primeiro!");
+    if (tipoTxAtual === 'transferencia' && conta === contaDest) return alert("Escolha contas diferentes!");
+
+    fecharModal('modalLancamento');
+    document.getElementById('loading').classList.remove('hidden');
 
     const valorParcela = rep === 'parcelada' ? (valorTotal / qtdParcelas) : valorTotal;
     const [ano, mes, dia] = data.split('-').map(Number);
@@ -1021,32 +1332,45 @@
       const statusItem = (i === 0) ? status : (tipoTxAtual === 'cartao' ? 'Aberto' : 'Pendente');
       const origem = tipoTxAtual === 'cartao' ? cartao : conta;
       const dest = tipoTxAtual === 'transferencia' ? contaDest : '';
+      const tituloItem = qtdParcelas > 1 ? `${desc} (${infoParcela})` : desc;
+
+      let syncId = "";
+      if (criarSync && (statusItem === "Pendente" || i > 0)) {
+        syncId = await criarEventoAgendaETask(tituloItem, valorParcela, dataParcela, tipoTxAtual);
+      }
 
       linhas.push([
         `${Date.now()}-${i + 1}`, tipoTxAtual, desc, valorParcela.toFixed(2),
         dataParcela, mesFatura, tipoTxAtual === 'transferencia' ? 'Transferência' : cat,
-        origem, dest, statusItem, infoParcela, fone
+        origem, dest, statusItem, infoParcela, fone, syncId
       ]);
     }
 
-    fecharModalLancamento();
     await adicionarLinhas("Lancamentos", linhas);
-    mostrarToast("Lançamento registrado!");
+    mostrarToast(criarSync ? "Salvo + Agendado no Google!" : "Lançamento salvo!");
   }
 
   async function efetivarLancamento(row) {
     document.getElementById('loading').classList.remove('hidden');
-    await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!J${row}?valueInputOption=USER_ENTERED`, "PUT", {
-      values: [["Efetivado"]]
-    });
+    if (modoOffline) {
+      const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+      const item = localData.lancamentos.find(x => x.row === row);
+      if (item) item.cols[9] = "Efetivado";
+      localStorage.setItem("mfp_local_db", JSON.stringify(localData));
+    } else {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!J${row}?valueInputOption=USER_ENTERED`, "PUT", {
+        values: [["Efetivado"]]
+      });
+    }
     mostrarToast("Lançamento efetivado!");
     await carregarTodosDados();
   }
 
-  async function pagarFaturaCartao(nomeCartao, valorFatura) {
+  async function pagarFaturaCartao(nomeCartao, valorFatura, contaPadrao) {
     if (db.contas.length === 0) return alert("Cadastre uma conta antes de pagar a fatura!");
     const nomesContas = db.contas.map((c, idx) => `${idx + 1} - ${c.cols[1]}`).join('\n');
-    const escolha = prompt(`Pagar fatura de ${formatarMoeda(valorFatura)} com qual conta?\nDigite o número:\n${nomesContas}`, "1");
+    const padraoIdx = Math.max(1, db.contas.findIndex(c => c.cols[1] === contaPadrao) + 1);
+    const escolha = prompt(`Pagar fatura de ${formatarMoeda(valorFatura)} com qual conta?\n${nomesContas}`, String(padraoIdx));
     if (!escolha) return;
 
     const idxConta = parseInt(escolha) - 1;
@@ -1055,27 +1379,34 @@
 
     document.getElementById('loading').classList.remove('hidden');
 
-    // 1. Marca os itens da fatura deste mês como "Pago"
-    const updates = [];
-    db.lancamentos.forEach(l => {
-      if (l.cols[1] === "cartao" && l.cols[7] === nomeCartao && l.cols[5] === chaveMesSel && l.cols[9] !== "Pago") {
-        updates.push({ range: `Lancamentos!J${l.row}`, values: [["Pago"]] });
-      }
-    });
-
-    if (updates.length > 0) {
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
-        valueInputOption: "USER_ENTERED",
-        data: updates
+    if (modoOffline) {
+      const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+      localData.lancamentos.forEach(l => {
+        if (l.cols[1] === "cartao" && l.cols[7] === nomeCartao && l.cols[5] === chaveMesSel && l.cols[9] !== "Pago") {
+          l.cols[9] = "Pago";
+        }
       });
+      localStorage.setItem("mfp_local_db", JSON.stringify(localData));
+    } else {
+      const updates = [];
+      db.lancamentos.forEach(l => {
+        if (l.cols[1] === "cartao" && l.cols[7] === nomeCartao && l.cols[5] === chaveMesSel && l.cols[9] !== "Pago") {
+          updates.push({ range: `Lancamentos!J${l.row}`, values: [["Pago"]] });
+        }
+      });
+      if (updates.length > 0) {
+        await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
+          valueInputOption: "USER_ENTERED",
+          data: updates
+        });
+      }
     }
 
-    // 2. Lança a despesa efetivada na conta bancária escolhida
     const hoje = new Date().toISOString().split('T')[0];
     await adicionarLinhas("Lancamentos", [[
       Date.now().toString(), "despesa", `Fatura ${nomeCartao} (${chaveMesSel})`,
       valorFatura.toFixed(2), hoje, chaveMesSel, "Cartão de Crédito",
-      contaEscolhida, "", "Efetivado", "1/1", ""
+      contaEscolhida, "", "Efetivado", "1/1", "", ""
     ]]);
 
     mostrarToast("Fatura paga com sucesso!");
@@ -1084,23 +1415,27 @@
   // Cadastros Auxiliares
   async function salvarConta() {
     const nome = document.getElementById('contaNome').value.trim();
+    const tipo = document.getElementById('contaTipo').value;
     const saldo = parseFloat(document.getElementById('contaSaldo').value) || 0;
     if (!nome) return alert("Digite o nome da conta!");
-    await adicionarLinhas("Contas", [[Date.now().toString(), nome, saldo]]);
+    await adicionarLinhas("Contas", [[Date.now().toString(), nome, tipo, saldo]]);
     document.getElementById('contaNome').value = '';
     mostrarToast("Conta adicionada!");
   }
 
   async function salvarCartao() {
-    const nome = document.getElementById('cartaoNome').value.trim();
-    const limite = parseFloat(document.getElementById('cartaoLimite').value) || 0;
-    const fech = parseInt(document.getElementById('cartaoFech').value) || 5;
-    const venc = parseInt(document.getElementById('cartaoVenc').value) || 12;
-    if (!nome || !limite) return alert("Preencha nome e limite do cartão!");
-    await adicionarLinhas("Cartoes", [[Date.now().toString(), nome, limite, fech, venc]]);
-    document.getElementById('cartaoNome').value = '';
-    document.getElementById('cartaoLimite').value = '';
-    mostrarToast("Cartão cadastrado!");
+    const nome = document.getElementById('ccNome').value.trim();
+    const bandeira = document.getElementById('ccBandeira').value;
+    const cor = document.getElementById('ccCor').value;
+    const limite = parseFloat(document.getElementById('ccLimite').value) || 0;
+    const fech = parseInt(document.getElementById('ccFechamento').value) || 5;
+    const venc = parseInt(document.getElementById('ccVencimento').value) || 12;
+    const contaPadrao = document.getElementById('ccContaPadrao').value;
+
+    if (!nome || !limite) return alert("Preencha o nome e o limite total do cartão!");
+    fecharModal('modalCartao');
+    await adicionarLinhas("Cartoes", [[Date.now().toString(), nome, bandeira, cor, limite, fech, venc, contaPadrao]]);
+    mostrarToast("Cartão de crédito adicionado!");
   }
 
   async function salvarCategoria() {
@@ -1115,24 +1450,65 @@
   async function salvarOrcamento() {
     const cat = document.getElementById('orcCategoria').value;
     const val = parseFloat(document.getElementById('orcValor').value);
-    if (!cat || !val) return alert("Selecione a categoria e o valor limite!");
+    if (!cat || !val) return alert("Selecione a categoria e o limite!");
     await adicionarLinhas("Orcamentos", [[Date.now().toString(), cat, val]]);
     document.getElementById('orcValor').value = '';
-    mostrarToast("Meta definida!");
+    mostrarToast("Orçamento salvo!");
   }
 
   async function deletarLinha(aba, row) {
     if (!confirm("Excluir este registro permanentemente?")) return;
     document.getElementById('loading').classList.remove('hidden');
-    await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, "POST", {
-      requests: [{
-        deleteDimension: {
-          range: { sheetId: sheetIdsMap[aba], dimension: "ROWS", startIndex: row - 1, endIndex: row }
-        }
-      }]
-    });
+
+    if (modoOffline) {
+      const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+      const key = aba.toLowerCase();
+      localData[key] = (localData[key] || []).filter(x => x.row !== row);
+      localData[key].forEach((x, idx) => x.row = idx + 2);
+      localStorage.setItem("mfp_local_db", JSON.stringify(localData));
+    } else {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, "POST", {
+        requests: [{
+          deleteDimension: {
+            range: { sheetId: sheetIdsMap[aba], dimension: "ROWS", startIndex: row - 1, endIndex: row }
+          }
+        }]
+      });
+    }
     mostrarToast("Registro excluído!");
     await carregarTodosDados();
+  }
+
+  // Preferências & Exportação
+  function salvarPreferenciasLocal() {
+    localStorage.setItem("mfp_auto_sync_agenda", document.getElementById('cfgAutoSyncAgenda').checked);
+    localStorage.setItem("mfp_hora_lembrete", document.getElementById('cfgHoraLembrete').value);
+    mostrarToast("Preferências salvas!");
+  }
+
+  function carregarPreferenciasLocal() {
+    document.getElementById('cfgAutoSyncAgenda').checked = localStorage.getItem("mfp_auto_sync_agenda") === "true";
+    const hora = localStorage.getItem("mfp_hora_lembrete");
+    if (hora) document.getElementById('cfgHoraLembrete').value = hora;
+  }
+
+  function exportarCSV() {
+    let csv = "ID;Tipo;Descricao;Valor;Data;MesFatura;Categoria;ContaOuCartao;ContaDestino;Status;Parcela\n";
+    db.lancamentos.forEach(l => {
+      csv += l.cols.slice(0, 11).join(";") + "\n";
+    });
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Minhas_Financas_${getChaveMes(mesAtual)}.csv`;
+    link.click();
+  }
+
+  function resetarBancoDados() {
+    if (!confirm("Isso desvinculará a planilha atual para criar uma nova estrutura limpa. Continuar?")) return;
+    localStorage.removeItem("mfp_gdrive_sheet_id");
+    localStorage.removeItem("mfp_local_db");
+    location.reload();
   }
 </script>
 </body>
