@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#090e1a">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>Minhas Finanças Pro</title>
+  <title>AppFinance</title>
   <link id="manifest-link" rel="manifest">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
@@ -569,6 +569,10 @@
     .itens-tx{font-size:.74rem;color:var(--muted);margin-top:6px;line-height:1.55}
     nav.bottom-nav .nav-btn{font-size:.6rem;padding:4px 1px}
     @media (max-width:520px){.header-left h1{font-size:.92rem}#perfilNome{max-width:54px}.btn-top{padding:6px 8px}}
+
+    .box-share{background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:14px;margin:12px 0}
+    .sb-av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0}
+    .sb-ini{background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem}
   </style>
 </head>
 <body>
@@ -579,7 +583,7 @@
 <div id="telaLogin">
   <div class="login-card">
     <div style="font-size:3.2rem; margin-bottom:10px;">📊</div>
-    <h2 style="margin:0 0 8px; font-size:1.45rem;">Minhas Finanças Pro</h2>
+    <h2 style="margin:0 0 8px; font-size:1.45rem;">AppFinance</h2>
     <p style="color:var(--muted); font-size:0.88rem; line-height:1.5; margin:0;">
       Gestão financeira pessoal completa com banco de dados automático no <strong>Google Drive</strong> e lembretes integrados no <strong>Google Agenda</strong> e <strong>Google Tasks</strong>.
     </p>
@@ -597,9 +601,16 @@
 
   <!-- SIDEBAR DESKTOP -->
   <aside class="sidebar">
-    <div class="sidebar-brand">
-      <span>📊</span>
-      <span>Minhas Finanças</span>
+    <div class="sidebar-brand" style="flex-direction:column; align-items:flex-start; gap:6px; cursor:pointer;" onclick="editarNome()" title="Toque para alterar o nome">
+      <div style="display:flex; align-items:center; gap:10px; width:100%;">
+        <img id="sbFoto" class="sb-av hidden" alt="" referrerpolicy="no-referrer"><span id="sbIni" class="sb-av sb-ini"></span>
+        <div style="min-width:0;">
+          <div id="sbNome" style="font-size:0.95rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+          <div id="sbStatus" style="font-size:0.72rem; font-weight:600;"></div>
+        </div>
+      </div>
+      <div id="sbSync" style="font-size:0.7rem; color:var(--muted); font-weight:400;"></div>
+      <div style="font-size:0.7rem; color:var(--muted); font-weight:400;">AppFinance <b id="sbVersao"></b></div>
     </div>
     <button class="side-btn active" data-target="telaResumo" onclick="navegar('telaResumo')">🏠 Visão Geral</button>
     <button class="side-btn" data-target="telaTransacoes" onclick="navegar('telaTransacoes')">↕️ Extrato & Lançamentos</button>
@@ -616,7 +627,7 @@
     <header>
       <div class="header-inner">
         <div class="header-left">
-          <h1>📊 Finanças <span id="badgeModoApp" class="badge-mode">CLOUD</span></h1>
+          <h1>📊 AppFinance <span id="badgeModoApp" class="badge-mode">CLOUD</span></h1>
         </div>
 
         <div class="month-nav">
@@ -854,6 +865,7 @@
             <span>Status da Conexão</span>
             <strong id="infoStatusConexao" style="color:var(--green);">Conectado ao Google Drive, Agenda e Tasks</strong>
           </div>
+          <div class="mini-stat" style="margin-bottom:10px;"><span>Versão do aplicativo</span><strong id="infoVersao"></strong></div>
           <label>Onde criar lembretes de vencimento?</label>
           <select id="cfgIntegracao" onchange="salvarPreferenciasLocal()">
             <option value="agenda">Google Agenda</option>
@@ -867,7 +879,7 @@
           <label>Horário padrão dos lembretes na Agenda:</label>
           <input type="time" id="cfgHoraLembrete" value="09:00" onchange="salvarPreferenciasLocal()">
 
-          <div class="section-card" style="background:var(--bg);">
+          <div class="box-share">
             <strong>👥 Compartilhar esta conta</strong>
             <p style="color:var(--muted); font-size:0.78rem; margin:4px 0 8px;">Cada lançamento fica identificado com o nome de quem o criou.</p>
             <label>Código da conta (envie para quem vai usar junto):</label>
@@ -921,11 +933,11 @@
 
   <div id="modalListaNova" class="modal-overlay hidden">
     <div class="modal-box">
-      <div class="modal-header"><h3 style="margin:0; font-size:1.05rem;">🛒 Nova Lista de Compras</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalListaNova')">✕</button></div>
+      <div class="modal-header"><h3 id="lnTitulo" style="margin:0; font-size:1.05rem;">🛒 Nova Lista de Compras</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalListaNova')">✕</button></div>
       <label>Nome da lista:</label><input type="text" id="lnNome" placeholder="Ex: Mercado do mês, Feira, Farmácia">
       <label>Categoria:</label><select id="lnCat"></select>
       <label>Conta que será debitada:</label><select id="lnConta"></select>
-      <button class="btn-primary" style="background:var(--green);" onclick="salvarLista()">Criar e adicionar itens</button>
+      <button class="btn-primary" style="background:var(--green);" id="lnBtn" onclick="salvarLista()">Criar e adicionar itens</button>
     </div>
   </div>
 
@@ -940,11 +952,15 @@
           <div><label>Quantidade:</label><input type="text" id="liQtd" inputmode="decimal" value="1"></div>
           <div><label>Valor unitário (R$):</label><input type="text" id="liValor" inputmode="decimal" placeholder="0,00" onkeydown="if(event.key==='Enter')addItemLista()"></div>
         </div>
-        <button class="btn-primary" style="background:#334155;" onclick="addItemLista()">+ Adicionar item à lista</button>
+        <button class="btn-primary" style="background:#334155;" id="btnAddItem" onclick="addItemLista()">+ Adicionar item à lista</button>
       </div>
       <div style="display:flex; justify-content:space-between; margin-top:12px;"><strong>Total da compra</strong><strong id="ldTotal" style="color:var(--red);">R$ 0,00</strong></div>
       <button class="btn-primary" style="background:var(--green);" onclick="efetivarLista()">✔ Efetivar compra (lançar no extrato)</button>
-      <button class="btn-mini" style="background:#334155; color:#fca5a5; margin-top:10px;" onclick="excluirListaAtual()">🗑 Excluir lista</button>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
+        <button class="btn-mini" style="background:var(--blue); color:#fff;" onclick="editarListaAtual()">✏️ Editar lista</button>
+        <button class="btn-mini" style="background:#334155; color:#fff;" onclick="duplicarLista(listaRow)">📄 Duplicar</button>
+        <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="excluirListaAtual()">🗑 Excluir lista</button>
+      </div>
     </div>
   </div>
 
@@ -1172,9 +1188,12 @@
     listas: []       // [ID, Nome, Categoria, Conta, Status, ItensJSON, Criada]
   };
 
+  // Versão do app — somar +1 a cada atualização
+  const APP_VERSION = 7;
+
   // PWA Manifest
   const manifestData = {
-    name: "Minhas Finanças Pro", short_name: "Finanças", start_url: ".", display: "standalone",
+    name: "AppFinance", short_name: "AppFinance", start_url: ".", display: "standalone",
     background_color: "#090e1a", theme_color: "#090e1a",
     icons: [{
       src: "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#1e293b"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="240" fill="#10b981" font-family="sans-serif" font-weight="bold">R$</text></svg>'),
@@ -1419,7 +1438,7 @@
         meta.sheets.forEach(s => { sheetIdsMap[s.properties.title] = s.properties.sheetId; });
         await garantirAbas();
 
-        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:H&ranges=Categorias!A2:C&ranges=Lancamentos!A2:O&ranges=Orcamentos!A2:C&ranges=Metas!A2:E&ranges=Devedores!A2:I&ranges=ItensRapidos!A2:D&ranges=Listas!A2:G";
+        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:I&ranges=Categorias!A2:C&ranges=Lancamentos!A2:O&ranges=Orcamentos!A2:C&ranges=Metas!A2:E&ranges=Devedores!A2:I&ranges=ItensRapidos!A2:D&ranges=Listas!A2:G";
         const valRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
         const valData = await valRes.json();
 
@@ -1434,6 +1453,7 @@
         db.listas = ((valData.valueRanges[8] || {}).values || []).map((r, i) => ({ row: i + 2, cols: r }));
       }
       sanitizarDb();
+      localStorage.setItem('mfp_last_sync', new Date().toISOString());
       renderizarTudo();
     } catch (e) {
       console.error(e);
@@ -1448,7 +1468,7 @@
     const hora = document.getElementById('cfgHoraLembrete').value || "09:00";
     const prefixo = tipo === "receita" ? "💰 Receber:" : "💸 Pagar:";
     const summary = `${prefixo} ${titulo} (${formatarMoeda(valor)})`;
-    const description = `Lançamento gerado pelo app Minhas Finanças Pro.\nValor: ${formatarMoeda(valor)}\nTipo: ${tipo.toUpperCase()}`;
+    const description = `Lançamento gerado pelo AppFinance.\nValor: ${formatarMoeda(valor)}\nTipo: ${tipo.toUpperCase()}`;
 
     let syncIds = [];
     const modo = integ();
@@ -1888,6 +1908,7 @@
             </div>
           </div>
           <div class="section-card" style="margin-top:-6px;">
+            <button class="btn-primary" style="background:${c.cols[8] ? '#334155' : 'var(--blue)'}; margin-top:0; margin-bottom:10px;" onclick="alternarLembreteFatura(${c.row})">${c.cols[8] ? '🔕 Desativar lembrete da fatura (Agenda)' : '🔔 Ativar lembrete da fatura no Google Agenda'}</button>
             ${valorAberto > 0 ? `<button class="btn-primary" style="background:var(--green); margin-top:0; margin-bottom:10px;" onclick="pagarFaturaCartao('${nome}', ${valorAberto}, '${info.contaPadrao}')">✔ Pagar Fatura (${formatarMoeda(valorAberto)})</button>` : '<p style="color:var(--green); font-size:0.8rem; margin:0 0 8px;">✔ Fatura quitada ou sem lançamentos em aberto.</p>'}
             ${htmlItensFat || '<p style="color:var(--muted); font-size:0.8rem; margin:0;">Nenhuma compra nesta fatura.</p>'}
           </div>
@@ -1941,6 +1962,7 @@
     renderizarUsuarios();
     atualizarCompartilhar();
     atualizarBadgeOffline();
+    atualizarInfoApp();
   }
 
   function renderizarEvolucao() {
@@ -1963,7 +1985,7 @@
     const atr = db.lancamentos.filter(l => l.cols[9] === 'Pendente' && (l.cols[4] || '') < hoje && ['receita', 'despesa'].includes(l.cols[1]));
     const aPagar = atr.filter(l => l.cols[1] === 'despesa').reduce((a, l) => a + (num(l.cols[3]) || 0), 0);
     document.getElementById('dashAtrasados').innerHTML = atr.length === 0 ? '' :
-      `<div class="alerta-atraso" onclick="navegar('telaTransacoes')">⚠️ ${atr.length} lançamento(s) vencido(s) e pendente(s)${aPagar > 0 ? ' • ' + formatarMoeda(aPagar) + ' a pagar' : ''} — toque para ver</div>`;
+      `<div class="alerta-atraso" onclick="abrirVisao('atrasados')">⚠️ ${atr.length} lançamento(s) vencido(s) e pendente(s)${aPagar > 0 ? ' • ' + formatarMoeda(aPagar) + ' a pagar' : ''} — toque para ver</div>`;
   }
 
   function renderizarMetas() {
@@ -2039,6 +2061,25 @@
     img.onerror = () => { img.classList.add('hidden'); ini.classList.remove('hidden'); };
     if (foto) { img.src = foto; img.classList.remove('hidden'); ini.classList.add('hidden'); }
     else { img.classList.add('hidden'); ini.classList.remove('hidden'); }
+    const sf = document.getElementById('sbFoto'), si = document.getElementById('sbIni');
+    if (sf) {
+      document.getElementById('sbNome').innerText = n || 'Definir nome';
+      si.innerText = (n || '?').charAt(0).toUpperCase();
+      sf.onerror = () => { sf.classList.add('hidden'); si.classList.remove('hidden'); };
+      if (foto) { sf.src = foto; sf.classList.remove('hidden'); si.classList.add('hidden'); }
+      else { sf.classList.add('hidden'); si.classList.remove('hidden'); }
+    }
+  }
+  function atualizarInfoApp() {
+    const st = document.getElementById('sbStatus');
+    if (!st) return;
+    const ts = localStorage.getItem('mfp_last_sync');
+    const d = ts ? new Date(ts) : null, p2 = x => String(x).padStart(2, '0');
+    const fmt = d ? `${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} ${p2(d.getHours())}:${p2(d.getMinutes())}` : '—';
+    if (modoOffline) { st.innerText = '📴 Modo local (sem sincronização)'; st.style.color = 'var(--amber)'; document.getElementById('sbSync').innerText = 'Última gravação: ' + fmt; }
+    else { st.innerText = '☁️ Sincronizado com o Google'; st.style.color = 'var(--green)'; document.getElementById('sbSync').innerText = 'Última sincronização: ' + fmt; }
+    document.getElementById('sbVersao').innerText = 'v' + APP_VERSION;
+    const iv = document.getElementById('infoVersao'); if (iv) iv.innerText = 'AppFinance v' + APP_VERSION;
   }
   function editarNome() {
     const n = prompt("Seu nome:", localStorage.getItem("mfp_user_name") || "");
@@ -2046,7 +2087,7 @@
   }
 
   // ----- Listas de compras -----
-  let listaRow = null;
+  let listaRow = null, liEditIdx = null, listaEditRow = null, listaEditVoltar = false;
   function fmtQ(q) { return String(num(q)).replace('.', ','); }
   function itensLista(l) { try { const a = JSON.parse(l.cols[5] || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
   function totalLista(l) { return r2(itensLista(l).reduce((a, i) => a + num(i[1]) * num(i[2]), 0)); }
@@ -2056,11 +2097,20 @@
     if (!Array.isArray(a) || !a.length) return '';
     return '<div class="itens-tx">' + a.map(i => `• ${i[0]} quant=${fmtQ(i[1])} <span style="opacity:.7">(${formatarMoeda(num(i[1]) * num(i[2]))})</span>`).join('<br>') + '</div>';
   }
-  function abrirModalListaNova() {
-    document.getElementById('lnNome').value = '';
+  function abrirModalListaNova(editRow, voltar) {
+    listaEditRow = editRow || null; listaEditVoltar = !!voltar;
+    const l = listaEditRow ? db.listas.find(x => x.row === listaEditRow) : null;
+    document.getElementById('lnTitulo').innerText = l ? '✏️ Editar Lista' : '🛒 Nova Lista de Compras';
+    document.getElementById('lnBtn').innerText = l ? 'Salvar alterações' : 'Criar e adicionar itens';
     document.getElementById('lnCat').innerHTML = db.categorias.filter(c => c.cols[1] === 'despesa').map(c => `<option value="${c.cols[2]}">${c.cols[2]}</option>`).join('');
     document.getElementById('lnConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    document.getElementById('lnNome').value = l ? l.cols[1] : '';
+    if (l) { document.getElementById('lnCat').value = l.cols[2]; document.getElementById('lnConta').value = l.cols[3]; }
     document.getElementById('modalListaNova').classList.remove('hidden');
+  }
+  function editarListaAtual() {
+    document.getElementById('modalListaDet').classList.add('hidden');
+    abrirModalListaNova(listaRow, true);
   }
   async function salvarLista() {
     const nome = document.getElementById('lnNome').value.trim();
@@ -2068,14 +2118,49 @@
     const conta = document.getElementById('lnConta').value;
     if (!nome) return alert("Dê um nome para a lista!");
     if (!conta) return alert("Cadastre uma conta primeiro!");
+    if (listaEditRow) {
+      const row = listaEditRow, voltar = listaEditVoltar;
+      listaEditRow = null;
+      fecharModal('modalListaNova');
+      document.getElementById('loading').classList.remove('hidden');
+      await atualizarCelula("Listas", row, "B", 1, nome);
+      await atualizarCelula("Listas", row, "C", 2, cat);
+      await atualizarCelula("Listas", row, "D", 3, conta);
+      mostrarToast("Lista atualizada!");
+      await carregarTodosDados();
+      if (voltar) abrirLista(row);
+      return;
+    }
     const id = Date.now().toString();
     fecharModal('modalListaNova');
     await adicionarLinhas("Listas", [[id, nome, cat, conta, 'Aberta', '[]', hojeISO()]]);
     const l = db.listas.find(x => String(x.cols[0]) === id);
     if (l) abrirLista(l.row);
   }
+  async function duplicarLista(row) {
+    const l = db.listas.find(x => x.row === row);
+    if (!l) return;
+    document.getElementById('modalListaDet').classList.add('hidden');
+    const id = Date.now().toString();
+    await adicionarLinhas("Listas", [[id, `${l.cols[1]} (cópia)`, l.cols[2], l.cols[3], 'Aberta', l.cols[5] || '[]', hojeISO()]]);
+    mostrarToast("Lista duplicada!");
+    const n = db.listas.find(x => String(x.cols[0]) === id);
+    if (n) abrirLista(n.row);
+  }
+  function editarItemLista(k) {
+    const l = db.listas.find(x => x.row === listaRow);
+    const it = l && itensLista(l)[k];
+    if (!it) return;
+    document.getElementById('liDesc').value = it[0];
+    document.getElementById('liQtd').value = String(it[1]).replace('.', ',');
+    document.getElementById('liValor').value = String(it[2]).replace('.', ',');
+    liEditIdx = k;
+    document.getElementById('btnAddItem').innerText = '💾 Salvar alteração do item';
+    document.getElementById('liDesc').focus();
+  }
   function abrirLista(row) {
-    listaRow = row;
+    listaRow = row; liEditIdx = null;
+    document.getElementById('btnAddItem').innerText = '+ Adicionar item à lista';
     document.getElementById('modalListaDet').classList.remove('hidden');
     ['liDesc', 'liValor'].forEach(i => document.getElementById(i).value = '');
     document.getElementById('liQtd').value = 1;
@@ -2094,6 +2179,7 @@
         <div class="row-item">
           <div><strong>${i[0]}</strong><br><small style="color:var(--muted)">quant=${fmtQ(i[1])} × ${formatarMoeda(i[2])}</small></div>
           <div style="display:flex; align-items:center; gap:8px;"><strong>${formatarMoeda(num(i[1]) * num(i[2]))}</strong>
+            <button class="btn-mini" style="background:#334155; color:#fff;" onclick="editarItemLista(${k})">✏️</button>
             <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="removerItemLista(${k})">✕</button></div>
         </div>`).join('');
     document.getElementById('ldTotal').innerText = formatarMoeda(totalLista(l));
@@ -2109,7 +2195,9 @@
     const qtd = num(document.getElementById('liQtd').value) || 1;
     const valor = num(document.getElementById('liValor').value);
     if (!l || !desc || !valor) return alert("Informe a descrição e o valor do item!");
-    const itens = itensLista(l); itens.push([desc, qtd, valor]);
+    const itens = itensLista(l);
+    if (liEditIdx !== null && itens[liEditIdx]) itens[liEditIdx] = [desc, qtd, valor]; else itens.push([desc, qtd, valor]);
+    liEditIdx = null; document.getElementById('btnAddItem').innerText = '+ Adicionar item à lista';
     ['liDesc', 'liValor'].forEach(i => document.getElementById(i).value = '');
     document.getElementById('liQtd').value = 1;
     document.getElementById('liDesc').focus();
@@ -2118,6 +2206,7 @@
   async function removerItemLista(k) {
     const l = db.listas.find(x => x.row === listaRow);
     if (!l) return;
+    liEditIdx = null; document.getElementById('btnAddItem').innerText = '+ Adicionar item à lista';
     const itens = itensLista(l); itens.splice(k, 1);
     await salvarItensLista(l, itens);
   }
@@ -2146,20 +2235,58 @@
     abertas.forEach(l => {
       const n = itensLista(l).length;
       ab.innerHTML += `
-        <div class="section-card">
+        <div class="section-card" style="cursor:pointer;" onclick="abrirLista(${l.row})">
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
             <div><strong>🛒 ${l.cols[1]}</strong><br><small style="color:var(--muted)">${l.cols[2]} • ${l.cols[3]} • ${n} ${n === 1 ? 'item' : 'itens'}</small></div>
             <strong style="color:var(--red)">${formatarMoeda(totalLista(l))}</strong>
           </div>
-          <div style="display:flex; gap:6px; margin-top:10px;">
-            <button class="btn-mini" style="background:var(--blue); color:#fff;" onclick="abrirLista(${l.row})">Abrir / adicionar itens</button>
-            <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Listas', ${l.row})">✕</button>
+          <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;" onclick="event.stopPropagation()">
+            <button class="btn-mini" style="background:var(--blue); color:#fff;" onclick="abrirLista(${l.row})">🛒 Abrir carrinho</button>
+            <button class="btn-mini" style="background:#334155; color:#fff;" onclick="abrirModalListaNova(${l.row})">✏️ Editar</button>
+            <button class="btn-mini" style="background:#334155; color:#fff;" onclick="duplicarLista(${l.row})">📄 Duplicar</button>
+            <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Listas', ${l.row})">🗑 Excluir</button>
           </div>
         </div>`;
     });
     document.getElementById('listaComprasHist').innerHTML = fim.length === 0 ? '' :
       '<div class="section-card"><div class="section-title"><span>✔ Compras efetivadas</span></div>' +
-      fim.slice(-8).reverse().map(l => `<div class="row-item"><span>${l.cols[1]} <small style="color:var(--muted)">(${(l.cols[6] || '').split('-').reverse().join('/')})</small></span><strong>${formatarMoeda(totalLista(l))}</strong></div>`).join('') + '</div>';
+      fim.slice(-8).reverse().map(l => `<div class="row-item"><span>${l.cols[1]} <small style="color:var(--muted)">(${(l.cols[6] || '').split('-').reverse().join('/')})</small></span><div style="display:flex; align-items:center; gap:6px;"><strong>${formatarMoeda(totalLista(l))}</strong><button class="btn-mini" style="background:#334155; color:#fff;" onclick="duplicarLista(${l.row})">📄 Repetir</button><button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Listas', ${l.row})">✕</button></div></div>`).join('') + '</div>';
+  }
+
+  // ----- Lembrete mensal da fatura (Google Agenda) -----
+  async function alternarLembreteFatura(row) {
+    if (modoOffline) return alert("Entre com sua conta Google para usar lembretes no Google Agenda.");
+    const c = db.cartoes.find(x => x.row === row);
+    if (!c) return;
+    document.getElementById('loading').classList.remove('hidden');
+    try {
+      if (c.cols[8]) {
+        await removerSync(c.cols[8]);
+        await atualizarCelula("Cartoes", row, "I", 8, "");
+        mostrarToast("Lembrete da fatura desativado");
+      } else {
+        const dia = Math.min(parseInt(c.cols[6]) || 10, 28);
+        const hoje = new Date();
+        let dt = new Date(hoje.getFullYear(), hoje.getMonth(), dia);
+        if (dataISO(dt) < hojeISO()) dt = new Date(hoje.getFullYear(), hoje.getMonth() + 1, dia);
+        const hora = localStorage.getItem("mfp_hora_lembrete") || "09:00";
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Sao_Paulo";
+        const fim = String(Math.min(23, parseInt(hora.split(':')[0]) + 1)).padStart(2, '0') + ':' + hora.split(':')[1];
+        const r = await fetchGoogle("https://www.googleapis.com/calendar/v3/calendars/primary/events", "POST", {
+          summary: `💳 Vence a fatura do ${c.cols[1]}`,
+          description: "Lembrete mensal criado pelo AppFinance. Abra o app para ver o valor da fatura.",
+          start: { dateTime: `${dataISO(dt)}T${hora}:00`, timeZone: tz },
+          end: { dateTime: `${dataISO(dt)}T${fim}:00`, timeZone: tz },
+          recurrence: [`RRULE:FREQ=MONTHLY;BYMONTHDAY=${dia}`],
+          reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 1440 }, { method: "popup", minutes: 60 }] }
+        });
+        if (!r.ok) throw new Error(await r.text());
+        const j = await r.json();
+        await atualizarCelula("Cartoes", row, "I", 8, "CAL:" + j.id);
+        mostrarToast("Lembrete mensal da fatura criado na Agenda!");
+      }
+    } catch (e) { alert("Não foi possível alterar o lembrete no Google Agenda."); }
+    await carregarTodosDados();
   }
 
   // ----- Limite do modo gratuito (offline) -----
@@ -2294,9 +2421,9 @@
   }
   function limparVisao() { visaoExtrato = null; renderizarExtrato(); }
   function bannerVisao(v) {
-    const nomes = { receitas: '💰 Receitas recebidas no mês', pagas: '💸 Despesas + faturas pagas no mês', balanco: '⚖️ Balanço mensal (somente pagos)', previsao: '🔮 Previsão do mês (pagos e pendentes)', 'pend:despesa': '⏳ Despesas pendentes', 'pend:receita': '⏳ Receitas pendentes' };
+    const nomes = { receitas: '💰 Receitas recebidas no mês', pagas: '💸 Despesas + faturas pagas no mês', balanco: '⚖️ Balanço mensal (somente pagos)', previsao: '🔮 Previsão do mês (pagos e pendentes)', 'pend:despesa': '⏳ Despesas pendentes', 'pend:receita': '⏳ Receitas pendentes', atrasados: '⚠️ Vencidos e pendentes (todos os meses)' };
     const mes = getChaveMes(mesAtual).split('-').reverse().join('/');
-    return `<div class="alerta-atraso" style="background:var(--blue-soft); border-color:rgba(59,130,246,.35); color:var(--text); display:flex; justify-content:space-between; align-items:center; cursor:default;"><span>${nomes[v] || ''} • ${mes}</span><button class="btn-mini" style="background:#334155; color:#fff;" onclick="limparVisao()">✕ Limpar filtro</button></div>`;
+    return `<div class="alerta-atraso" style="background:var(--blue-soft); border-color:rgba(59,130,246,.35); color:var(--text); display:flex; justify-content:space-between; align-items:center; cursor:default;"><span>${nomes[v] || ''}${v === 'atrasados' ? '' : ' • ' + mes}</span><button class="btn-mini" style="background:#334155; color:#fff;" onclick="limparVisao()">✕ Limpar filtro</button></div>`;
   }
   function htmlVisaoEspecial(v) {
     const mes = getChaveMes(mesAtual);
@@ -2312,6 +2439,17 @@
     const vazio = '<p style="text-align:center; color:var(--muted); padding:24px;">Nenhum lançamento encontrado.</p>';
     const recPagas = L.filter(l => l.cols[1] === 'receita' && l.cols[9] === 'Efetivado').sort(porData);
     const despPagas = L.filter(l => l.cols[1] === 'despesa' && l.cols[9] === 'Efetivado').sort(porData);
+    if (v === 'atrasados') {
+      const hoje = hojeISO();
+      const A = db.lancamentos.filter(l => l.cols[9] === 'Pendente' && (l.cols[4] || '') < hoje && ['despesa', 'receita'].includes(l.cols[1])).sort(porData);
+      const D = A.filter(l => l.cols[1] === 'despesa'), Rc = A.filter(l => l.cols[1] === 'receita');
+      const dias = l => Math.max(1, Math.round((new Date(hoje) - new Date(l.cols[4])) / 86400000));
+      const lp = (l, cor, sinal) => `<div class="row-item"><div><strong style="font-size:0.86rem;">${l.cols[2]}</strong>${usr(l)}<br><small style="color:var(--muted)">${dbr(l)} • venceu há ${dias(l)} dia(s) • ${l.cols[6] || ''} (${l.cols[7] || ''})</small></div><div style="display:flex; align-items:center; gap:8px;"><strong style="color:${cor}; white-space:nowrap;">${sinal} ${formatarMoeda(val(l))}</strong><button class="btn-mini" style="background:var(--green); color:#fff;" onclick="efetivarLancamento(${l.row})">✔</button></div></div>`;
+      if (!A.length) return '<p style="text-align:center; color:var(--muted); padding:24px;">Nenhum lançamento vencido. 🎉</p>';
+      return topo('Total de despesas vencidas', soma(D), 'var(--red)') +
+        (D.length ? `<div class="section-card"><div class="section-title"><span>Despesas pendentes (${D.length})</span></div>${D.map(l => lp(l, 'var(--red)', '−')).join('')}</div>` : '') +
+        (Rc.length ? `<div class="section-card"><div class="section-title"><span>Receitas a receber vencidas (${Rc.length})</span><strong style="color:var(--green)">${formatarMoeda(soma(Rc))}</strong></div>${Rc.map(l => lp(l, 'var(--green)', '+')).join('')}</div>` : '');
+    }
     if (v === 'receitas') return topo('Total recebido no mês', soma(recPagas), 'var(--green)') + (recPagas.length ? recPagas.map(l => linha(l, '+', 'var(--green)')).join('') : vazio);
     if (v === 'pagas') return topo('Total pago no mês', soma(despPagas), 'var(--red)') + (despPagas.length ? despPagas.map(l => linha(l, '−', 'var(--red)')).join('') : vazio);
     if (v === 'balanco') {
@@ -2536,7 +2674,7 @@
     const blob = new Blob([JSON.stringify({ exportadoEm: new Date().toISOString(), db }, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `Backup_Financas_${hojeISO()}.json`;
+    a.download = `Backup_AppFinance_${hojeISO()}.json`;
     a.click();
   }
 
@@ -3043,6 +3181,7 @@
       for (const r of rows) { const x = db.lancamentos.find(y => y.row === r); if (x) await removerSync(x.cols[12]); }
     } else {
       if (!confirm("Excluir este registro permanentemente?")) return;
+      if (aba === 'Cartoes') { const cc = db.cartoes.find(x => x.row === row); if (cc && cc.cols[8]) await removerSync(cc.cols[8]); }
       if (aba === 'Devedores') {
         const dv = db.devedores.find(x => x.row === row);
         if (dv) for (const part of (dv.cols[8] || '').split(';')) await removerSync(part);
@@ -3126,7 +3265,7 @@
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `Minhas_Financas_${getChaveMes(mesAtual)}.csv`;
+    link.download = `AppFinance_${getChaveMes(mesAtual)}.csv`;
     link.click();
   }
 
