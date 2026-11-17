@@ -401,7 +401,7 @@
       padding: 0;
     }
 
-    .fab-rapido{position:fixed;bottom:74px;right:84px;width:56px;height:56px;border-radius:50%;background:var(--amber);color:#1c1300;border:none;font-size:1.6rem;box-shadow:0 8px 22px rgba(245,158,11,.5);cursor:pointer;z-index:35}
+    .fab-rapido { position: fixed; bottom: 74px; right: 84px; width: 56px; height: 56px; border-radius: 50%; background: var(--amber); color: #1c1300; border: none; font-size: 1.6rem; box-shadow: 0 8px 22px rgba(245,158,11,.5); cursor: pointer; z-index: 35; }
 
     nav.bottom-nav {
       position: fixed;
@@ -448,28 +448,28 @@
     #loading { text-align: center; padding: 9px; color: var(--blue); font-size: 0.82rem; font-weight: 600; background: var(--blue-soft); border-radius: 10px; margin-bottom: 12px; }
     #toast { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 0.84rem; font-weight: 700; z-index: 60; display: none; box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
 
-    .evo{display:flex;gap:10px;align-items:flex-end;height:110px}
-    .evo-col{flex:1;text-align:center}
-    .evo-bars{height:90px;display:flex;gap:3px;align-items:flex-end;justify-content:center}
-    .evo-bars i{width:42%;max-width:18px;border-radius:5px 5px 0 0;min-height:2px;}
-    .evo-col small{color:var(--muted);font-size:.68rem}
+    .evo { display: flex; gap: 10px; align-items: flex-end; height: 110px; }
+    .evo-col { flex: 1; text-align: center; }
+    .evo-bars { height: 90px; display: flex; gap: 3px; align-items: flex-end; justify-content: center; }
+    .evo-bars i { width: 42%; max-width: 18px; border-radius: 5px 5px 0 0; min-height: 2px; }
+    .evo-col small { color: var(--muted); font-size: .68rem; }
 
-    .perfil-chip{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:3px 12px 3px 3px;cursor:pointer;max-width:160px}
-    .perfil-chip img,.perfil-chip .ini{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0}
-    .perfil-chip .ini{background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
-    #perfilNome{font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .perfil-chip { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px 3px 3px; cursor: pointer; max-width: 160px; }
+    .perfil-chip img, .perfil-chip .ini { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .perfil-chip .ini { background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .8rem; }
+    #perfilNome { font-size: .78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .box-share{background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:14px;margin:12px 0}
-    .sb-av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0}
-    .sb-ini{background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem}
-    .side-sair{margin-top:6px;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);border-radius:999px;padding:3px 10px;font-size:.7rem;font-weight:600;cursor:pointer}
-    .sidebar-footer{margin-top:auto;border-top:1px solid var(--border);padding-top:12px;font-size:.7rem;color:var(--muted);line-height:1.6}
+    .box-share { background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin: 12px 0; }
+    .sb-av { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .sb-ini { background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; }
+    .side-sair { margin-top: 6px; background: rgba(239,68,68,.15); color: #fca5a5; border: 1px solid rgba(239,68,68,.3); border-radius: 999px; padding: 3px 10px; font-size: .7rem; font-weight: 600; cursor: pointer; }
+    .sidebar-footer { margin-top: auto; border-top: 1px solid var(--border); padding-top: 12px; font-size: .7rem; color: var(--muted); line-height: 1.6; }
 
-    @media (min-width:900px){
-      .fab-rapido{right:94px;bottom:28px}
-      .fab{right:28px;bottom:28px}
-      .sidebar{overflow-y:auto}
-      #perfilChip,.btn-sair-top{display:none!important}
+    @media (min-width:900px) {
+      .fab-rapido { right: 94px; bottom: 28px; }
+      .fab { right: 28px; bottom: 28px; }
+      .sidebar { overflow-y: auto; }
+      #perfilChip, .btn-sair-top { display: none !important; }
     }
   </style>
 </head>
@@ -1365,7 +1365,7 @@
     });
   }
 
-  // --- Compartilhamento e Envio Automático de E-mail via Gmail API ---
+  // --- Compartilhamento e Envio de E-mail via Gmail API ---
   function atualizarCompartilhar() {
     const c = document.getElementById('shCodigo');
     if (!c) return;
@@ -1382,7 +1382,7 @@
     if (!/^\S+@\S+\.\S+$/.test(email)) return alert("Informe um e-mail válido!");
 
     try {
-      // 1. Concede permissão de edição na planilha pelo Drive (sem enviar notificação padrão)
+      // 1. Concede permissão de escrita no Google Drive sem disparar o e-mail padrão do Google
       const r = await fetchGoogle(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions?sendNotificationEmail=false`, "POST", {
         role: "writer",
         type: "user",
@@ -1390,7 +1390,7 @@
       });
       if (!r.ok) throw new Error(await r.text());
 
-      // 2. Monta o e-mail personalizado com o link do app e a chave
+      // 2. Prepara o conteúdo do e-mail com o link do app e a chave da conta
       const linkApp = window.location.href.split('?')[0];
       const assunto = "Convite para editar conta conjunta no AppFinance";
       const corpo = 
@@ -1413,18 +1413,18 @@
         .replace(/\//g, '_')
         .replace(/=+$/, '');
 
-      // 3. Dispara o e-mail utilizando a API do Gmail
+      // 3. Envia o e-mail utilizando a API do Gmail autenticada do usuário
       const gmailRes = await fetchGoogle("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", "POST", {
         raw: rawBase64Url
       });
 
-      if (!gmailRes.ok) throw new Error("Permissão concedida, mas falhou ao enviar o e-mail.");
+      if (!gmailRes.ok) throw new Error("Acesso liberado na planilha, mas falhou ao enviar o e-mail pelo Gmail.");
 
       document.getElementById('shEmail').value = '';
-      mostrarToast(`Convite com o link do app enviado para ${email}!`);
+      mostrarToast(`Convite com link do app enviado para ${email}!`);
     } catch (e) {
       console.error(e);
-      alert("Erro ao enviar o e-mail. Se atualizou o código agora pouco, saia da conta e entre novamente para autorizar o envio de e-mails.");
+      alert("Erro ao enviar convite. Se acabou de atualizar as permissões, saia da conta e entre novamente para autorizar o envio de e-mails.");
     }
   }
 
