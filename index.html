@@ -649,20 +649,20 @@
           </div>
 
           <div class="kpi-grid">
-            <div class="mini-stat">
+            <div class="mini-stat" style="cursor:pointer" onclick="abrirVisao('receitas')">
               <span>Receitas do Mês</span>
               <strong id="dashReceitas" style="color:var(--green)">R$ 0,00</strong>
             </div>
-            <div class="mini-stat">
+            <div class="mini-stat" style="cursor:pointer" onclick="abrirVisao('pagas')">
               <span>Despesas + Faturas</span>
               <strong id="dashDespesas" style="color:var(--red)">R$ 0,00</strong>
             </div>
-            <div class="mini-stat">
+            <div class="mini-stat" style="cursor:pointer" onclick="abrirVisao('balanco')">
               <span>Balanço Mensal</span>
               <strong id="dashBalanco">R$ 0,00</strong>
             </div>
             <!-- Card dinâmico: Previsão Fim do Mês APENAS no mês corrente -->
-            <div class="mini-stat" id="cardPrevisaoMes">
+            <div class="mini-stat" id="cardPrevisaoMes" style="cursor:pointer" onclick="abrirVisao('previsao')">
               <span id="lblPrevisaoMes">Previsão Fim do Mês</span>
               <strong id="dashPrevisao" style="color:var(--blue)">R$ 0,00</strong>
             </div>
@@ -676,6 +676,7 @@
               <div class="section-title"><span>📈 Últimos 6 meses</span><small style="color:var(--muted)"><span style="color:var(--green)">■</span> Receitas <span style="color:var(--red)">■</span> Despesas</small></div>
               <div id="dashEvolucao"></div>
             </div>
+            <div id="dashUsuarios"></div>
             <!-- Despesas por Categoria (Acordeão Clicável) -->
             <div class="section-card">
               <div class="section-title">
@@ -719,6 +720,9 @@
 
       <!-- ABA 2: EXTRATO / TRANSAÇÕES -->
       <div id="telaTransacoes" class="view-section hidden">
+        <div id="extratoBanner" class="hidden"></div>
+        <div id="extratoEspecial"></div>
+        <div id="extratoFiltros">
         <input type="text" id="buscaTx" class="search-box" placeholder="🔍 Buscar por descrição, categoria ou conta..." oninput="renderizarExtrato()">
         <div class="filter-pills">
           <button class="pill active" onclick="filtrarTx('TODOS', this)">Todos</button>
@@ -726,6 +730,8 @@
           <button class="pill" onclick="filtrarTx('despesa', this)">Despesas</button>
           <button class="pill" onclick="filtrarTx('cartao', this)">Cartão</button>
           <button class="pill" onclick="filtrarTx('PENDENTE', this)">Pendentes</button>
+        </div>
+        <select id="filtroUsuario" class="hidden" onchange="renderizarExtrato()"></select>
         </div>
         <div id="listaTransacoes"></div>
       </div>
@@ -861,6 +867,19 @@
           <label>Horário padrão dos lembretes na Agenda:</label>
           <input type="time" id="cfgHoraLembrete" value="09:00" onchange="salvarPreferenciasLocal()">
 
+          <div class="section-card" style="background:var(--bg);">
+            <strong>👥 Compartilhar esta conta</strong>
+            <p style="color:var(--muted); font-size:0.78rem; margin:4px 0 8px;">Cada lançamento fica identificado com o nome de quem o criou.</p>
+            <label>Código da conta (envie para quem vai usar junto):</label>
+            <div style="display:flex; gap:6px;"><input type="text" id="shCodigo" readonly><button class="btn-mini" style="background:#334155; color:#fff;" onclick="copiarCodigoConta()">Copiar</button></div>
+            <label>Convidar por e-mail (conta Google):</label>
+            <input type="email" id="shEmail" placeholder="pessoa@gmail.com">
+            <button class="btn-primary" style="background:var(--blue);" onclick="convidarUsuario()">Enviar convite</button>
+            <label>Usar a conta compartilhada de outra pessoa:</label>
+            <input type="text" id="shEntrar" placeholder="Cole o código ou o link da planilha">
+            <button class="btn-primary" style="background:#334155;" onclick="entrarContaCompartilhada()">Entrar na conta compartilhada</button>
+            <button id="btnVoltarMinha" class="btn-mini hidden" style="background:#334155; color:#fff; margin-top:8px;" onclick="voltarMinhaConta()">↩ Voltar para a minha conta</button>
+          </div>
           <button class="btn-primary" style="background:#334155;" onclick="exportarCSV()">📥 Exportar Planilha Completa (CSV)</button>
           <button class="btn-primary" style="background:#334155;" onclick="exportarBackup()">💾 Baixar Backup Completo (JSON)</button>
           <button class="btn-primary" style="background:#7f1d1d;" onclick="resetarBancoDados()">⚠️ Recriar Estrutura do Banco</button>
@@ -1061,8 +1080,8 @@
         <button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalCartao')">✕</button>
       </div>
 
-      <label>Nome do Cartão:</label>
-      <input type="text" id="ccNome" placeholder="Ex: Nubank Ultravioleta, Inter, Itaú">
+      <label>Nome do banco:</label>
+      <input type="text" id="ccNome" placeholder="Ex: Nubank, Itaú, Inter, Bradesco">
 
       <div class="grid-2">
         <div>
@@ -1076,14 +1095,11 @@
           </select>
         </div>
         <div>
-          <label>Cor do Cartão:</label>
-          <select id="ccCor">
-            <option value="linear-gradient(135deg, #6d28d9, #4c1d95)">Roxo (Nubank)</option>
-            <option value="linear-gradient(135deg, #ea580c, #9a3412)">Laranja (Inter/Itaú)</option>
-            <option value="linear-gradient(135deg, #0284c7, #1e3a8a)">Azul (Caixa/BB)</option>
-            <option value="linear-gradient(135deg, #1e293b, #090d16)">Black (Carbon)</option>
-            <option value="linear-gradient(135deg, #059669, #064e3b)">Verde (Sicredi)</option>
-          </select>
+          <label>Cor do cartão:</label>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <input type="color" id="ccCor" value="#6d28d9" style="width:54px; height:42px; padding:2px;">
+            <button type="button" onclick="document.getElementById('ccCor').value='#6d28d9'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#6d28d9;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#ea580c'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#ea580c;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#0284c7'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#0284c7;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#1e293b'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#1e293b;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#059669'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#059669;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#dc2626'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#dc2626;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#db2777'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#db2777;cursor:pointer;"></button>
+          </div>
         </div>
       </div>
 
@@ -1127,7 +1143,8 @@
     "https://www.googleapis.com/auth/calendar.events",
     "https://www.googleapis.com/auth/tasks",
     "openid",
-    "https://www.googleapis.com/auth/userinfo.profile"
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/spreadsheets"
   ].join(" ");
 
   let tokenClient;
@@ -1217,6 +1234,7 @@
   }
 
   function entrarModoLocal() {
+    if (localStorage.getItem("mfp_offline_locked") === "true") return alert("🔒 O limite da versão gratuita (3 transações sem conta) já foi atingido. Entre com sua conta Google para continuar.");
     modoOffline = true;
     localStorage.setItem("mfp_offline_mode", "true");
     if (!localStorage.getItem("mfp_local_db")) {
@@ -1251,6 +1269,7 @@
     localStorage.removeItem("mfp_offline_mode");
     localStorage.removeItem("mfp_user_name");
     localStorage.removeItem("mfp_user_photo");
+    localStorage.removeItem("mfp_own_sheet_id");
     accessToken = ""; spreadsheetId = ""; modoOffline = false;
     document.getElementById('appPrincipal').classList.add('hidden');
     document.getElementById('telaLogin').classList.remove('hidden');
@@ -1352,6 +1371,7 @@
   }
 
   function iniciarAppLogado() {
+    if (modoOffline && localStorage.getItem("mfp_offline_locked") === "true") { sairConta(); aplicarBloqueioLogin(); return; }
     document.getElementById('telaLogin').classList.add('hidden');
     document.getElementById('appPrincipal').classList.remove('hidden');
 
@@ -1370,6 +1390,10 @@
 
     carregarTodosDados();
     carregarNomeUsuario();
+    if (modoOffline && !sessionStorage.getItem('mfp_aviso_free')) {
+      sessionStorage.setItem('mfp_aviso_free', '1');
+      setTimeout(() => alert("ℹ️ Versão gratuita (modo local, sem conta): você pode registrar até 3 transações. Depois disso o app será bloqueado e pedirá o login com o Google para continuar."), 700);
+    }
   }
 
   async function carregarTodosDados() {
@@ -1395,7 +1419,7 @@
         meta.sheets.forEach(s => { sheetIdsMap[s.properties.title] = s.properties.sheetId; });
         await garantirAbas();
 
-        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:H&ranges=Categorias!A2:C&ranges=Lancamentos!A2:N&ranges=Orcamentos!A2:C&ranges=Metas!A2:E&ranges=Devedores!A2:I&ranges=ItensRapidos!A2:D&ranges=Listas!A2:G";
+        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:H&ranges=Categorias!A2:C&ranges=Lancamentos!A2:O&ranges=Orcamentos!A2:C&ranges=Metas!A2:E&ranges=Devedores!A2:I&ranges=ItensRapidos!A2:D&ranges=Listas!A2:G";
         const valRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
         const valData = await valRes.json();
 
@@ -1498,8 +1522,8 @@
     db.metas.forEach(r => { r.cols[4] = dt(r.cols[4]); });
   }
   async function garantirAbas() {
-    if (!localStorage.getItem('mfp_hdrN')) {
-      try { await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!N1?valueInputOption=RAW`, "PUT", { values: [["Itens"]] }); localStorage.setItem('mfp_hdrN', '1'); } catch (e) {}
+    if (!localStorage.getItem('mfp_hdrNO' + spreadsheetId)) {
+      try { await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!N1:O1?valueInputOption=RAW`, "PUT", { values: [["Itens", "Usuario"]] }); localStorage.setItem('mfp_hdrNO' + spreadsheetId, '1'); } catch (e) {}
     }
     const abas = [
       ["Metas", ["ID", "Nome", "Alvo", "Guardado", "Prazo"]],
@@ -1762,14 +1786,14 @@
       const [id, tipo, desc, val, data, mesFat, cat, conta] = l.cols;
       const dataBr = data ? data.split('-').reverse().join('/') : '';
       dashPend.innerHTML += `
-        <div class="row-item">
+        <div class="row-item" style="cursor:pointer" onclick="abrirVisao('pend:${tipo}')">
           <div>
             <strong style="font-size:0.86rem;">${desc}</strong><br>
             <small style="color:var(--muted);">${dataBr} • ${cat} (${conta})</small>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <strong style="font-size:0.86rem; color:${tipo === 'receita' ? 'var(--green)' : 'var(--red)'}">${formatarMoeda(val)}</strong>
-            <button class="btn-mini" style="background:var(--green); color:#fff;" onclick="efetivarLancamento(${l.row})">✔</button>
+            <button class="btn-mini" style="background:var(--green); color:#fff;" onclick="event.stopPropagation(); efetivarLancamento(${l.row})">✔</button>
           </div>
         </div>`;
     });
@@ -1875,7 +1899,10 @@
             <strong>${nome}</strong> (${info.bandeira})<br>
             <small style="color:var(--muted)">Limite: ${formatarMoeda(info.limite)} | Fecha: ${info.fech} | Venc: ${info.venc}</small>
           </div>
-          <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Cartoes', ${c.row})">Excluir</button>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="color" value="${((c.cols[3] || '').match(/#[0-9a-f]{6}/i) || ['#6d28d9'])[0]}" title="Trocar a cor" style="width:36px; height:32px; padding:1px;" onchange="mudarCorCartao(${c.row}, this.value)">
+            <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Cartoes', ${c.row})">Excluir</button>
+          </div>
         </div>`;
     });
 
@@ -1911,6 +1938,9 @@
     renderizarRapido();
     renderizarListas();
     renderizarListaDetalhe();
+    renderizarUsuarios();
+    atualizarCompartilhar();
+    atualizarBadgeOffline();
   }
 
   function renderizarEvolucao() {
@@ -2097,6 +2127,7 @@
     if (!l) return;
     const itens = itensLista(l);
     if (!itens.length) return alert("Adicione pelo menos um item!");
+    if (!checarLimiteOffline([[`${Date.now()}-1`]])) return;
     const total = totalLista(l);
     if (!confirm(`Efetivar "${l.cols[1]}" no valor de ${formatarMoeda(total)}? O valor sairá da conta ${l.cols[3]}.`)) return;
     const hoje = hojeISO();
@@ -2129,6 +2160,181 @@
     document.getElementById('listaComprasHist').innerHTML = fim.length === 0 ? '' :
       '<div class="section-card"><div class="section-title"><span>✔ Compras efetivadas</span></div>' +
       fim.slice(-8).reverse().map(l => `<div class="row-item"><span>${l.cols[1]} <small style="color:var(--muted)">(${(l.cols[6] || '').split('-').reverse().join('/')})</small></span><strong>${formatarMoeda(totalLista(l))}</strong></div>`).join('') + '</div>';
+  }
+
+  // ----- Limite do modo gratuito (offline) -----
+  const LIMITE_OFFLINE = 3;
+  function grupoTx(id) { return String(id).split('-')[0]; }
+  function gruposOffline(extra) {
+    const ld = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+    const g = new Set((ld.lancamentos || []).map(x => grupoTx(x.cols[0])));
+    (extra || []).forEach(c => g.add(grupoTx(c[0])));
+    return g.size;
+  }
+  function checarLimiteOffline(novas) {
+    if (!modoOffline) return true;
+    if (gruposOffline(novas) <= LIMITE_OFFLINE) return true;
+    bloquearOffline();
+    return false;
+  }
+  function bloquearOffline() {
+    localStorage.setItem("mfp_offline_locked", "true");
+    document.getElementById('loading').classList.add('hidden');
+    alert("🔒 Versão gratuita: o modo sem conta permite até 3 transações. Para continuar usando o app, entre com sua conta Google.");
+    sairConta();
+    aplicarBloqueioLogin();
+  }
+  function aplicarBloqueioLogin() {
+    const b = document.querySelector('.btn-offline');
+    if (!b) return;
+    const lk = localStorage.getItem("mfp_offline_locked") === "true";
+    b.disabled = lk;
+    b.innerText = lk ? "🔒 Modo local esgotado — entre com o Google" : "Usar Modo Local Offline (Sem Google)";
+  }
+  function atualizarBadgeOffline() {
+    if (!modoOffline) return;
+    document.getElementById('badgeModoApp').innerText = `OFFLINE ${Math.min(gruposOffline(), LIMITE_OFFLINE)}/${LIMITE_OFFLINE}`;
+  }
+
+  // ----- Usuário, compartilhamento e cor de cartão -----
+  function usuarioAtual() { return localStorage.getItem("mfp_user_name") || "Usuário"; }
+  function gradienteCor(hex) {
+    const h = /^#[0-9a-f]{6}$/i.test(hex) ? hex : '#6d28d9';
+    const n = parseInt(h.slice(1), 16), f = 0.55;
+    const esc = '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(x => Math.round(x * f).toString(16).padStart(2, '0')).join('');
+    return `linear-gradient(135deg, ${h}, ${esc})`;
+  }
+  async function mudarCorCartao(row, hex) {
+    document.getElementById('loading').classList.remove('hidden');
+    await atualizarCelula("Cartoes", row, "D", 3, gradienteCor(hex));
+    mostrarToast("Cor do cartão atualizada!");
+    await carregarTodosDados();
+  }
+  function atualizarCompartilhar() {
+    const c = document.getElementById('shCodigo');
+    if (!c) return;
+    c.value = modoOffline ? '(disponível ao entrar com o Google)' : spreadsheetId;
+    const own = localStorage.getItem('mfp_own_sheet_id');
+    document.getElementById('btnVoltarMinha').classList.toggle('hidden', !own || own === spreadsheetId);
+  }
+  async function copiarCodigoConta() {
+    try { await navigator.clipboard.writeText(spreadsheetId); mostrarToast("Código copiado!"); } catch (e) { alert(spreadsheetId); }
+  }
+  async function convidarUsuario() {
+    if (modoOffline) return alert("Entre com sua conta Google para compartilhar.");
+    const email = document.getElementById('shEmail').value.trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) return alert("Informe um e-mail válido!");
+    try {
+      const r = await fetchGoogle(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions?sendNotificationEmail=true`, "POST", { role: "writer", type: "user", emailAddress: email });
+      if (!r.ok) throw new Error(await r.text());
+      document.getElementById('shEmail').value = '';
+      alert("✅ Convite enviado! Peça para a pessoa abrir o app, entrar com esse e-mail do Google e, em Ajustes → Google & Backup, colar o código da conta em \"Entrar na conta compartilhada\".");
+    } catch (e) {
+      alert("Não foi possível convidar automaticamente. Compartilhe a planilha \"Minhas Financas DB\" pelo Google Drive e envie o código da conta.");
+    }
+  }
+  async function entrarContaCompartilhada() {
+    if (modoOffline) return alert("Entre com sua conta Google primeiro.");
+    const raw = document.getElementById('shEntrar').value.trim();
+    const m = raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const id = m ? m[1] : raw;
+    if (!/^[a-zA-Z0-9_-]{20,}$/.test(id)) return alert("Código ou link inválido!");
+    document.getElementById('loading').classList.remove('hidden');
+    try {
+      const r = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=sheets.properties.title`);
+      if (!r.ok) throw new Error("acesso");
+      const j = await r.json();
+      if (!j.sheets.some(x => x.properties.title === 'Lancamentos')) throw new Error("formato");
+      if (!localStorage.getItem('mfp_own_sheet_id')) localStorage.setItem('mfp_own_sheet_id', spreadsheetId);
+      spreadsheetId = id;
+      localStorage.setItem("mfp_gdrive_sheet_id", id);
+      document.getElementById('shEntrar').value = '';
+      mostrarToast("Conta compartilhada conectada!");
+      await carregarTodosDados();
+    } catch (e) {
+      document.getElementById('loading').classList.add('hidden');
+      alert("Não foi possível acessar essa conta. Confirme se o convite foi aceito e se você entrou com o mesmo e-mail que recebeu o convite.");
+    }
+  }
+  async function voltarMinhaConta() {
+    const own = localStorage.getItem('mfp_own_sheet_id');
+    if (!own) return;
+    spreadsheetId = own;
+    localStorage.setItem("mfp_gdrive_sheet_id", own);
+    localStorage.removeItem('mfp_own_sheet_id');
+    document.getElementById('loading').classList.remove('hidden');
+    await carregarTodosDados();
+  }
+  function renderizarUsuarios() {
+    const el = document.getElementById('dashUsuarios');
+    if (!el) return;
+    const us = [...new Set(db.lancamentos.map(l => l.cols[14]).filter(Boolean))];
+    if (us.length < 2) { el.innerHTML = ''; return; }
+    const mes = getChaveMes(mesAtual), rec = {}, des = {};
+    db.lancamentos.forEach(l => {
+      const t = l.cols[1], u = l.cols[14] || '—';
+      const m = t === 'cartao' ? l.cols[5] : (l.cols[4] || '').substring(0, 7);
+      if (m !== mes) return;
+      const v = num(l.cols[3]) || 0;
+      if (t === 'receita') rec[u] = (rec[u] || 0) + v;
+      if ((t === 'despesa' && !(l.cols[2] || '').startsWith('Fatura ')) || t === 'cartao') des[u] = (des[u] || 0) + v;
+    });
+    el.innerHTML = '<div class="section-card"><div class="section-title"><span>👥 Por usuário (mês)</span></div>' +
+      us.map(u => `<div class="row-item"><strong>👤 ${u}</strong><span style="font-size:0.8rem;"><span style="color:var(--green)">+ ${formatarMoeda(rec[u] || 0)}</span> &nbsp; <span style="color:var(--red)">− ${formatarMoeda(des[u] || 0)}</span></span></div>`).join('') + '</div>';
+  }
+
+  // ----- Visões do extrato (cards do topo e pendências) -----
+  let visaoExtrato = null, _manterVisao = false;
+  function abrirVisao(v) {
+    visaoExtrato = v; _manterVisao = true;
+    navegar('telaTransacoes');
+    _manterVisao = false;
+    renderizarExtrato();
+    window.scrollTo(0, 0);
+  }
+  function limparVisao() { visaoExtrato = null; renderizarExtrato(); }
+  function bannerVisao(v) {
+    const nomes = { receitas: '💰 Receitas recebidas no mês', pagas: '💸 Despesas + faturas pagas no mês', balanco: '⚖️ Balanço mensal (somente pagos)', previsao: '🔮 Previsão do mês (pagos e pendentes)', 'pend:despesa': '⏳ Despesas pendentes', 'pend:receita': '⏳ Receitas pendentes' };
+    const mes = getChaveMes(mesAtual).split('-').reverse().join('/');
+    return `<div class="alerta-atraso" style="background:var(--blue-soft); border-color:rgba(59,130,246,.35); color:var(--text); display:flex; justify-content:space-between; align-items:center; cursor:default;"><span>${nomes[v] || ''} • ${mes}</span><button class="btn-mini" style="background:#334155; color:#fff;" onclick="limparVisao()">✕ Limpar filtro</button></div>`;
+  }
+  function htmlVisaoEspecial(v) {
+    const mes = getChaveMes(mesAtual);
+    const mesTx = l => l.cols[1] === 'cartao' ? l.cols[5] : (l.cols[4] || '').substring(0, 7);
+    const L = db.lancamentos.filter(l => mesTx(l) === mes);
+    const val = l => num(l.cols[3]) || 0;
+    const dbr = l => (l.cols[4] || '').split('-').reverse().join('/');
+    const soma = a => a.reduce((t, l) => t + val(l), 0);
+    const porData = (a, b) => (a.cols[4] || '').localeCompare(b.cols[4] || '');
+    const usr = l => l.cols[14] ? ` <span class="badge" style="background:var(--blue-soft); color:var(--blue);">👤 ${l.cols[14]}</span>` : '';
+    const topo = (t, x, cor) => `<div class="section-card" style="text-align:center;"><small style="color:var(--muted)">${t}</small><div style="font-size:1.7rem; font-weight:800; color:${cor};">${formatarMoeda(x)}</div></div>`;
+    const linha = (l, sinal, cor) => `<div class="row-item"><div><strong style="font-size:0.86rem;">${l.cols[2]}</strong>${usr(l)}<br><small style="color:var(--muted)">${dbr(l)} • ${l.cols[6] || ''} (${l.cols[7] || ''})</small></div><strong style="color:${cor}; white-space:nowrap;">${sinal} ${formatarMoeda(val(l))}</strong></div>`;
+    const vazio = '<p style="text-align:center; color:var(--muted); padding:24px;">Nenhum lançamento encontrado.</p>';
+    const recPagas = L.filter(l => l.cols[1] === 'receita' && l.cols[9] === 'Efetivado').sort(porData);
+    const despPagas = L.filter(l => l.cols[1] === 'despesa' && l.cols[9] === 'Efetivado').sort(porData);
+    if (v === 'receitas') return topo('Total recebido no mês', soma(recPagas), 'var(--green)') + (recPagas.length ? recPagas.map(l => linha(l, '+', 'var(--green)')).join('') : vazio);
+    if (v === 'pagas') return topo('Total pago no mês', soma(despPagas), 'var(--red)') + (despPagas.length ? despPagas.map(l => linha(l, '−', 'var(--red)')).join('') : vazio);
+    if (v === 'balanco') {
+      const r = soma(recPagas), d = soma(despPagas), res = r - d;
+      const todos = [...recPagas, ...despPagas].sort(porData);
+      return `<div class="section-card" style="text-align:center; border:2px solid ${res >= 0 ? 'var(--green)' : 'var(--red)'};">
+          <small style="color:var(--muted)">Receitas pagas − Despesas pagas</small>
+          <div style="font-size:2rem; font-weight:800; color:${res >= 0 ? 'var(--green)' : 'var(--red)'};">${formatarMoeda(res)}</div>
+          <div style="display:flex; justify-content:space-around; margin-top:8px; font-size:0.85rem;"><span style="color:var(--green)">+ ${formatarMoeda(r)}</span><span style="color:var(--red)">− ${formatarMoeda(d)}</span></div>
+        </div>` + (todos.length ? todos.map(l => linha(l, l.cols[1] === 'receita' ? '+' : '−', l.cols[1] === 'receita' ? 'var(--green)' : 'var(--red)')).join('') : vazio);
+    }
+    if (v === 'previsao') {
+      const recs = L.filter(l => l.cols[1] === 'receita').sort(porData);
+      const gastos = L.filter(l => (l.cols[1] === 'despesa' && !(l.cols[2] || '').startsWith('Fatura ')) || l.cols[1] === 'cartao').sort(porData);
+      const pago = l => ['Efetivado', 'Pago'].includes(l.cols[9]);
+      const lin = l => `<div class="row-item"><span><i style="display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px; background:${pago(l) ? 'var(--green)' : 'var(--amber)'}"></i>${l.cols[2]}</span><strong>${formatarMoeda(val(l))}</strong></div>`;
+      const tr = soma(recs), tg = soma(gastos);
+      return topo('Receitas − Gastos previstos do mês', tr - tg, tr - tg >= 0 ? 'var(--blue)' : 'var(--red)') +
+        `<small style="color:var(--muted)"><span style="color:var(--green)">●</span> pago/recebido &nbsp; <span style="color:var(--amber)">●</span> pendente</small>` +
+        `<div class="section-card"><div class="section-title"><span>Receitas</span><strong style="color:var(--green)">${formatarMoeda(tr)}</strong></div>${recs.map(lin).join('') || '<small style="color:var(--muted)">Sem receitas.</small>'}</div>` +
+        `<div class="section-card"><div class="section-title"><span>Gastos</span><strong style="color:var(--red)">${formatarMoeda(tg)}</strong></div>${gastos.map(lin).join('') || '<small style="color:var(--muted)">Sem gastos.</small>'}</div>`;
+    }
+    return '';
   }
 
   // ----- Devedores -----
@@ -2242,6 +2448,7 @@
     const data = document.getElementById('recData').value;
     const conta = document.getElementById('recConta').value;
     if (!d || !valor || !data || !conta) return alert("Informe valor, data e conta!");
+    if (!checarLimiteOffline([[`${Date.now()}-1`]])) return;
     const n = Math.max(1, parseInt(d.cols[5]) || 1), pagas = parseInt(d.cols[7]) || 0;
     const catReceita = (db.categorias.find(c => c.cols[1] === 'receita' && /cobran/i.test(c.cols[2])) || db.categorias.find(c => c.cols[1] === 'receita') || { cols: [0, 0, 'Sem Categoria'] }).cols[2];
     fecharModal('modalReceber');
@@ -2334,6 +2541,20 @@
   }
 
   function renderizarExtrato() {
+    const vis = visaoExtrato;
+    const modoLista = !vis || vis.startsWith('pend:');
+    document.getElementById('extratoFiltros').classList.toggle('hidden', !!vis);
+    document.getElementById('listaTransacoes').classList.toggle('hidden', !modoLista);
+    document.getElementById('extratoBanner').classList.toggle('hidden', !vis);
+    document.getElementById('extratoEspecial').innerHTML = '';
+    if (vis) document.getElementById('extratoBanner').innerHTML = bannerVisao(vis);
+    const selU = document.getElementById('filtroUsuario');
+    const usuarios = [...new Set(db.lancamentos.map(l => l.cols[14]).filter(Boolean))];
+    const atualU = selU.value;
+    selU.innerHTML = '<option value="">👥 Todos os usuários</option>' + usuarios.map(u => `<option value="${u}">${u}</option>`).join('');
+    selU.value = usuarios.includes(atualU) ? atualU : '';
+    selU.classList.toggle('hidden', usuarios.length < 2);
+    if (vis && !modoLista) { document.getElementById('extratoEspecial').innerHTML = htmlVisaoEspecial(vis); return; }
     const chaveMesSel = getChaveMes(mesAtual);
     const termo = (document.getElementById('buscaTx').value || "").toLowerCase();
     const lista = document.getElementById('listaTransacoes');
@@ -2342,11 +2563,13 @@
       const [id, tipo, desc, val, data, mesFat, cat, conta, dest, status] = l.cols;
       const mesRef = tipo === "cartao" ? mesFat : (data || "").substring(0, 7);
       if (mesRef !== chaveMesSel) return false;
+      if (vis && vis.startsWith('pend:')) return tipo === vis.split(':')[1] && status === 'Pendente';
       if (filtroTxAtual !== "TODOS") {
         if (filtroTxAtual === "PENDENTE" && status !== "Pendente") return false;
         if (filtroTxAtual !== "PENDENTE" && tipo !== filtroTxAtual) return false;
       }
       if (termo && !`${desc} ${cat} ${conta}`.toLowerCase().includes(termo)) return false;
+      if (selU.value && (l.cols[14] || '') !== selU.value) return false;
       return true;
     });
 
@@ -2376,6 +2599,7 @@
             <p>${dataBr} • ${cat || 'Transferência'} • <strong>${conta}</strong>${dest ? ` → ${dest}` : ''}
               <span class="badge ${isPend ? 'badge-pend' : 'badge-ok'}">${status}</span>
               ${syncId ? '<span class="badge badge-cal" title="Sincronizado com Agenda/Tasks">📅</span>' : ''}
+              ${l.cols[14] ? `<span class="badge" style="background:var(--blue-soft); color:var(--blue);">👤 ${l.cols[14]}</span>` : ''}
             </p>
             ${itensTxHtml(l.cols[13])}
           </div>
@@ -2410,6 +2634,7 @@
 
   // Navegação Unificada (Mobile + Desktop Sidebar)
   function navegar(telaId) {
+    if (!(telaId === 'telaTransacoes' && _manterVisao)) visaoExtrato = null;
     document.querySelectorAll('.nav-btn, .side-btn').forEach(b => {
       b.classList.toggle('active', b.getAttribute('data-target') === telaId);
     });
@@ -2419,6 +2644,7 @@
     });
     const alvo = document.getElementById(telaId);
     alvo.classList.remove('hidden');
+    if (telaId === 'telaTransacoes') renderizarExtrato();
   }
 
   function mudarSubAba(idAlvo, el) {
@@ -2562,6 +2788,10 @@
 
   // Persistência Unificada
   async function adicionarLinhas(aba, linhas) {
+    if (aba === 'Lancamentos') {
+      if (!checarLimiteOffline(linhas)) return;
+      linhas = linhas.map(c => { const r = [...c]; while (r.length < 14) r.push(''); if (!r[14]) r[14] = usuarioAtual(); return r; });
+    }
     document.getElementById('loading').classList.remove('hidden');
     if (modoOffline) {
       const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
@@ -2584,7 +2814,7 @@
     if (modoOffline) {
       const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
       const idx = localData.lancamentos.findIndex(x => x.row === row);
-      if (idx !== -1) localData.lancamentos[idx].cols = novaLinha;
+      if (idx !== -1) localData.lancamentos[idx].cols = [...novaLinha, ...localData.lancamentos[idx].cols.slice(novaLinha.length)];
       localStorage.setItem("mfp_local_db", JSON.stringify(localData));
     } else {
       await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!A${row}:N${row}?valueInputOption=RAW`, "PUT", {
@@ -2711,6 +2941,7 @@
   }
 
   async function pagarFaturaCartao(nomeCartao, valorFatura, contaPadrao) {
+    if (!checarLimiteOffline([[`${Date.now()}-1`]])) return;
     if (db.contas.length === 0) return alert("Cadastre uma conta antes de pagar a fatura!");
     const nomesContas = db.contas.map((c, idx) => `${idx + 1} - ${c.cols[1]}`).join('\n');
     const padraoIdx = Math.max(1, db.contas.findIndex(c => c.cols[1] === contaPadrao) + 1);
@@ -2770,7 +3001,7 @@
   async function salvarCartao() {
     const nome = document.getElementById('ccNome').value.trim();
     const bandeira = document.getElementById('ccBandeira').value;
-    const cor = document.getElementById('ccCor').value;
+    const cor = gradienteCor(document.getElementById('ccCor').value);
     const limite = num(document.getElementById('ccLimite').value) || 0;
     const fech = parseInt(document.getElementById('ccFechamento').value) || 5;
     const venc = parseInt(document.getElementById('ccVencimento').value) || 12;
@@ -2862,12 +3093,12 @@
     document.getElementById('loading').classList.remove('hidden');
     if (modoOffline) {
       const ld = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
-      lista.forEach(u => { const it = ld.lancamentos.find(x => x.row === u.row); if (it) it.cols = u.cols; });
+      lista.forEach(u => { const it = ld.lancamentos.find(x => x.row === u.row); if (it) it.cols = [...u.cols.slice(0, 14), ...it.cols.slice(14)]; });
       localStorage.setItem("mfp_local_db", JSON.stringify(ld));
     } else {
       await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
         valueInputOption: "RAW",
-        data: lista.map(u => ({ range: `Lancamentos!A${u.row}:N${u.row}`, values: [u.cols] }))
+        data: lista.map(u => ({ range: `Lancamentos!A${u.row}:N${u.row}`, values: [u.cols.slice(0, 14)] }))
       });
     }
     await carregarTodosDados();
@@ -2905,6 +3136,7 @@
     localStorage.removeItem("mfp_local_db");
     location.reload();
   }
+  aplicarBloqueioLogin();
 </script>
 </body>
 </html>
