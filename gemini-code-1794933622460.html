@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#090e1a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>AppFinance</title>
+  <link id="manifest-link" rel="manifest">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root {
+      --bg: #090e1a;
+      --surface: #111827;
+      --card: #1e293b;
+      --card-hover: #263348;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --green: #10b981;
+      --green-soft: rgba(16, 185, 129, 0.15);
+      --red: #ef4444;
+      --red-soft: rgba(239, 68, 68, 0.15);
+      --blue: #3b82f6;
+      --blue-soft: rgba(59, 130, 246, 0.15);
+      --purple: #8b5cf6;
+      --purple-soft: rgba(139, 92, 246, 0.15);
+      --amber: #f59e0b;
+      --border: #283548;
+      --radius: 16px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 88px;
+      overflow-x: hidden;
+    }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes modalPop {
+      from { opacity: 0; transform: translateY(24px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .view-section {
+      animation: fadeSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #telaLogin {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      text-align: center;
+      background: radial-gradient(circle at top, #1e293b 0%, #090e1a 70%);
+    }
+
+    .login-card {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(12px);
+      padding: 36px 28px;
+      border-radius: 24px;
+      max-width: 430px;
+      width: 100%;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      animation: modalPop 0.35s ease;
+    }
+
+    .btn-google {
+      background: #fff;
+      color: #0f172a;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 22px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-google:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,255,255,0.15); }
+
+    .btn-offline {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-offline:hover { background: var(--card-hover); color: var(--text); }
+
+    .sidebar {
+      display: none;
+    }
+
+    @media (min-width: 900px) {
+      body { padding-bottom: 24px; }
+      #appPrincipal {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        min-height: 100vh;
+      }
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        padding: 20px 16px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        z-index: 40;
+      }
+      .sidebar-brand {
+        font-size: 1.15rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 8px 20px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 16px;
+      }
+      .side-btn {
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        padding: 12px 14px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 6px;
+        text-align: left;
+        transition: all 0.2s;
+      }
+      .side-btn:hover { background: var(--card); color: var(--text); }
+      .side-btn.active { background: var(--blue-soft); color: var(--blue); }
+      nav.bottom-nav { display: none !important; }
+      .desktop-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+      .modal-overlay { align-items: center !important; }
+      .modal-box { border-radius: 20px !important; max-width: 520px !important; border: 1px solid var(--border); }
+    }
+
+    header {
+      background: rgba(17, 24, 39, 0.88);
+      backdrop-filter: blur(12px);
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    h1 { margin: 0; font-size: 1.05rem; font-weight: 800; }
+    .badge-mode { font-size: 0.65rem; padding: 3px 8px; border-radius: 20px; background: var(--green-soft); color: var(--green); font-weight: 700; }
+
+    .month-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg);
+      padding: 4px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      min-width: 210px;
+    }
+
+    .month-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 34px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 0;
+      transition: background 0.15s;
+    }
+    .month-btn:hover { background: var(--card); }
+    .month-label { font-weight: 700; font-size: 0.9rem; text-transform: capitalize; cursor: pointer; padding: 0 8px; }
+
+    .header-actions { display: flex; gap: 6px; }
+    .btn-top {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 7px 11px;
+      border-radius: 10px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: auto;
+      margin: 0;
+      transition: background 0.15s;
+    }
+    .btn-top:hover { background: var(--card-hover); }
+    .btn-install { background: var(--blue); border-color: var(--blue); display: none; }
+
+    .container { padding: 18px 14px; max-width: 1080px; margin: 0 auto; }
+
+    .saldo-hero {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .saldo-hero small { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+    .saldo-hero .valor-grande { font-size: 1.85rem; font-weight: 800; margin-top: 2px; letter-spacing: -0.5px; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 10px;
+    }
+
+    .mini-stat {
+      background: rgba(9, 14, 26, 0.65);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      transition: transform 0.2s;
+    }
+    .mini-stat span { display: block; font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
+    .mini-stat strong { font-size: 0.98rem; font-weight: 700; }
+
+    .section-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 0 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .cat-accordion {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      background: rgba(15, 23, 42, 0.45);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .cat-accordion:hover { border-color: var(--blue); }
+
+    .cat-header {
+      padding: 12px 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .cat-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+    }
+
+    .cat-chevron {
+      display: inline-block;
+      transition: transform 0.25s ease;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-left: 6px;
+    }
+    .cat-accordion.open .cat-chevron { transform: rotate(180deg); color: var(--blue); }
+
+    .cat-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(9, 14, 26, 0.65);
+      border-top: 0 solid var(--border);
+    }
+    .cat-accordion.open .cat-details {
+      max-height: 1200px;
+      border-top-width: 1px;
+    }
+
+    .cat-expense-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+      font-size: 0.82rem;
+    }
+    .cat-expense-row:last-child { border-bottom: none; }
+
+    .credit-card-ui {
+      border-radius: 16px;
+      padding: 16px;
+      color: #fff;
+      margin-bottom: 12px;
+      position: relative;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    .cc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .cc-flag { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; background: rgba(255,255,255,0.22); padding: 3px 8px; border-radius: 6px; }
+    .cc-dates { font-size: 0.74rem; opacity: 0.92; display: flex; justify-content: space-between; margin-top: 10px; }
+
+    .row-item { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .row-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+    .progress-bg { width: 100%; height: 7px; background: rgba(0,0,0,0.4); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    .progress-fill { height: 100%; border-radius: 99px; transition: width 0.35s ease; }
+
+    .search-box {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+    .filter-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; }
+    .pill { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; cursor: pointer; width: auto; margin: 0; transition: all 0.15s; }
+    .pill.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+    .tx-card {
+      background: var(--card);
+      padding: 13px 14px;
+      border-radius: 14px;
+      margin-bottom: 9px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid var(--blue);
+      transition: transform 0.15s, background 0.15s;
+    }
+    .tx-card:hover { background: var(--card-hover); }
+    .tx-card.receita { border-left-color: var(--green); }
+    .tx-card.despesa { border-left-color: var(--red); }
+    .tx-card.cartao { border-left-color: var(--purple); }
+    .tx-card.transferencia { border-left-color: var(--amber); }
+    .tx-card.pendente { opacity: 0.9; border-style: dashed; border-width: 1px 1px 1px 4px; border-color: var(--border); }
+
+    .tx-info { flex: 1; padding-right: 10px; }
+    .tx-info h4 { margin: 0 0 4px; font-size: 0.94rem; }
+    .tx-info p { margin: 0; font-size: 0.76rem; color: var(--muted); line-height: 1.4; }
+    .badge { padding: 2px 7px; border-radius: 6px; font-size: 0.66rem; font-weight: 700; margin-left: 4px; }
+    .badge-ok { background: var(--green-soft); color: var(--green); }
+    .badge-pend { background: rgba(245,158,11,0.18); color: var(--amber); }
+    .badge-cal { background: var(--blue-soft); color: var(--blue); }
+
+    .tx-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .tx-val { font-weight: 800; font-size: 0.95rem; }
+    .btn-mini { padding: 5px 9px; font-size: 0.72rem; border-radius: 7px; border: none; cursor: pointer; font-weight: 600; width: auto; margin: 0; transition: opacity 0.15s; }
+    .btn-mini:hover { opacity: 0.88; }
+
+    label { font-size: 0.78rem; color: var(--muted); margin-top: 10px; display: block; font-weight: 500; }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 11px 12px;
+      margin-top: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+    textarea { resize: vertical; min-height: 70px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); }
+    button.btn-primary { background: var(--blue); border: none; font-weight: 700; margin-top: 14px; cursor: pointer; transition: filter 0.15s; }
+    button.btn-primary:hover { filter: brightness(1.08); }
+
+    .checkbox-row { display: flex; align-items: center; gap: 10px; background: var(--bg); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); margin-top: 12px; cursor: pointer; }
+    .checkbox-row input { width: 18px; height: 18px; margin: 0; accent-color: var(--blue); }
+
+    .sub-tabs { display: flex; gap: 5px; margin-bottom: 12px; background: var(--bg); padding: 4px; border-radius: 12px; border: 1px solid var(--border); overflow-x: auto; }
+    .sub-tab { flex: 1; text-align: center; padding: 8px 6px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; color: var(--muted); cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+    .sub-tab.active { background: var(--blue); color: #fff; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .fab {
+      position: fixed;
+      bottom: 74px;
+      right: 18px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      font-size: 1.9rem;
+      font-weight: 700;
+      box-shadow: 0 8px 22px rgba(59,130,246,0.5);
+      cursor: pointer;
+      z-index: 35;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 0;
+      transition: transform 0.15s;
+    }
+    .fab:active { transform: scale(0.94); }
+
+    nav.bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 6px 2px 9px;
+      z-index: 30;
+    }
+    .nav-btn { flex: 1; background: none; border: none; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.68rem; font-weight: 600; padding: 4px; margin: 0; cursor: pointer; transition: color 0.15s; }
+    .nav-btn.active { color: var(--blue); }
+    .nav-icon { font-size: 1.15rem; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-box {
+      background: var(--card);
+      width: 100%;
+      max-width: 600px;
+      border-radius: 22px 22px 0 0;
+      padding: 20px 18px 28px;
+      max-height: 92vh;
+      overflow-y: auto;
+      border-top: 1px solid var(--border);
+      animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+
+    .hidden { display: none !important; }
+    #loading { text-align: center; padding: 9px; color: var(--blue); font-size: 0.82rem; font-weight: 600; background: var(--blue-soft); border-radius: 10px; margin-bottom: 12px; }
+    #toast { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 0.84rem; font-weight: 700; z-index: 60; display: none; box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
+
+    .evo{display:flex;gap:10px;align-items:flex-end;height:110px}
+    .evo-col{flex:1;text-align:center}
+    .evo-bars{height:90px;display:flex;gap:3px;align-items:flex-end;justify-content:center}
+    .evo-bars i{width:42%;max-width:18px;border-radius:5px 5px 0 0;min-height:2px;transition:height .4s}
+    .evo-col small{color:var(--muted);font-size:.68rem}
+    .alerta-atraso{background:var(--red-soft);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:12px 14px;border-radius:14px;margin-bottom:12px;font-size:.84rem;font-weight:600;cursor:pointer}
+    strong,.valor-grande,.tx-val{font-variant-numeric:tabular-nums}
+    nav.bottom-nav{padding-bottom:env(safe-area-inset-bottom,0)}
+    .btn-primary:active,.btn-mini:active,.nav-btn:active{transform:scale(.97)}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+    .fab-rapido{position:fixed;bottom:74px;left:18px;width:56px;height:56px;border-radius:50%;background:var(--amber);color:#1c1300;border:none;font-size:1.6rem;box-shadow:0 8px 22px rgba(245,158,11,.5);cursor:pointer;z-index:35}
+    @media (min-width:900px){.fab-rapido{left:auto;right:28px;bottom:28px}}
+
+    .msg-cobranca{background:var(--bg);border:1px dashed var(--border);border-radius:12px;padding:10px;font-size:.76rem;color:var(--muted);margin:8px 0;white-space:pre-wrap}
+    .perfil-chip{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:3px 12px 3px 3px;cursor:pointer;max-width:160px}
+    .perfil-chip img,.perfil-chip .ini{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0}
+    .perfil-chip .ini{background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
+    #perfilNome{font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .itens-tx{font-size:.74rem;color:var(--muted);margin-top:6px;line-height:1.55}
+
+    .box-share{background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:14px;margin:12px 0}
+    .sb-av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0}
+    .sb-ini{background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem}
+
+    .fab-rapido{left:auto;right:18px}
+    .fab{right:84px}
+    @media (min-width:900px){
+      .fab-rapido{right:28px;bottom:28px}
+      .fab{right:94px;bottom:28px}
+      .sidebar{overflow-y:auto}
+      #perfilChip,.btn-sair-top{display:none!important}
+    }
+    .side-sair{margin-top:6px;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);border-radius:999px;padding:3px 10px;font-size:.7rem;font-weight:600;cursor:pointer}
+    .side-sair:hover{background:rgba(239,68,68,.28)}
+    .sidebar-footer{margin-top:auto;border-top:1px solid var(--border);padding-top:12px;font-size:.7rem;color:var(--muted);line-height:1.6}
+  </style>
+</head>
+<body>
+
+<div id="toast">Salvo!</div>
+
+<!-- TELA DE LOGIN -->
+<div id="telaLogin">
+  <div class="login-card">
+    <div style="font-size:3.2rem; margin-bottom:10px;">📊</div>
+    <h2 style="margin:0 0 8px; font-size:1.45rem;">AppFinance</h2>
+    <p style="color:var(--muted); font-size:0.88rem; line-height:1.5; margin:0;">
+      Gestão financeira pessoal completa com banco de dados automático no <strong>Google Drive</strong> e lembretes integrados no <strong>Google Agenda</strong> e <strong>Google Tasks</strong>.
+    </p>
+    <button class="btn-google" onclick="fazerLoginGoogle()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Entrar com Google (Drive + Agenda + Tasks)
+    </button>
+    <button class="btn-offline" onclick="entrarModoLocal()">Usar Modo Local Offline (Sem Google)</button>
+    <p id="statusLogin" style="color:var(--blue); font-size:0.8rem; margin-top:14px;"></p>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="appPrincipal" class="hidden">
+
+  <!-- SIDEBAR DESKTOP -->
+  <aside class="sidebar">
+    <div class="sidebar-brand" style="flex-direction:column; align-items:flex-start; gap:6px; cursor:pointer;" onclick="editarNome()" title="Toque para alterar o nome">
+      <div style="display:flex; align-items:center; gap:10px; width:100%;">
+        <img id="sbFoto" class="sb-av hidden" alt="" referrerpolicy="no-referrer"><span id="sbIni" class="sb-av sb-ini"></span>
+        <div style="min-width:0;">
+          <div id="sbNome" style="font-size:0.95rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+          <div id="sbStatus" style="font-size:0.72rem; font-weight:600;"></div>
+          <button class="side-sair" onclick="event.stopPropagation(); sairConta()">⎋ Sair da conta</button>
+        </div>
+      </div>
+      <div id="sbSync" style="font-size:0.7rem; color:var(--muted); font-weight:400;"></div>
+    </div>
+    <button class="side-btn active" data-target="telaResumo" onclick="navegar('telaResumo')">🏠 Visão Geral</button>
+    <button class="side-btn" data-target="telaTransacoes" onclick="navegar('telaTransacoes')">↕️ Extrato & Lançamentos</button>
+    <button class="side-btn" data-target="telaCartoes" onclick="navegar('telaCartoes')">💳 Cartões de Crédito</button>
+    <button class="side-btn" data-target="telaCompras" onclick="navegar('telaCompras')">🛒 Listas de Compras</button>
+    <button class="side-btn" data-target="telaDevedores" onclick="navegar('telaDevedores')">💰 Cobrança de Dívidas</button>
+    <button class="side-btn" data-target="telaOrcamentos" onclick="navegar('telaOrcamentos')">🎯 Orçamentos & Metas</button>
+    <button class="side-btn" data-target="telaAjustes" onclick="navegar('telaAjustes')">⚙️ Configurações</button>
+
+    <div class="sidebar-footer">
+      Desenvolvido por <b>Leicler Marvim</b><br>
+      AppFinance <b id="sbVersao"></b> • lançada em <b id="sbRelease"></b>
+    </div>
+  </aside>
+
+  <div>
+    <header>
+      <div class="header-inner">
+        <div class="header-left">
+          <h1>📊 AppFinance <span id="badgeModoApp" class="badge-mode">CLOUD</span></h1>
+        </div>
+
+        <div class="month-nav">
+          <button class="month-btn" onclick="alterarMes(-1)">‹</button>
+          <span class="month-label" id="labelMesAtual" onclick="irParaHoje()" title="Voltar para o mês atual">Novembro 2026</span>
+          <button class="month-btn" onclick="alterarMes(1)">›</button>
+        </div>
+
+        <div class="header-actions">
+          <div id="perfilChip" class="perfil-chip" onclick="editarNome()" title="Toque para alterar o nome"><img id="perfilFoto" class="hidden" alt="" referrerpolicy="no-referrer"><span id="perfilIni" class="ini"></span><span id="perfilNome"></span></div>
+          <button id="btnInstall" class="btn-top btn-install" onclick="instalarApp()">📲 Instalar</button>
+          <button class="btn-top" onclick="carregarTodosDados()" title="Sincronizar">↻</button>
+          <button class="btn-top btn-sair-top" style="background:rgba(239,68,68,0.2); color:#fca5a5; border-color:rgba(239,68,68,0.3);" onclick="sairConta()">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div id="loading" class="hidden">Sincronizando dados...</div>
+
+      <!-- ABA 1: VISÃO GERAL -->
+      <div id="telaResumo" class="view-section">
+        <div class="saldo-hero">
+          <div class="hero-top">
+            <div>
+              <small>Saldo Consolidado em Contas</small>
+              <div class="valor-grande" id="dashSaldoAtual">R$ 0,00</div>
+            </div>
+            <div id="badgeMesStatus" style="font-size:0.74rem; padding:5px 10px; border-radius:20px; background:var(--blue-soft); color:var(--blue); font-weight:700;">Mês Corrente</div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="mini-stat" style="cursor:pointer" onclick="abrirVisao('receitas')">
+              <span>Receitas do Mês</span>
+              <strong id="dashReceitas" style="color:var(--green)">R$ 0,00</strong>
+            </div>
+            <div class="mini-stat" style="cursor:pointer" onclick="abrirVisao('pagas')">
+              <span>Despesas + Faturas</span>
+              <strong id="dashDespesas" style="color:var(--red)">R$ 0,00</strong>
+            </div>
+            <div class="mini-stat" style="cursor:pointer" onclick="abrirVisao('balanco')">
+              <span>Balanço Mensal</span>
+              <strong id="dashBalanco">R$ 0,00</strong>
+            </div>
+            <div class="mini-stat" id="cardPrevisaoMes" style="cursor:pointer" onclick="abrirVisao('previsao')">
+              <span id="lblPrevisaoMes">Previsão Fim do Mês</span>
+              <strong id="dashPrevisao" style="color:var(--blue)">R$ 0,00</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="desktop-grid-2">
+          <div>
+            <div id="dashAtrasados"></div>
+            <div class="section-card">
+              <div class="section-title"><span>📈 Últimos 6 meses</span><small style="color:var(--muted)"><span style="color:var(--green)">■</span> Receitas <span style="color:var(--red)">■</span> Despesas</small></div>
+              <div id="dashEvolucao"></div>
+            </div>
+            <div id="dashUsuarios"></div>
+            <div class="section-card">
+              <div class="section-title">
+                <span>🍩 Despesas por Categoria</span>
+                <small style="color:var(--muted); font-weight:500;">Toque para detalhar</small>
+              </div>
+              <div id="dashCategorias"></div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title">
+                <span>🔔 Pendências do Mês</span>
+                <a href="#" onclick="navegar('telaTransacoes'); return false;" style="color:var(--blue); font-size:0.78rem; text-decoration:none;">Ver Extrato</a>
+              </div>
+              <div id="dashPendentes"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-card">
+              <div class="section-title">
+                <span>🏦 Minhas Contas</span>
+                <a href="#" onclick="navegar('telaAjustes'); return false;" style="color:var(--blue); font-size:0.78rem; text-decoration:none;">+ Gerenciar</a>
+              </div>
+              <div id="dashListaContas"></div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-title">
+                <span>💳 Cartões de Crédito</span>
+                <a href="#" onclick="navegar('telaCartoes'); return false;" style="color:var(--blue); font-size:0.78rem; text-decoration:none;">Faturas & Limites</a>
+              </div>
+              <div id="dashListaCartoes"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 2: EXTRATO -->
+      <div id="telaTransacoes" class="view-section hidden">
+        <div id="extratoBanner" class="hidden"></div>
+        <div id="extratoEspecial"></div>
+        <div id="extratoFiltros">
+        <input type="text" id="buscaTx" class="search-box" placeholder="🔍 Buscar por descrição, categoria ou conta..." oninput="renderizarExtrato()">
+        <div class="filter-pills">
+          <button class="pill active" onclick="filtrarTx('TODOS', this)">Todos</button>
+          <button class="pill" onclick="filtrarTx('receita', this)">Receitas</button>
+          <button class="pill" onclick="filtrarTx('despesa', this)">Despesas</button>
+          <button class="pill" onclick="filtrarTx('cartao', this)">Cartão</button>
+          <button class="pill" onclick="filtrarTx('PENDENTE', this)">Pendentes</button>
+        </div>
+        <select id="filtroUsuario" class="hidden" onchange="renderizarExtrato()"></select>
+        </div>
+        <div id="listaTransacoes"></div>
+      </div>
+
+      <!-- ABA 3: CARTÕES -->
+      <div id="telaCartoes" class="view-section hidden">
+        <button class="btn-primary" style="background:var(--purple); margin-top:0; margin-bottom:14px;" onclick="abrirModalCartao()">+ Adicionar Novo Cartão de Crédito</button>
+        <div id="listaFaturasDetalhadas" class="desktop-grid-2"></div>
+      </div>
+
+      <!-- ABA: COMPRAS -->
+      <div id="telaCompras" class="view-section hidden">
+        <button class="btn-primary" style="background:var(--green); margin-top:0; margin-bottom:14px;" onclick="abrirModalListaNova()">+ Nova Lista de Compras</button>
+        <div id="listaComprasAbertas" class="desktop-grid-2"></div>
+        <div id="listaComprasHist"></div>
+      </div>
+
+      <!-- ABA: COBRANÇA DE DÍVIDAS / DEVEDORES -->
+      <div id="telaDevedores" class="view-section hidden">
+        <div class="sub-tabs" style="margin-bottom:14px;">
+          <div class="sub-tab active" onclick="mudarAbaDevedores('cobrancas', this)">Cobranças Ativas</div>
+          <div class="sub-tab" onclick="mudarAbaDevedores('pessoas', this)">Cadastrar Pessoas</div>
+        </div>
+
+        <div id="secaoCobrancas">
+          <button class="btn-primary" style="background:var(--amber); color:#1c1300; margin-top:0; margin-bottom:14px;" onclick="abrirModalDevedor()">+ Adicionar Nova Cobrança</button>
+          <div id="resumoDevedores"></div>
+          <div id="listaDevedores" class="desktop-grid-2"></div>
+        </div>
+
+        <div id="secaoPessoas" class="hidden">
+          <button class="btn-primary" style="background:var(--blue); margin-top:0; margin-bottom:14px;" onclick="abrirModalPessoa()">+ Cadastrar Nova Pessoa</button>
+          <div id="listaCadPessoas" class="desktop-grid-2"></div>
+        </div>
+      </div>
+
+      <!-- ABA 4: METAS -->
+      <div id="telaOrcamentos" class="view-section hidden">
+        <div class="section-card">
+          <h3 style="margin:0 0 8px; font-size:0.95rem;">🎯 Definir Orçamento Mensal por Categoria</h3>
+          <div class="grid-2">
+            <div>
+              <label>Categoria de Despesa:</label>
+              <select id="orcCategoria"></select>
+            </div>
+            <div>
+              <label>Limite Mensal (R$):</label>
+              <input type="text" id="orcValor" inputmode="decimal" placeholder="0,00">
+            </div>
+          </div>
+          <button class="btn-primary" onclick="salvarOrcamento()">Salvar Orçamento</button>
+        </div>
+        <div id="listaOrcamentos" class="desktop-grid-2"></div>
+        <div class="section-card">
+          <h3 style="margin:0 0 8px; font-size:0.95rem;">🐷 Metas de Economia (Reserva, Viagem, Carro...)</h3>
+          <div class="grid-2">
+            <div><label>Nome da meta:</label><input type="text" id="metaNome" placeholder="Ex: Reserva de emergência"></div>
+            <div><label>Valor alvo (R$):</label><input type="text" id="metaAlvo" inputmode="decimal" placeholder="0,00"></div>
+          </div>
+          <label>Prazo (opcional):</label>
+          <input type="date" id="metaPrazo">
+          <button class="btn-primary" onclick="salvarMeta()">Criar Meta</button>
+        </div>
+        <div id="listaMetas" class="desktop-grid-2"></div>
+      </div>
+
+      <!-- ABA 5: AJUSTES -->
+      <div id="telaAjustes" class="view-section hidden">
+        <div class="sub-tabs">
+          <div class="sub-tab active" onclick="mudarSubAba('cfgContas', this)">Contas</div>
+          <div class="sub-tab" onclick="mudarSubAba('cfgCartoes', this)">Cartões</div>
+          <div class="sub-tab" onclick="mudarSubAba('cfgCats', this)">Categorias</div>
+          <div class="sub-tab" onclick="mudarSubAba('cfgSistema', this)">Google & Backup</div>
+        </div>
+
+        <div id="cfgContas" class="section-card">
+          <h3 style="margin:0 0 8px; font-size:0.95rem;">🏦 Adicionar Conta / Carteira</h3>
+          <label>Nome da Conta:</label>
+          <input type="text" id="contaNome" placeholder="Ex: Nubank, Banco do Brasil, Carteira">
+          <div class="grid-2">
+            <div>
+              <label>Tipo:</label>
+              <select id="contaTipo">
+                <option value="Conta Corrente">Conta Corrente</option>
+                <option value="Carteira">Dinheiro / Carteira</option>
+                <option value="Poupança">Poupança / Invest.</option>
+              </select>
+            </div>
+            <div>
+              <label>Saldo Inicial (R$):</label>
+              <input type="text" id="contaSaldo" inputmode="decimal" value="0">
+            </div>
+          </div>
+          <button class="btn-primary" onclick="salvarConta()">Salvar Conta</button>
+          <div id="listaCadContas" style="margin-top:14px;"></div>
+        </div>
+
+        <div id="cfgCartoes" class="section-card hidden">
+          <div class="section-title">
+            <span>💳 Meus Cartões de Crédito</span>
+            <button class="btn-mini" style="background:var(--purple); color:#fff;" onclick="abrirModalCartao()">+ Novo Cartão</button>
+          </div>
+          <div id="listaCadCartoes"></div>
+        </div>
+
+        <div id="cfgCats" class="section-card hidden">
+          <h3 style="margin:0 0 8px; font-size:0.95rem;">🏷️ Nova Categoria</h3>
+          <div class="grid-2">
+            <div>
+              <label>Tipo:</label>
+              <select id="catTipo">
+                <option value="despesa">Despesa</option>
+                <option value="receita">Receita</option>
+              </select>
+            </div>
+            <div>
+              <label>Nome:</label>
+              <input type="text" id="catNome" placeholder="Ex: Energia, Internet, Freela">
+            </div>
+          </div>
+          <button class="btn-primary" onclick="salvarCategoria()">Adicionar Categoria</button>
+          <div id="listaCadCats" style="margin-top:14px;"></div>
+        </div>
+
+        <div id="cfgSistema" class="section-card hidden">
+          <h3 style="margin:0 0 10px; font-size:0.95rem;">☁️ Integração Google & Preferências</h3>
+          <div class="mini-stat" style="margin-bottom:10px;">
+            <span>Status da Conexão</span>
+            <strong id="infoStatusConexao" style="color:var(--green);">Conectado ao Google Drive, Agenda e Tasks</strong>
+          </div>
+          <div class="mini-stat" style="margin-bottom:10px;"><span>Versão do aplicativo</span><strong id="infoVersao"></strong></div>
+          <label>Onde criar lembretes de vencimento?</label>
+          <select id="cfgIntegracao" onchange="salvarPreferenciasLocal()">
+            <option value="agenda">Google Agenda</option>
+            <option value="tasks">Google Tasks</option>
+            <option value="ambos">Agenda + Tasks</option>
+          </select>
+          <label class="checkbox-row">
+            <input type="checkbox" id="cfgAutoSyncAgenda" onchange="salvarPreferenciasLocal()">
+            <span style="font-size:0.84rem;">Já deixar o lembrete marcado em novos lançamentos</span>
+          </label>
+          <label>Horário padrão dos lembretes na Agenda:</label>
+          <input type="time" id="cfgHoraLembrete" value="09:00" onchange="salvarPreferenciasLocal()">
+
+          <div class="box-share">
+            <strong>👥 Compartilhar esta conta</strong>
+            <p style="color:var(--muted); font-size:0.78rem; margin:4px 0 8px;">Envie o acesso ao aplicativo e a chave para edição em conjunto.</p>
+            <label>Chave de compartilhamento da conta:</label>
+            <div style="display:flex; gap:6px;"><input type="text" id="shCodigo" readonly><button class="btn-mini" style="background:#334155; color:#fff;" onclick="copiarCodigoConta()">Copiar Chave</button></div>
+            <label>Convidar por e-mail (conta Google):</label>
+            <input type="email" id="shEmail" placeholder="pessoa@gmail.com">
+            <button class="btn-primary" style="background:var(--blue);" onclick="convidarUsuario()">Enviar convite</button>
+            <label>Usar a conta compartilhada de outra pessoa:</label>
+            <input type="text" id="shEntrar" placeholder="Cole o código ou link da conta">
+            <button class="btn-primary" style="background:#334155;" onclick="entrarContaCompartilhada()">Entrar na conta compartilhada</button>
+            <button id="btnVoltarMinha" class="btn-mini hidden" style="background:#334155; color:#fff; margin-top:8px;" onclick="voltarMinhaConta()">↩ Voltar para a minha conta</button>
+          </div>
+          <button class="btn-primary" style="background:#334155;" onclick="exportarCSV()">📥 Exportar Planilha Completa (CSV)</button>
+          <button class="btn-primary" style="background:#334155;" onclick="exportarBackup()">💾 Baixar Backup Completo (JSON)</button>
+          <button class="btn-primary" style="background:#7f1d1d;" onclick="resetarBancoDados()">⚠️ Recriar Estrutura do Banco</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="fab" onclick="abrirModalLancamento()">+</button>
+  <button class="fab-rapido" onclick="abrirModalRapido()" title="Despesa rápida">⚡</button>
+
+  <div id="modalEscopo" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><h3 id="tituloEscopo" style="margin:0; font-size:1.05rem;"></h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="resolverEscopo(null)">✕</button></div>
+      <p id="txtEscopo" style="color:var(--muted); font-size:0.85rem; margin:0 0 6px;"></p>
+      <button class="btn-primary" style="background:#334155;" onclick="resolverEscopo('uma')">Somente esta parcela</button>
+      <button class="btn-primary" style="background:var(--blue);" onclick="resolverEscopo('seguintes')">Esta e as seguintes</button>
+      <button class="btn-primary" style="background:var(--purple);" onclick="resolverEscopo('todas')">Todas as parcelas</button>
+    </div>
+  </div>
+
+  <!-- MODAL CADASTRAR PESSOA -->
+  <div id="modalPessoa" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><h3 id="tituloModalPessoa" style="margin:0; font-size:1.05rem;">👤 Cadastrar Pessoa</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalPessoa')">✕</button></div>
+      <label>Nome da pessoa:</label><input type="text" id="pesNome" placeholder="Ex: João Silva">
+      <label>Telefone / WhatsApp com DDD:</label><input type="tel" id="pesFone" placeholder="22999998888">
+      <label>Observação:</label><textarea id="pesObs" placeholder="Ex: Cliente regular, vizinho..."></textarea>
+      <button class="btn-primary" style="background:var(--blue);" onclick="salvarPessoa()">Salvar Pessoa</button>
+    </div>
+  </div>
+
+  <!-- MODAL NOVA COBRANÇA -->
+  <div id="modalDevedor" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><h3 style="margin:0; font-size:1.05rem;">💰 Adicionar Nova Cobrança</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalDevedor')">✕</button></div>
+      <label>Selecionar Devedor Cadastrado:</label>
+      <select id="devPessoaSelect" onchange="preencherDadosDevedor()"></select>
+      <div id="boxInfoDevedor" style="background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; margin-top:8px; font-size:0.82rem; color:var(--muted);">
+        Telefone: <strong id="lblDevFone" style="color:var(--text);">-</strong><br>
+        Obs: <strong id="lblDevObs" style="color:var(--text);">-</strong>
+      </div>
+      <label>Descrição sobre a dívida:</label><input type="text" id="devDesc" placeholder="Ex: Empréstimo, venda de produto...">
+      <label>Observação (se necessário):</label><textarea id="devObs" placeholder="Detalhes adicionais..."></textarea>
+      <div class="grid-2">
+        <div><label>Valor total (R$):</label><input type="text" id="devValor" inputmode="decimal" placeholder="0,00"></div>
+        <div><label>Qtd. de parcelas:</label><input type="number" id="devParcelas" min="1" max="60" value="1"></div>
+      </div>
+      <label>Vencimento do pagamento ou 1ª parcela:</label><input type="date" id="devVenc">
+      <label class="checkbox-row"><input type="checkbox" id="devAgenda"><span style="font-size:0.82rem;">📅 Criar lembrete no <strong>Google Agenda</strong> para cada parcela</span></label>
+      <button class="btn-primary" style="background:var(--amber); color:#1c1300;" onclick="salvarDevedor()">Criar Evento de Cobrança</button>
+    </div>
+  </div>
+
+  <div id="modalListaNova" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><h3 id="lnTitulo" style="margin:0; font-size:1.05rem;">🛒 Nova Lista de Compras</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalListaNova')">✕</button></div>
+      <label>Nome da lista:</label><input type="text" id="lnNome" placeholder="Ex: Mercado do mês, Feira, Farmácia">
+      <label>Categoria:</label><select id="lnCat"></select>
+      <label>Conta que será debitada:</label><select id="lnConta"></select>
+      <button class="btn-primary" style="background:var(--green);" id="lnBtn" onclick="salvarLista()">Criar e adicionar itens</button>
+    </div>
+  </div>
+
+  <div id="modalListaDet" class="modal-overlay hidden">
+    <div class="modal-box" style="max-height:92vh; overflow-y:auto;">
+      <div class="modal-header"><h3 id="ldTitulo" style="margin:0; font-size:1.05rem;"></h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalListaDet')">✕</button></div>
+      <small id="ldSub" style="color:var(--muted);"></small>
+      <div id="ldItens" style="margin:10px 0;"></div>
+      <div class="section-card">
+        <label>Descrição do item:</label><input type="text" id="liDesc" placeholder="Ex: Arroz 5kg">
+        <div class="grid-2">
+          <div><label>Quantidade:</label><input type="text" id="liQtd" inputmode="decimal" value="1"></div>
+          <div><label>Valor unitário (R$):</label><input type="text" id="liValor" inputmode="decimal" placeholder="0,00" onkeydown="if(event.key==='Enter')addItemLista()"></div>
+        </div>
+        <button class="btn-primary" style="background:#334155;" id="btnAddItem" onclick="addItemLista()">+ Adicionar item à lista</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:12px;"><strong>Total da compra</strong><strong id="ldTotal" style="color:var(--red);">R$ 0,00</strong></div>
+      <button class="btn-primary" style="background:var(--green);" onclick="efetivarLista()">✔ Efetivar compra (lançar no extrato)</button>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
+        <button class="btn-mini" style="background:var(--blue); color:#fff;" onclick="editarListaAtual()">✏️ Editar lista</button>
+        <button class="btn-mini" style="background:#334155; color:#fff;" onclick="duplicarLista(listaRow)">📄 Duplicar</button>
+        <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="excluirListaAtual()">🗑 Excluir lista</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalReceber" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><h3 style="margin:0; font-size:1.05rem;">💵 Receber Parcela</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalReceber')">✕</button></div>
+      <p id="recInfo" style="color:var(--muted); font-size:0.85rem; margin:0 0 6px;"></p>
+      <div class="grid-2">
+        <div><label>Valor recebido (R$):</label><input type="text" id="recValor" inputmode="decimal" oninput="avisoRecebimento()"></div>
+        <div><label>Data:</label><input type="date" id="recData"></div>
+      </div>
+      <small id="recAviso" style="color:var(--amber); display:block; min-height:1.1em; margin-top:4px;"></small>
+      <label>Entrou em qual conta?</label><select id="recConta"></select>
+      <button class="btn-primary" style="background:var(--green);" onclick="confirmarRecebimento()">Confirmar recebimento</button>
+    </div>
+  </div>
+
+  <div id="modalRapido" class="modal-overlay hidden">
+    <div class="modal-box" style="max-height:92vh; overflow-y:auto;">
+      <div class="modal-header"><h3 style="margin:0; font-size:1.05rem;">⚡ Despesa Rápida</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalRapido')">✕</button></div>
+      <label>Item:</label>
+      <select id="rpItem" onchange="rapidoEscolheu()"></select>
+      <div id="boxRpNovo" class="hidden">
+        <label>Nome do novo item:</label>
+        <input type="text" id="rpNome" placeholder="Ex: Pão francês">
+      </div>
+      <div id="boxRpDetalhes" class="hidden">
+        <label>Categoria:</label><select id="rpCat"></select>
+        <div class="grid-2">
+          <div><label>Valor unitário (R$):</label><input type="text" id="rpValor" inputmode="decimal" placeholder="0,50" oninput="rapidoTotal()"></div>
+          <div><label>Quantidade:</label><input type="text" id="rpQtd" inputmode="decimal" value="1" oninput="rapidoTotal()"></div>
+        </div>
+        <label>Debitar da conta:</label><select id="rpConta"></select>
+        <div style="display:flex; justify-content:space-between; margin-top:12px;"><strong>Total</strong><strong id="rpTotal" style="color:var(--red);">R$ 0,00</strong></div>
+        <button class="btn-primary" onclick="confirmarRapido()">Lançar despesa</button>
+        <button class="btn-primary" style="background:#334155;" onclick="confirmarRapido(true)">Lançar e continuar adicionando</button>
+        <button id="btnRpRemover" class="btn-mini hidden" style="background:#334155; color:#fca5a5; margin-top:10px;" onclick="removerItemRapido()">🗑 Remover este item da lista</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalLancamento" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="tituloModalTx" style="margin:0; font-size:1.05rem;">Novo Lançamento</h3>
+        <button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalLancamento')">✕</button>
+      </div>
+
+      <div class="sub-tabs" id="tabsTipoTx">
+        <div class="sub-tab active" onclick="selecionarTipoTx('despesa', this)">Despesa</div>
+        <div class="sub-tab" onclick="selecionarTipoTx('receita', this)">Receita</div>
+        <div class="sub-tab" onclick="selecionarTipoTx('cartao', this)">Cartão</div>
+        <div class="sub-tab" onclick="selecionarTipoTx('transferencia', this)">Transf.</div>
+      </div>
+
+      <label>Descrição:</label>
+      <input type="text" id="txDesc" placeholder="Ex: Mercado, Conta de Luz, Salário...">
+
+      <div class="grid-2">
+        <div>
+          <label>Valor (R$):</label>
+          <input type="text" id="txValor" inputmode="decimal" placeholder="0,00">
+        </div>
+        <div>
+          <label>Data:</label>
+          <input type="date" id="txData">
+        </div>
+      </div>
+
+      <div id="boxCategoria">
+        <label>Categoria:</label>
+        <select id="txCategoria"></select>
+      </div>
+
+      <div id="boxContaOrigem">
+        <label id="lblContaOrigem">Conta:</label>
+        <select id="txConta"></select>
+      </div>
+
+      <div id="boxContaDestino" class="hidden">
+        <label>Conta de Destino:</label>
+        <select id="txContaDestino"></select>
+      </div>
+
+      <div id="boxCartao" class="hidden">
+        <label>Cartão de Crédito:</label>
+        <select id="txCartao"></select>
+      </div>
+
+      <div class="grid-2" id="rowRepeticao">
+        <div id="boxRepeticao">
+          <label>Repetição:</label>
+          <select id="txRepeticao" onchange="toggleParcelas()">
+            <option value="unica">Única</option>
+            <option value="parcelada">Parcelada (Nx)</option>
+            <option value="fixa">Fixa Mensal (12x)</option>
+          </select>
+        </div>
+        <div id="boxParcelas" class="hidden">
+          <label>Qtd. Parcelas:</label>
+          <input type="number" id="txParcelas" min="2" max="48" value="2">
+        </div>
+        <div id="boxStatus">
+          <label>Situação:</label>
+          <select id="txStatus">
+            <option value="Efetivado">Pago / Recebido</option>
+            <option value="Pendente">Pendente (Agendar)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="boxContatoZap" class="hidden">
+        <label>WhatsApp p/ Cobrança (opcional):</label>
+        <input type="tel" id="txFone" placeholder="Ex: 22999998888">
+      </div>
+
+      <label class="checkbox-row" id="boxSyncGoogle">
+        <input type="checkbox" id="txCriarAgendaTask">
+        <span style="font-size:0.82rem;">📅 Criar lembrete no <strong id="txtSync">Google Agenda</strong></span>
+      </label>
+
+      <button class="btn-primary" id="btnSalvarTx" onclick="salvarLancamento()">Salvar Lançamento</button>
+      <button class="btn-primary" id="btnSalvarContinuar" style="background:#334155;" onclick="salvarLancamento(true)">Salvar e continuar adicionando</button>
+    </div>
+  </div>
+
+  <div id="modalCartao" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:1.05rem;">💳 Configurar Cartão de Crédito</h3>
+        <button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalCartao')">✕</button>
+      </div>
+
+      <label>Nome do banco:</label>
+      <input type="text" id="ccNome" placeholder="Ex: Nubank, Itaú, Inter, Bradesco">
+
+      <div class="grid-2">
+        <div>
+          <label>Bandeira:</label>
+          <select id="ccBandeira">
+            <option value="Mastercard">Mastercard</option>
+            <option value="Visa">Visa</option>
+            <option value="Elo">Elo</option>
+            <option value="Amex">American Express</option>
+            <option value="Hipercard">Hipercard</option>
+          </select>
+        </div>
+        <div>
+          <label>Cor do cartão:</label>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <input type="color" id="ccCor" value="#6d28d9" style="width:54px; height:42px; padding:2px;">
+            <button type="button" onclick="document.getElementById('ccCor').value='#6d28d9'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#6d28d9;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#ea580c'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#ea580c;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#0284c7'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#0284c7;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#1e293b'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#1e293b;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#059669'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#059669;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#dc2626'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#dc2626;cursor:pointer;"></button><button type="button" onclick="document.getElementById('ccCor').value='#db2777'" style="width:26px;height:26px;border-radius:50%;border:2px solid #fff3;background:#db2777;cursor:pointer;"></button>
+          </div>
+        </div>
+      </div>
+
+      <label>Limite Total (R$):</label>
+      <input type="text" id="ccLimite" inputmode="decimal" placeholder="5000,00">
+
+      <div class="grid-2">
+        <div>
+          <label>Dia de Fechamento:</label>
+          <input type="number" id="ccFechamento" min="1" max="31" value="5">
+        </div>
+        <div>
+          <label>Dia de Vencimento:</label>
+          <input type="number" id="ccVencimento" min="1" max="31" value="12">
+        </div>
+      </div>
+
+      <label>Conta Padrão para Pagamento da Fatura:</label>
+      <select id="ccContaPadrao"></select>
+
+      <button class="btn-primary" style="background:var(--purple);" onclick="salvarCartao()">Salvar Cartão de Crédito</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-target="telaResumo" onclick="navegar('telaResumo')"><span class="nav-icon">🏠</span><span>Resumo</span></button>
+    <button class="nav-btn" data-target="telaTransacoes" onclick="navegar('telaTransacoes')"><span class="nav-icon">↕️</span><span>Extrato</span></button>
+    <button class="nav-btn" data-target="telaCartoes" onclick="navegar('telaCartoes')"><span class="nav-icon">💳</span><span>Cartões</span></button>
+    <button class="nav-btn" data-target="telaCompras" onclick="navegar('telaCompras')"><span class="nav-icon">🛒</span><span>Compras</span></button>
+    <button class="nav-btn" data-target="telaDevedores" onclick="navegar('telaDevedores')"><span class="nav-icon">💰</span><span>Cobranças</span></button>
+    <button class="nav-btn" data-target="telaOrcamentos" onclick="navegar('telaOrcamentos')"><span class="nav-icon">🎯</span><span>Metas</span></button>
+    <button class="nav-btn" data-target="telaAjustes" onclick="navegar('telaAjustes')"><span class="nav-icon">⚙️</span><span>Ajustes</span></button>
+  </nav>
+</div>
+
+<script>
+  const CLIENT_ID = "484331620797-5eva98kl1vhk31jnl6m83ofpr6425ro2.apps.googleusercontent.com";
+  const SCOPES = [
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/tasks",
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/spreadsheets"
+  ].join(" ");
+
+  let tokenClient;
+  let accessToken = localStorage.getItem("mfp_gdrive_token") || "";
+  let spreadsheetId = localStorage.getItem("mfp_gdrive_sheet_id") || "";
+  let modoOffline = localStorage.getItem("mfp_offline_mode") === "true";
+  let sheetIdsMap = {};
+  let deferredPrompt;
+
+  let mesAtual = new Date();
+  let tipoTxAtual = "despesa";
+  let filtroTxAtual = "TODOS";
+  let editandoRow = null;
+
+  let db = {
+    contas: [],
+    cartoes: [],
+    categorias: [],
+    lancamentos: [],
+    orcamentos: [],
+    metas: [],
+    devedores: [],   // Cobranças ativas
+    pessoas: [],     // Cadastro de pessoas/devedores
+    itens: [],
+    listas: []
+  };
+
+  const APP_VERSION = 9;
+  const APP_RELEASE = "17/11/2026";
+
+  const manifestData = {
+    name: "AppFinance", short_name: "AppFinance", start_url: ".", display: "standalone",
+    background_color: "#090e1a", theme_color: "#090e1a",
+    icons: [{
+      src: "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#1e293b"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="240" fill="#10b981" font-family="sans-serif" font-weight="bold">R$</text></svg>'),
+      sizes: "512x512", type: "image/svg+xml"
+    }]
+  };
+  document.getElementById('manifest-link').setAttribute('href', 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifestData)));
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e;
+    document.getElementById('btnInstall').style.display = 'inline-block';
+  });
+
+  async function instalarApp() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  }
+
+  window.onload = () => {
+    atualizarLabelMes();
+    carregarPreferenciasLocal();
+
+    if (typeof google !== "undefined" && google.accounts) {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: async (resp) => {
+          if (resp.error) {
+            document.getElementById('statusLogin').innerText = "Erro no login: " + resp.error;
+            return;
+          }
+          modoOffline = false;
+          localStorage.setItem("mfp_offline_mode", "false");
+          accessToken = resp.access_token;
+          localStorage.setItem("mfp_gdrive_token", accessToken);
+          await prepararEstruturaDrive();
+        }
+      });
+    }
+
+    if (modoOffline) {
+      iniciarAppLogado();
+    } else if (accessToken && spreadsheetId) {
+      iniciarAppLogado();
+    }
+  };
+
+  function fazerLoginGoogle() {
+    if (!tokenClient) {
+      alert("A biblioteca do Google ainda não carregou ou você está sem internet. Você pode usar o Modo Local Offline.");
+      return;
+    }
+    document.getElementById('statusLogin').innerText = "Solicitando acesso ao Drive, Agenda e Tasks...";
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  function entrarModoLocal() {
+    if (localStorage.getItem("mfp_offline_locked") === "true") return alert("🔒 O limite da versão gratuita (3 transações sem conta) já foi atingido. Entre com sua conta Google para continuar.");
+    modoOffline = true;
+    localStorage.setItem("mfp_offline_mode", "true");
+    if (!localStorage.getItem("mfp_local_db")) {
+      const dbInicial = {
+        contas: [{ row: 2, cols: ["1", "Carteira", "Carteira", "0"] }],
+        cartoes: [],
+        categorias: [{ row: 2, cols: ["1", "despesa", "Alimentação"] }],
+        lancamentos: [],
+        orcamentos: [],
+        metas: [],
+        devedores: [],
+        pessoas: [],
+        itensrapidos: [],
+        listas: []
+      };
+      localStorage.setItem("mfp_local_db", JSON.stringify(dbInicial));
+    }
+    iniciarAppLogado();
+  }
+
+  function sairConta() {
+    localStorage.removeItem("mfp_gdrive_token");
+    localStorage.removeItem("mfp_gdrive_sheet_id");
+    localStorage.removeItem("mfp_offline_mode");
+    localStorage.removeItem("mfp_user_name");
+    localStorage.removeItem("mfp_user_photo");
+    localStorage.removeItem("mfp_own_sheet_id");
+    accessToken = ""; spreadsheetId = ""; modoOffline = false;
+    document.getElementById('appPrincipal').classList.add('hidden');
+    document.getElementById('telaLogin').classList.remove('hidden');
+  }
+
+  async function fetchGoogle(url, method = "GET", body = null) {
+    const opts = {
+      method,
+      headers: { "Authorization": "Bearer " + accessToken, "Content-Type": "application/json" }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    if (res.status === 401) {
+      tokenClient.requestAccessToken({ prompt: '' });
+      throw new Error("Sessão expirada, renovando token...");
+    }
+    return res;
+  }
+
+  async function prepararEstruturaDrive() {
+    const statusEl = document.getElementById('statusLogin');
+    statusEl.innerText = "Verificando banco de dados no Google Drive...";
+
+    try {
+      const q = encodeURIComponent("name = 'Minhas Financas DB v2' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false");
+      const searchRes = await fetchGoogle(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+      const searchData = await searchRes.json();
+
+      if (searchData.files && searchData.files.length > 0) {
+        spreadsheetId = searchData.files[0].id;
+        localStorage.setItem("mfp_gdrive_sheet_id", spreadsheetId);
+        iniciarAppLogado();
+        return;
+      }
+
+      statusEl.innerText = "Criando pasta 'Minhas Finanças Pro' no Google Drive...";
+      const folderRes = await fetchGoogle("https://www.googleapis.com/drive/v3/files", "POST", {
+        name: "Minhas Finanças Pro",
+        mimeType: "application/vnd.google-apps.folder"
+      });
+      const folder = await folderRes.json();
+
+      statusEl.innerText = "Criando tabelas...";
+      const sheetRes = await fetchGoogle("https://sheets.googleapis.com/v4/spreadsheets", "POST", {
+        properties: { title: "Minhas Financas DB v2" },
+        sheets: [
+          { properties: { title: "Contas" } },
+          { properties: { title: "Cartoes" } },
+          { properties: { title: "Categorias" } },
+          { properties: { title: "Lancamentos" } },
+          { properties: { title: "Orcamentos" } },
+          { properties: { title: "Metas" } },
+          { properties: { title: "Devedores" } },
+          { properties: { title: "Pessoas" } },
+          { properties: { title: "ItensRapidos" } },
+          { properties: { title: "Listas" } }
+        ]
+      });
+      const sheet = await sheetRes.json();
+      spreadsheetId = sheet.spreadsheetId;
+      localStorage.setItem("mfp_gdrive_sheet_id", spreadsheetId);
+
+      await fetchGoogle(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?addParents=${folder.id}&removeParents=root`, "PATCH");
+
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
+        valueInputOption: "RAW",
+        data: [
+          { range: "Contas!A1:D2", values: [["ID", "Nome", "Tipo", "SaldoInicial"], ["1", "Carteira", "Carteira", "0"]] },
+          { range: "Cartoes!A1:H1", values: [["ID", "Nome", "Bandeira", "Cor", "Limite", "Fechamento", "Vencimento", "ContaPadrao"]] },
+          { range: "Categorias!A1:C3", values: [["ID", "Tipo", "Nome"], ["1", "despesa", "Alimentação"], ["2", "receita", "Salário"]] },
+          { range: "Lancamentos!A1:O1", values: [["ID", "Tipo", "Descricao", "Valor", "Data", "MesFatura", "Categoria", "ContaOuCartao", "ContaDestino", "Status", "Parcela", "Telefone", "GoogleSyncId", "Itens", "Usuario"]] },
+          { range: "Orcamentos!A1:C1", values: [["ID", "Categoria", "Limite"]] },
+          { range: "Metas!A1:E1", values: [["ID", "Nome", "Alvo", "Guardado", "Prazo"]] },
+          { range: "Devedores!A1:J1", values: [["ID", "Nome", "Telefone", "Descricao", "Observacao", "ValorTotal", "Parcelas", "PrimeiroVenc", "Pagas", "Lembretes"]] },
+          { range: "Pessoas!A1:D1", values: [["ID", "Nome", "Telefone", "Observacao"]] }
+        ]
+      });
+
+      iniciarAppLogado();
+    } catch (err) {
+      statusEl.innerText = "Erro ao configurar Drive: " + err.message;
+    }
+  }
+
+  function iniciarAppLogado() {
+    if (modoOffline && localStorage.getItem("mfp_offline_locked") === "true") { sairConta(); aplicarBloqueioLogin(); return; }
+    document.getElementById('telaLogin').classList.add('hidden');
+    document.getElementById('appPrincipal').classList.remove('hidden');
+
+    const badge = document.getElementById('badgeModoApp');
+    const infoCon = document.getElementById('infoStatusConexao');
+    if (modoOffline) {
+      badge.innerText = "OFFLINE LOCAL";
+      badge.style.background = "rgba(245,158,11,0.2)";
+      badge.style.color = "#fcd34d";
+      infoCon.innerText = "Modo Local Offline (Sem sincronização Google)";
+      infoCon.style.color = "var(--amber)";
+    } else {
+      badge.innerText = "GOOGLE SYNC";
+      infoCon.innerText = "Conectado ao Google Drive, Agenda e Tasks";
+    }
+
+    carregarTodosDados();
+    carregarNomeUsuario();
+  }
+
+  async function carregarTodosDados() {
+    const loading = document.getElementById('loading');
+    loading.classList.remove('hidden');
+    try {
+      if (modoOffline) {
+        const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+        db = {
+          contas: localData.contas || [],
+          cartoes: localData.cartoes || [],
+          categorias: localData.categorias || [],
+          lancamentos: localData.lancamentos || [],
+          orcamentos: localData.orcamentos || [],
+          metas: localData.metas || [],
+          devedores: localData.devedores || [],
+          pessoas: localData.pessoas || [],
+          itens: localData.itensrapidos || [],
+          listas: localData.listas || []
+        };
+      } else {
+        const metaRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
+        const meta = await metaRes.json();
+        meta.sheets.forEach(s => { sheetIdsMap[s.properties.title] = s.properties.sheetId; });
+        await garantirAbas();
+
+        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:I&ranges=Categorias!A2:C&ranges=Lancamentos!A2:O&ranges=Orcamentos!A2:C&ranges=Metas!A2:E&ranges=Devedores!A2:J&ranges=Pessoas!A2:D&ranges=ItensRapidos!A2:D&ranges=Listas!A2:G";
+        const valRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
+        const valData = await valRes.json();
+
+        db.contas = (valData.valueRanges[0].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.cartoes = (valData.valueRanges[1].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.categorias = (valData.valueRanges[2].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.lancamentos = (valData.valueRanges[3].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.orcamentos = (valData.valueRanges[4].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.metas = (valData.valueRanges[5].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.devedores = (valData.valueRanges[6].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.pessoas = (valData.valueRanges[7].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.itens = (valData.valueRanges[8].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.listas = ((valData.valueRanges[9] || {}).values || []).map((r, i) => ({ row: i + 2, cols: r }));
+      }
+      sanitizarDb();
+      localStorage.setItem('mfp_last_sync', new Date().toISOString());
+      renderizarTudo();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loading.classList.add('hidden');
+    }
+  }
+
+  async function criarEventoAgendaETask(titulo, valor, dataStr, tipo) {
+    if (modoOffline || !accessToken) return "";
+    const hora = document.getElementById('cfgHoraLembrete').value || "09:00";
+    const prefixo = tipo === "receita" ? "💰 Cobrança:" : "💸 Pagar:";
+    const summary = `${prefixo} ${titulo} (${formatarMoeda(valor)})`;
+    const description = `Gerenciado pelo AppFinance.\nValor: ${formatarMoeda(valor)}`;
+
+    let syncIds = [];
+    const modo = integ();
+    if (modo === "nenhum") return "";
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Sao_Paulo";
+
+    try {
+      const startDateTime = `${dataStr}T${hora}:00`;
+      const endHour = String(Math.min(23, parseInt(hora.split(':')[0]) + 1)).padStart(2, '0');
+      const endDateTime = `${dataStr}T${endHour}:${hora.split(':')[1]}:00`;
+
+      if (modo === "agenda" || modo === "ambos") {
+        const calRes = await fetchGoogle("https://www.googleapis.com/calendar/v3/calendars/primary/events", "POST", {
+          summary, description,
+          start: { dateTime: startDateTime, timeZone: tz },
+          end: { dateTime: endDateTime, timeZone: tz }
+        });
+        if (calRes.ok) {
+          const calData = await calRes.json();
+          syncIds.push("CAL:" + calData.id);
+        }
+      }
+    } catch (err) { console.error(err); }
+
+    return syncIds.join("|");
+  }
+
+  function num(v) {
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    let t = String(v == null ? '' : v).replace(/[^\d,.\-]/g, '');
+    if (!t) return 0;
+    const lc = t.lastIndexOf(','), ld = t.lastIndexOf('.');
+    if (lc > -1 && ld > -1) t = lc > ld ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, '');
+    else if (lc > -1) t = t.replace(',', '.');
+    else if ((t.match(/\./g) || []).length > 1) t = t.replace(/\./g, '');
+    const n = Number(t);
+    return isNaN(n) ? 0 : n;
+  }
+  function r2(x) { return Math.round(num(x) * 100) / 100; }
+  function integ() { const v = localStorage.getItem("mfp_integracao"); return (!v || v === "nenhum") ? "agenda" : v; }
+  function dataISO(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+  function hojeISO() { return dataISO(new Date()); }
+
+  function sanitizarDb() {
+    Object.values(db).forEach(tab => tab.forEach(r => { r.cols = r.cols.map(c => String(c).replace(/</g, '&lt;').replace(/>/g, '&gt;')); }));
+  }
+
+  async function garantirAbas() {
+    const abas = [
+      ["Metas", ["ID", "Nome", "Alvo", "Guardado", "Prazo"]],
+      ["Devedores", ["ID", "Nome", "Telefone", "Descricao", "Observacao", "ValorTotal", "Parcelas", "PrimeiroVenc", "Pagas", "Lembretes"]],
+      ["Pessoas", ["ID", "Nome", "Telefone", "Observacao"]],
+      ["ItensRapidos", ["ID", "Nome", "Preco", "Categoria"]],
+      ["Listas", ["ID", "Nome", "Categoria", "Conta", "Status", "Itens", "Criada"]]
+    ];
+    for (const [nome, cab] of abas) {
+      if (sheetIdsMap[nome] !== undefined) continue;
+      const r = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, "POST", { requests: [{ addSheet: { properties: { title: nome } } }] });
+      const j = await r.json();
+      sheetIdsMap[nome] = j.replies[0].addSheet.properties.sheetId;
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${nome}!A1:${String.fromCharCode(64 + cab.length)}1?valueInputOption=RAW`, "PUT", { values: [cab] });
+    }
+  }
+
+  async function removerSync(syncId) {
+    if (!syncId || modoOffline) return;
+    for (const p of syncId.split("|")) {
+      const [k, id] = p.split(":");
+      try {
+        if (k === "CAL") await fetchGoogle(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${id}`, "DELETE");
+      } catch (e) { console.error(e); }
+    }
+  }
+
+  async function atualizarCelula(aba, row, col, idx, valor) {
+    if (modoOffline) {
+      const ld = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+      const it = (ld[aba.toLowerCase()] || []).find(x => x.row === row);
+      if (it) it.cols[idx] = valor;
+      localStorage.setItem("mfp_local_db", JSON.stringify(ld));
+    } else {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!${col}${row}?valueInputOption=RAW`, "PUT", { values: [[valor]] });
+    }
+  }
+
+  function getChaveMes(dateObj) {
+    return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  function atualizarLabelMes() {
+    document.getElementById('labelMesAtual').innerText = mesAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  }
+
+  function alterarMes(delta) {
+    mesAtual.setMonth(mesAtual.getMonth() + delta);
+    atualizarLabelMes();
+    renderizarTudo();
+  }
+
+  function irParaHoje() {
+    mesAtual = new Date();
+    atualizarLabelMes();
+    renderizarTudo();
+  }
+
+  function formatarMoeda(v) {
+    return num(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function mostrarToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg; t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 2400);
+  }
+
+  function toggleCategoriaCard(elHeader) {
+    const card = elHeader.parentElement;
+    card.classList.toggle('open');
+  }
+
+  function renderizarTudo() {
+    const chaveMesSel = getChaveMes(mesAtual);
+    const chaveMesHoje = getChaveMes(new Date());
+    const isMesCorrente = chaveMesSel === chaveMesHoje;
+
+    const saldosContas = {};
+    db.contas.forEach(c => { saldosContas[c.cols[1]] = num(c.cols[3]) || 0; });
+
+    db.lancamentos.forEach(l => {
+      const [id, tipo, desc, valStr, data, mesFat, cat, conta, contaDest, status] = l.cols;
+      const val = num(valStr) || 0;
+      if (status === "Efetivado") {
+        if (tipo === "receita" && saldosContas[conta] !== undefined) saldosContas[conta] += val;
+        if (tipo === "despesa" && saldosContas[conta] !== undefined) saldosContas[conta] -= val;
+        if (tipo === "transferencia") {
+          if (saldosContas[conta] !== undefined) saldosContas[conta] -= val;
+          if (saldosContas[contaDest] !== undefined) saldosContas[contaDest] += val;
+        }
+      }
+    });
+
+    const saldoTotalContas = Object.values(saldosContas).reduce((a, b) => a + b, 0);
+
+    let receitasMes = 0, receitasPendMes = 0;
+    let despesasMes = 0, despesasPendMes = 0;
+    let faturasMesAberto = 0;
+
+    const gastosAgrupadosCat = {};
+    const pendentesLista = [];
+    const faturasPorCartao = {};
+
+    db.cartoes.forEach(c => {
+      faturasPorCartao[c.cols[1]] = {
+        row: c.row, bandeira: c.cols[2] || "Mastercard", cor: c.cols[3] || "linear-gradient(135deg, #6d28d9, #4c1d95)",
+        limite: num(c.cols[4]) || 0, fech: parseInt(c.cols[5]) || 5, venc: parseInt(c.cols[6]) || 12,
+        contaPadrao: c.cols[7] || "", faturaMes: 0, usoTotalLimite: 0, itens: []
+      };
+    });
+
+    db.lancamentos.forEach(l => {
+      const [id, tipo, desc, valStr, data, mesFat, cat, contaOuCartao, contaDest, status] = l.cols;
+      const val = num(valStr) || 0;
+      const mesData = (data || "").substring(0, 7);
+      const nomeCat = cat || "Sem Categoria";
+
+      if (tipo === "cartao" && faturasPorCartao[contaOuCartao] && status !== "Pago") {
+        faturasPorCartao[contaOuCartao].usoTotalLimite += val;
+      }
+
+      if (tipo === "receita" && mesData === chaveMesSel) {
+        receitasMes += val;
+        if (status === "Pendente") { receitasPendMes += val; pendentesLista.push(l); }
+      }
+
+      if (tipo === "despesa" && mesData === chaveMesSel) {
+        despesasMes += val;
+        if (status === "Pendente") { despesasPendMes += val; pendentesLista.push(l); }
+        if (!gastosAgrupadosCat[nomeCat]) gastosAgrupadosCat[nomeCat] = { total: 0, itens: [] };
+        gastosAgrupadosCat[nomeCat].total += val;
+        gastosAgrupadosCat[nomeCat].itens.push(l);
+      }
+
+      if (tipo === "cartao" && mesFat === chaveMesSel) {
+        if (status !== "Pago") faturasMesAberto += val;
+        if (!gastosAgrupadosCat[nomeCat]) gastosAgrupadosCat[nomeCat] = { total: 0, itens: [] };
+        gastosAgrupadosCat[nomeCat].total += val;
+        gastosAgrupadosCat[nomeCat].itens.push(l);
+
+        if (faturasPorCartao[contaOuCartao]) {
+          faturasPorCartao[contaOuCartao].faturaMes += val;
+          faturasPorCartao[contaOuCartao].itens.push(l);
+        }
+      }
+    });
+
+    const totalDespesasGeral = despesasMes + faturasMesAberto;
+    const balancoMes = receitasMes - totalDespesasGeral;
+    const previsaoFimMes = saldoTotalContas + receitasPendMes - despesasPendMes - faturasMesAberto;
+
+    document.getElementById('dashSaldoAtual').innerText = formatarMoeda(saldoTotalContas);
+    document.getElementById('dashReceitas').innerText = formatarMoeda(receitasMes);
+    document.getElementById('dashDespesas').innerText = formatarMoeda(totalDespesasGeral);
+    document.getElementById('dashBalanco').innerText = formatarMoeda(balancoMes);
+
+    const cardPrev = document.getElementById('cardPrevisaoMes');
+    const badgeMes = document.getElementById('badgeMesStatus');
+    if (isMesCorrente) {
+      cardPrev.classList.remove('hidden');
+      document.getElementById('dashPrevisao').innerText = formatarMoeda(previsaoFimMes);
+      badgeMes.innerText = "Mês Corrente";
+    } else {
+      cardPrev.classList.add('hidden');
+      badgeMes.innerText = chaveMesSel < chaveMesHoje ? "Mês Encerrado" : "Planejamento Futuro";
+    }
+
+    renderizarExtrato();
+    popularSelects();
+    renderizarEvolucao();
+    renderizarMetas();
+    renderizarDevedores();
+    renderizarPessoas();
+    renderizarRapido();
+    renderizarListas();
+    renderizarListaDetalhe();
+    atualizarCompartilhar();
+    atualizarInfoApp();
+  }
+
+  function renderizarEvolucao() {
+    const meses = [];
+    for (let i = 5; i >= 0; i--) meses.push(getChaveMes(new Date(mesAtual.getFullYear(), mesAtual.getMonth() - i, 1)));
+    const rec = {}, des = {};
+    meses.forEach(m => { rec[m] = 0; des[m] = 0; });
+    db.lancamentos.forEach(l => {
+      const [id, t, d, v, dt, mf] = l.cols;
+      const val = num(v) || 0, m = (dt || '').substring(0, 7);
+      if (t === 'receita' && rec[m] !== undefined) rec[m] += val;
+      if (t === 'despesa' && des[m] !== undefined && !(d || '').startsWith('Fatura ')) des[m] += val;
+      if (t === 'cartao' && des[mf] !== undefined) des[mf] += val;
+    });
+    const max = Math.max(1, ...meses.map(m => Math.max(rec[m], des[m])));
+    document.getElementById('dashEvolucao').innerHTML = '<div class="evo">' + meses.map(m =>
+      `<div class="evo-col"><div class="evo-bars"><i style="height:${rec[m] / max * 100}%;background:var(--green)"></i><i style="height:${des[m] / max * 100}%;background:var(--red)"></i></div><small>${m.substring(5)}/${m.substring(2, 4)}</small></div>`).join('') + '</div>';
+  }
+
+  function renderizarMetas() {
+    const el = document.getElementById('listaMetas');
+    el.innerHTML = db.metas.length === 0 ? '<p style="color:var(--muted); font-size:0.82rem;">Nenhuma meta criada ainda.</p>' : '';
+    db.metas.forEach(m => {
+      const [id, nome, alvoS, guardS, prazo] = m.cols;
+      const alvo = num(alvoS) || 0, guard = num(guardS) || 0;
+      const pct = alvo > 0 ? Math.min(100, guard / alvo * 100) : 0;
+      el.innerHTML += `
+        <div class="section-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>🐷 ${nome}</strong>
+            <div style="display:flex; gap:4px;">
+              <button class="btn-mini" style="background:var(--green); color:#fff;" onclick="depositarMeta(${m.row})">+ Guardar</button>
+              <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Metas', ${m.row})">✕</button>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:6px; color:var(--muted);">
+            <span>Guardado: <strong style="color:var(--green)">${formatarMoeda(guard)}</strong> (${pct.toFixed(0)}%)</span>
+            <span>Alvo: ${formatarMoeda(alvo)}</span>
+          </div>
+          <div class="progress-bg" style="background:var(--bg);"><div class="progress-fill" style="width:${pct}%; background:var(--green);"></div></div>
+        </div>`;
+    });
+  }
+
+  async function salvarMeta() {
+    const nome = document.getElementById('metaNome').value.trim();
+    const alvo = num(document.getElementById('metaAlvo').value);
+    const prazo = document.getElementById('metaPrazo').value;
+    if (!nome || !alvo) return alert("Informe o nome e o valor alvo da meta!");
+    await adicionarLinhas("Metas", [[Date.now().toString(), nome, alvo, 0, prazo]]);
+    ['metaNome', 'metaAlvo', 'metaPrazo'].forEach(i => document.getElementById(i).value = '');
+    mostrarToast("Meta criada!");
+  }
+
+  async function depositarMeta(row) {
+    const m = db.metas.find(x => x.row === row);
+    const v = num((prompt("Quanto deseja guardar nesta meta?", "100") || "").replace(',', '.'));
+    if (!m || isNaN(v)) return;
+    const novo = Math.max(0, (num(m.cols[3]) || 0) + v);
+    await atualizarCelula("Metas", row, "D", 3, novo);
+    mostrarToast("Meta atualizada!");
+    await carregarTodosDados();
+  }
+
+  async function carregarNomeUsuario() {
+    let nome = localStorage.getItem("mfp_user_name") || "";
+    let foto = localStorage.getItem("mfp_user_photo") || "";
+    if ((!nome || !foto) && !modoOffline && accessToken) {
+      try {
+        const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: "Bearer " + accessToken } });
+        if (r.ok) {
+          const j = await r.json();
+          if (!nome) nome = j.given_name || j.name || "";
+          if (!foto && j.picture) { foto = j.picture; localStorage.setItem("mfp_user_photo", foto); }
+        }
+      } catch (e) {}
+    }
+    if (!nome) nome = (prompt("Como devemos te chamar?") || "").trim();
+    if (nome) localStorage.setItem("mfp_user_name", nome);
+    mostrarNome();
+  }
+
+  function mostrarNome() {
+    const n = localStorage.getItem("mfp_user_name") || "";
+    const foto = localStorage.getItem("mfp_user_photo") || "";
+    const img = document.getElementById('perfilFoto'), ini = document.getElementById('perfilIni');
+    document.getElementById('perfilNome').innerText = n || 'Definir nome';
+    ini.innerText = (n || '?').charAt(0).toUpperCase();
+    if (foto) { img.src = foto; img.classList.remove('hidden'); ini.classList.add('hidden'); }
+  }
+
+  function atualizarInfoApp() {
+    const st = document.getElementById('sbStatus');
+    if (!st) return;
+    st.innerText = modoOffline ? '📴 Modo local' : '☁️ Sincronizado com Google';
+    document.getElementById('sbVersao').innerText = 'v' + APP_VERSION;
+    document.getElementById('sbRelease').innerText = APP_RELEASE;
+    const iv = document.getElementById('infoVersao'); if (iv) iv.innerText = `AppFinance v${APP_VERSION} • ${APP_RELEASE}`;
+  }
+
+  function editarNome() {
+    const n = prompt("Seu nome:", localStorage.getItem("mfp_user_name") || "");
+    if (n && n.trim()) { localStorage.setItem("mfp_user_name", n.trim()); mostrarNome(); }
+  }
+
+  // --- ABA COBRANÇA DE DÍVIDAS / DEVEDORES ---
+  function mudarAbaDevedores(tipo, el) {
+    const parent = el.parentElement;
+    parent.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('secaoCobrancas').classList.toggle('hidden', tipo !== 'cobrancas');
+    document.getElementById('secaoPessoas').classList.toggle('hidden', tipo !== 'pessoas');
+  }
+
+  function abrirModalPessoa() {
+    ['pesNome', 'pesFone', 'pesObs'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('modalPessoa').classList.remove('hidden');
+  }
+
+  async function salvarPessoa() {
+    const nome = document.getElementById('pesNome').value.trim();
+    const fone = document.getElementById('pesFone').value.trim();
+    const obs = document.getElementById('pesObs').value.trim();
+    if (!nome) return alert("Informe o nome da pessoa!");
+    fecharModal('modalPessoa');
+    await adicionarLinhas("Pessoas", [[Date.now().toString(), nome, fone, obs]]);
+    mostrarToast("Pessoa cadastrada com sucesso!");
+  }
+
+  function renderizarPessoas() {
+    const el = document.getElementById('listaCadPessoas');
+    if (!el) return;
+    el.innerHTML = db.pessoas.length === 0 ? '<p style="color:var(--muted); font-size:0.85rem;">Nenhuma pessoa cadastrada.</p>' : '';
+    db.pessoas.forEach(p => {
+      const [id, nome, fone, obs] = p.cols;
+      el.innerHTML += `
+        <div class="section-card">
+          <strong>👤 ${nome}</strong><br>
+          <small style="color:var(--muted)">Telefone: ${fone || 'Não informado'} • Obs: ${obs || 'Nenhuma'}</small>
+          <div style="margin-top:8px;">
+            <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Pessoas', ${p.row})">Excluir</button>
+          </div>
+        </div>`;
+    });
+  }
+
+  function abrirModalDevedor() {
+    if (db.pessoas.length === 0) return alert("Cadastre pelo menos uma pessoa na aba 'Cadastrar Pessoas' antes de criar uma cobrança!");
+    const sel = document.getElementById('devPessoaSelect');
+    sel.innerHTML = db.pessoas.map(p => `<option value="${p.cols[1]}">${p.cols[1]}</option>`).join('');
+    preencherDadosDevedor();
+    ['devDesc', 'devObs', 'devValor'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('devParcelas').value = 1;
+    document.getElementById('devVenc').value = hojeISO();
+    document.getElementById('modalDevedor').classList.remove('hidden');
+  }
+
+  function preencherDadosDevedor() {
+    const nomeSel = document.getElementById('devPessoaSelect').value;
+    const pessoa = db.pessoas.find(p => p.cols[1] === nomeSel);
+    if (pessoa) {
+      document.getElementById('lblDevFone').innerText = pessoa.cols[2] || 'Não informado';
+      document.getElementById('lblDevObs').innerText = pessoa.cols[3] || 'Nenhuma';
+    }
+  }
+
+  function vencParcela(iso, k) {
+    const [a, m, d] = iso.split('-').map(Number);
+    const dt = new Date(a, m - 1 + k, 1);
+    dt.setDate(Math.min(d, new Date(a, m + k, 0).getDate()));
+    return dataISO(dt);
+  }
+
+  async function salvarDevedor() {
+    const nome = document.getElementById('devPessoaSelect').value;
+    const pessoa = db.pessoas.find(p => p.cols[1] === nome);
+    const fone = pessoa ? pessoa.cols[2] : '';
+    const desc = document.getElementById('devDesc').value.trim();
+    const obs = document.getElementById('devObs').value.trim();
+    const valor = num(document.getElementById('devValor').value);
+    const parc = parseInt(document.getElementById('devParcelas').value) || 1;
+    const venc = document.getElementById('devVenc').value;
+    if (!nome || !desc || !valor || !venc) return alert("Preencha todos os campos obrigatórios!");
+
+    const querAgenda = document.getElementById('devAgenda').checked && !modoOffline;
+    fecharModal('modalDevedor');
+    document.getElementById('loading').classList.remove('hidden');
+
+    const syncs = [];
+    const valorParcela = valor / parc;
+    for (let k = 0; k < parc; k++) {
+      const dataVenc = vencParcela(venc, k);
+      const titulo = parc > 1 ? `${desc} (${k + 1}/${parc})` : desc;
+      if (querAgenda) {
+        syncs.push(await criarEventoAgendaETask(`Cobrar ${nome}: ${titulo}`, valorParcela, dataVenc, 'receita'));
+      }
+    }
+
+    await adicionarLinhas("Devedores", [[Date.now().toString(), nome, fone, desc, obs, valor, parc, venc, 0, syncs.join(';')]]);
+    mostrarToast("Cobrança e eventos criados com sucesso!");
+  }
+
+  function renderizarDevedores() {
+    const el = document.getElementById('listaDevedores');
+    if (!el) return;
+    let totalAberto = 0;
+    el.innerHTML = db.devedores.length === 0 ? '<p style="color:var(--muted); font-size:0.85rem;">Nenhuma cobrança ativa.</p>' : '';
+    db.devedores.forEach(d => {
+      const [id, nome, fone, desc, obs, totS, parcS, venc, pagasS] = d.cols;
+      const tot = num(totS) || 0, n = Math.max(1, parseInt(parcS) || 1), pagas = Math.min(n, parseInt(pagasS) || 0);
+      const vp = tot / n, aberto = Math.max(0, tot - vp * pagas), quit = pagas >= n;
+      totalAberto += aberto;
+      const prox = quit ? null : vencParcela(venc, pagas);
+
+      el.innerHTML += `
+        <div class="section-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div><strong>👤 ${nome}</strong><br><small style="color:var(--muted)">${desc} • ${fone || 'sem tel'}</small></div>
+            <span class="badge ${quit ? 'badge-ok' : 'badge-pend'}">${quit ? 'Quitado' : 'Ativo'}</span>
+          </div>
+          <p style="font-size:0.8rem; color:var(--muted); margin:6px 0;">${obs ? 'Obs: ' + obs : ''}</p>
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:8px; color:var(--muted);">
+            <span>Parcelas: <strong style="color:var(--text)">${pagas}/${n}</strong></span>
+            <span>Aberto: <strong style="color:var(--amber)">${formatarMoeda(aberto)}</strong></span>
+          </div>
+          <div class="progress-bg" style="background:var(--bg);"><div class="progress-fill" style="width:${pagas / n * 100}%; background:var(--green);"></div></div>
+          <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
+            ${!quit ? `<button class="btn-mini" style="background:var(--green); color:#fff;" onclick="abrirModalReceber(${d.row})">✔ Registrar Recebimento</button>` : ''}
+            <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Devedores', ${d.row})">Excluir</button>
+          </div>
+        </div>`;
+    });
+    document.getElementById('resumoDevedores').innerHTML = db.devedores.length ?
+      `<div class="mini-stat" style="margin-bottom:12px;"><span>Total a receber em cobranças</span><strong style="color:var(--amber)">${formatarMoeda(totalAberto)}</strong></div>` : '';
+  }
+
+  let recRow = null;
+  function abrirModalReceber(row) {
+    const d = db.devedores.find(x => x.row === row);
+    if (!db.contas.length) return alert("Cadastre uma conta antes de registrar recebimentos!");
+    recRow = row;
+    const n = Math.max(1, parseInt(d.cols[6]) || 1), pagas = parseInt(d.cols[8]) || 0;
+    document.getElementById('recInfo').innerText = `${d.cols[1]} — ${d.cols[3]} (parcela ${Math.min(pagas + 1, n)}/${n})`;
+    document.getElementById('recValor').value = r2((num(d.cols[5]) || 0) / n);
+    document.getElementById('recData').value = hojeISO();
+    document.getElementById('recConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    document.getElementById('modalReceber').classList.remove('hidden');
+  }
+  function avisoRecebimento() {}
+
+  async function confirmarRecebimento() {
+    const d = db.devedores.find(x => x.row === recRow);
+    const valor = num(document.getElementById('recValor').value);
+    const data = document.getElementById('recData').value;
+    const conta = document.getElementById('recConta').value;
+    if (!d || !valor || !data || !conta) return alert("Preencha todos os campos!");
+    const n = Math.max(1, parseInt(d.cols[6]) || 1), pagas = parseInt(d.cols[8]) || 0;
+    fecharModal('modalReceber');
+    document.getElementById('loading').classList.remove('hidden');
+    await atualizarCelula("Devedores", d.row, "I", 8, pagas + 1);
+    await adicionarLinhas("Lancamentos", [[`${Date.now()}-1`, 'receita', `Recebido de ${d.cols[1]}: ${d.cols[3]}`, r2(valor), data, data.substring(0, 7), 'Renda Extra / Cobranças', conta, '', 'Efetivado', '1/1', '', '']]);
+    mostrarToast("Recebimento lançado na conta!");
+  }
+
+  // --- Listas de Compras & Outros ---
+  let listaRow = null, liEditIdx = null, listaEditRow = null, listaEditVoltar = false;
+  function itensLista(l) { try { const a = JSON.parse(l.cols[5] || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function totalLista(l) { return r2(itensLista(l).reduce((a, i) => a + num(i[1]) * num(i[2]), 0)); }
+  function abrirModalListaNova(editRow, voltar) {
+    listaEditRow = editRow || null; listaEditVoltar = !!voltar;
+    const l = listaEditRow ? db.listas.find(x => x.row === listaEditRow) : null;
+    document.getElementById('lnTitulo').innerText = l ? '✏️ Editar Lista' : '🛒 Nova Lista de Compras';
+    document.getElementById('lnCat').innerHTML = db.categorias.filter(c => c.cols[1] === 'despesa').map(c => `<option value="${c.cols[2]}">${c.cols[2]}</option>`).join('');
+    document.getElementById('lnConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    document.getElementById('lnNome').value = l ? l.cols[1] : '';
+    document.getElementById('modalListaNova').classList.remove('hidden');
+  }
+  async function salvarLista() {
+    const nome = document.getElementById('lnNome').value.trim();
+    const cat = document.getElementById('lnCat').value || 'Sem Categoria';
+    const conta = document.getElementById('lnConta').value;
+    if (!nome) return alert("Dê um nome para a lista!");
+    fecharModal('modalListaNova');
+    await adicionarLinhas("Listas", [[Date.now().toString(), nome, cat, conta, 'Aberta', '[]', hojeISO()]]);
+  }
+  function abrirLista(row) {
+    listaRow = row; liEditIdx = null;
+    document.getElementById('modalListaDet').classList.remove('hidden');
+    renderizarListaDetalhe();
+  }
+  function renderizarListaDetalhe() {
+    const m = document.getElementById('modalListaDet');
+    if (!m || m.classList.contains('hidden')) return;
+    const l = db.listas.find(x => x.row === listaRow);
+    if (!l) { m.classList.add('hidden'); return; }
+    const itens = itensLista(l);
+    document.getElementById('ldTitulo').innerText = '🛒 ' + l.cols[1];
+    document.getElementById('ldSub').innerText = `${l.cols[2]} • ${l.cols[3]}`;
+    document.getElementById('ldItens').innerHTML = itens.length === 0 ? '<p style="color:var(--muted); font-size:0.82rem;">Nenhum item ainda.</p>' :
+      itens.map((i, k) => `<div class="row-item"><strong>${i[0]}</strong> <span>${i[1]}x ${formatarMoeda(i[2])}</span></div>`).join('');
+    document.getElementById('ldTotal').innerText = formatarMoeda(totalLista(l));
+  }
+  async function addItemLista() {
+    const l = db.listas.find(x => x.row === listaRow);
+    const desc = document.getElementById('liDesc').value.trim();
+    const qtd = num(document.getElementById('liQtd').value) || 1;
+    const valor = num(document.getElementById('liValor').value);
+    if (!l || !desc || !valor) return alert("Preencha os campos!");
+    const itens = itensLista(l);
+    itens.push([desc, qtd, valor]);
+    l.cols[5] = JSON.stringify(itens);
+    renderizarListaDetalhe();
+    await atualizarCelula("Listas", l.row, "F", 5, l.cols[5]);
+    document.getElementById('liDesc').value = '';
+    document.getElementById('liValor').value = '';
+  }
+  async function efetivarLista() {
+    const l = db.listas.find(x => x.row === listaRow);
+    if (!l) return;
+    const total = totalLista(l);
+    document.getElementById('modalListaDet').classList.add('hidden');
+    await atualizarCelula("Listas", l.row, "E", 4, "Efetivada");
+    await adicionarLinhas("Lancamentos", [[Date.now().toString(), 'despesa', l.cols[1], total, hojeISO(), hojeISO().substring(0, 7), l.cols[2], l.cols[3], '', 'Efetivado', '1/1', '', '', l.cols[5]]]);
+    mostrarToast("Compra efetivada!");
+  }
+  function renderizarListas() {
+    const ab = document.getElementById('listaComprasAbertas');
+    if (!ab) return;
+    const abertas = db.listas.filter(l => l.cols[4] !== 'Efetivada');
+    ab.innerHTML = abertas.length === 0 ? '<p style="color:var(--muted); font-size:0.85rem;">Nenhuma lista aberta.</p>' : '';
+    abertas.forEach(l => {
+      ab.innerHTML += `<div class="section-card" onclick="abrirLista(${l.row})" style="cursor:pointer;"><strong>🛒 ${l.cols[1]}</strong><br><small style="color:var(--muted)">${formatarMoeda(totalLista(l))}</small></div>`;
+    });
+  }
+
+  // --- Compartilhamento de E-mail Corrigido ---
+  function atualizarCompartilhar() {
+    const c = document.getElementById('shCodigo');
+    if (!c) return;
+    c.value = modoOffline ? '(disponível ao entrar com o Google)' : spreadsheetId;
+  }
+  async function copiarCodigoConta() {
+    try { await navigator.clipboard.writeText(spreadsheetId); mostrarToast("Chave copiada!"); } catch (e) { alert(spreadsheetId); }
+  }
+  async function convidarUsuario() {
+    if (modoOffline) return alert("Entre com sua conta Google para compartilhar.");
+    const email = document.getElementById('shEmail').value.trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) return alert("Informe um e-mail válido!");
+    try {
+      const r = await fetchGoogle(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions?sendNotificationEmail=true`, "POST", { role: "writer", type: "user", emailAddress: email });
+      if (!r.ok) throw new Error(await r.text());
+      document.getElementById('shEmail').value = '';
+      
+      const linkApp = window.location.href.split('?')[0];
+      const chaveConta = spreadsheetId;
+      alert(`✅ Convite enviado com sucesso para ${email}!\n\nO e-mail enviado contém o link de acesso ao aplicativo e a chave de compartilhamento:\n\nLink: ${linkApp}\nChave da Conta: ${chaveConta}`);
+    } catch (e) {
+      alert("Erro ao enviar convite automático. Compartilhe a planilha pelo Google Drive.");
+    }
+  }
+  async function entrarContaCompartilhada() {
+    const raw = document.getElementById('shEntrar').value.trim();
+    if (!raw) return alert("Insira a chave ou link!");
+    spreadsheetId = raw;
+    localStorage.setItem("mfp_gdrive_sheet_id", raw);
+    mostrarToast("Conta conectada!");
+    await carregarTodosDados();
+  }
+  function voltarMinhaConta() { location.reload(); }
+
+  // --- Despesa rápida ---
+  function preencherRpItem(sel) {
+    const el = document.getElementById('rpItem');
+    el.innerHTML = '<option value="">— Escolha um item —</option>' +
+      db.itens.map(i => `<option value="${i.cols[0]}">${i.cols[1]}</option>`).join('') +
+      '<option value="__novo__">➕ Inserir novo item...</option>';
+    el.value = sel || '';
+  }
+  function abrirModalRapido() {
+    document.getElementById('rpCat').innerHTML = db.categorias.filter(c => c.cols[1] === 'despesa').map(c => `<option value="${c.cols[2]}">${c.cols[2]}</option>`).join('');
+    document.getElementById('rpConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    preencherRpItem('');
+    document.getElementById('modalRapido').classList.remove('hidden');
+    rapidoEscolheu();
+  }
+  function renderizarRapido() {}
+  function rapidoEscolheu() {
+    const v = document.getElementById('rpItem').value;
+    document.getElementById('boxRpNovo').classList.toggle('hidden', v !== '__novo__');
+    document.getElementById('boxRpDetalhes').classList.toggle('hidden', !v);
+  }
+  function rapidoTotal() {}
+  async function confirmarRapido(continuar = false) {
+    const sel = document.getElementById('rpItem').value;
+    const conta = document.getElementById('rpConta').value;
+    const cat = document.getElementById('rpCat').value || 'Sem Categoria';
+    const unit = num(document.getElementById('rpValor').value);
+    const qtd = num(document.getElementById('rpQtd').value) || 1;
+    let nome = sel === '__novo__' ? document.getElementById('rpNome').value.trim() : (db.itens.find(x => String(x.cols[0]) === sel) || {}).cols[1];
+    if (!nome || !unit) return alert("Preencha os campos!");
+    fecharModal('modalRapido');
+    await adicionarLinhas("Lancamentos", [[Date.now().toString(), 'despesa', nome, unit * qtd, hojeISO(), hojeISO().substring(0, 7), cat, conta, '', 'Efetivado', '1/1', '', '']]);
+    mostrarToast("Despesa rápida lançada!");
+  }
+
+  // --- Extrato & Lançamentos ---
+  let visaoExtrato = null, _manterVisao = false;
+  function abrirVisao(v) { visaoExtrato = v; _manterVisao = true; navegar('telaTransacoes'); _manterVisao = false; renderizarExtrato(); }
+  function limparVisao() { visaoExtrato = null; renderizarExtrato(); }
+  function bannerVisao(v) { return `<div class="alerta-atraso" onclick="limparVisao()">Filtro ativo: ${v} (Toque para remover)</div>`; }
+  function htmlVisaoEspecial(v) { return ''; }
+
+  function renderizarExtrato() {
+    const vis = visaoExtrato;
+    const modoLista = !vis;
+    document.getElementById('extratoFiltros').classList.toggle('hidden', !!vis);
+    document.getElementById('listaTransacoes').classList.toggle('hidden', !modoLista);
+    const chaveMesSel = getChaveMes(mesAtual);
+    const termo = (document.getElementById('buscaTx').value || "").toLowerCase();
+    const lista = document.getElementById('listaTransacoes');
+
+    let txs = db.lancamentos.filter(l => {
+      const [id, tipo, desc, val, data, mesFat, cat, conta, dest, status] = l.cols;
+      const mesRef = tipo === "cartao" ? mesFat : (data || "").substring(0, 7);
+      if (mesRef !== chaveMesSel) return false;
+      if (filtroTxAtual !== "TODOS") {
+        if (filtroTxAtual === "PENDENTE" && status !== "Pendente") return false;
+        if (filtroTxAtual !== "PENDENTE" && tipo !== filtroTxAtual) return false;
+      }
+      if (termo && !`${desc} ${cat} ${conta}`.toLowerCase().includes(termo)) return false;
+      return true;
+    });
+
+    txs.sort((a, b) => (b.cols[4] || "").localeCompare(a.cols[4] || ""));
+    lista.innerHTML = txs.length === 0 ? '<p style="text-align:center; color:var(--muted); padding:24px;">Nenhum lançamento encontrado.</p>' : '';
+
+    txs.forEach(l => {
+      const [id, tipo, desc, valStr, data, mesFat, cat, conta, dest, status, parcela] = l.cols;
+      const val = num(valStr) || 0;
+      const dataBr = data ? data.split('-').reverse().join('/') : '';
+      const isPend = status === "Pendente";
+      const sinal = tipo === "receita" ? "+" : (tipo === "transferencia" ? "⇄" : "-");
+
+      lista.innerHTML += `
+        <div class="tx-card ${tipo} ${isPend ? 'pendente' : ''}">
+          <div class="tx-info">
+            <h4>${desc} ${parcela && parcela !== '1/1' ? `<small style="color:var(--muted)">(${parcela})</small>` : ''}</h4>
+            <p>${dataBr} • ${cat} • <strong>${conta}</strong> <span class="badge ${isPend ? 'badge-pend' : 'badge-ok'}">${status}</span></p>
+          </div>
+          <div class="tx-right">
+            <span class="tx-val">${sinal} ${formatarMoeda(val)}</span>
+            <div style="display:flex; gap:4px;">
+              ${isPend ? `<button class="btn-mini" style="background:var(--green); color:#fff;" onclick="efetivarLancamento(${l.row})">Efetivar</button>` : ''}
+              <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Lancamentos', ${l.row})">✕</button>
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  function popularSelects() {
+    const selOrc = document.getElementById('orcCategoria');
+    const listaCadCats = document.getElementById('listaCadCats');
+    if (!selOrc) return;
+    selOrc.innerHTML = ''; listaCadCats.innerHTML = '';
+
+    db.categorias.forEach(c => {
+      const [id, tipo, nome] = c.cols;
+      if (tipo === "despesa") selOrc.innerHTML += `<option value="${nome}">${nome}</option>`;
+      listaCadCats.innerHTML += `
+        <div class="row-item">
+          <span>${nome} (${tipo})</span>
+          <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Categorias', ${c.row})">Excluir</button>
+        </div>`;
+    });
+  }
+
+  function navegar(telaId) {
+    document.querySelectorAll('.nav-btn, .side-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-target') === telaId);
+    });
+    ['telaResumo', 'telaTransacoes', 'telaCartoes', 'telaCompras', 'telaDevedores', 'telaOrcamentos', 'telaAjustes'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
+    });
+    document.getElementById(telaId).classList.remove('hidden');
+    if (telaId === 'telaTransacoes') renderizarExtrato();
+  }
+
+  function mudarSubAba(idAlvo, el) {
+    const parent = el.parentElement;
+    parent.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    parent.parentElement.querySelectorAll('.section-card').forEach(c => c.classList.add('hidden'));
+    document.getElementById(idAlvo).classList.remove('hidden');
+  }
+
+  function filtrarTx(tipo, el) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    filtroTxAtual = tipo;
+    renderizarExtrato();
+  }
+
+  function fecharModal(id) { document.getElementById(id).classList.add('hidden'); editandoRow = null; }
+
+  function abrirModalCartao() {
+    const selConta = document.getElementById('ccContaPadrao');
+    selConta.innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    document.getElementById('modalCartao').classList.remove('hidden');
+  }
+
+  function abrirModalLancamento() {
+    editandoRow = null;
+    document.getElementById('txData').value = hojeISO();
+    document.getElementById('txDesc').value = '';
+    document.getElementById('txValor').value = '';
+    document.getElementById('txConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    selecionarTipoTx('despesa', document.querySelector('#tabsTipoTx .sub-tab'));
+    document.getElementById('modalLancamento').classList.remove('hidden');
+  }
+
+  function selecionarTipoTx(tipo, el) {
+    tipoTxAtual = tipo;
+    document.querySelectorAll('#tabsTipoTx .sub-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const selCat = document.getElementById('txCategoria');
+    selCat.innerHTML = db.categorias.filter(c => c.cols[1] === (tipo === 'receita' ? 'receita' : 'despesa')).map(c => `<option value="${c.cols[2]}">${c.cols[2]}</option>`).join('');
+  }
+
+  function toggleParcelas() {}
+
+  async function adicionarLinhas(aba, linhas) {
+    document.getElementById('loading').classList.remove('hidden');
+    if (modoOffline) {
+      const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+      const key = aba.toLowerCase();
+      if (!localData[key]) localData[key] = [];
+      linhas.forEach(cols => { localData[key].push({ row: localData[key].length + 2, cols }); });
+      localStorage.setItem("mfp_local_db", JSON.stringify(localData));
+    } else {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!A1:append?valueInputOption=RAW`, "POST", { values: linhas });
+    }
+    await carregarTodosDados();
+  }
+
+  async function salvarLancamento(continuar = false) {
+    const desc = document.getElementById('txDesc').value.trim();
+    const valor = num(document.getElementById('txValor').value);
+    const data = document.getElementById('txData').value;
+    const cat = document.getElementById('txCategoria').value;
+    const conta = document.getElementById('txConta').value;
+    if (!desc || !valor || !data) return alert("Preencha descrição, valor e data!");
+    fecharModal('modalLancamento');
+    await adicionarLinhas("Lancamentos", [[Date.now().toString(), tipoTxAtual, desc, valor, data, data.substring(0, 7), cat, conta, '', 'Efetivado', '1/1', '', '']]);
+    mostrarToast("Lançamento salvo!");
+  }
+
+  async function efetivarLancamento(row) {
+    await atualizarCelula("Lancamentos", row, "J", 9, "Efetivado");
+    mostrarToast("Efetivado!");
+    await carregarTodosDados();
+  }
+
+  async function salvarConta() {
+    const nome = document.getElementById('contaNome').value.trim();
+    if (!nome) return alert("Nome obrigatório!");
+    await adicionarLinhas("Contas", [[Date.now().toString(), nome, 'Conta', 0]]);
+    mostrarToast("Conta salva!");
+  }
+
+  async function salvarCartao() {
+    const nome = document.getElementById('ccNome').value.trim();
+    const limite = num(document.getElementById('ccLimite').value);
+    if (!nome) return alert("Nome obrigatório!");
+    fecharModal('modalCartao');
+    await adicionarLinhas("Cartoes", [[Date.now().toString(), nome, 'Mastercard', '#6d28d9', limite, 5, 12, '']]);
+    mostrarToast("Cartão salvo!");
+  }
+
+  async function salvarCategoria() {
+    const nome = document.getElementById('catNome').value.trim();
+    const tipo = document.getElementById('catTipo').value;
+    if (!nome) return alert("Nome obrigatório!");
+    await adicionarLinhas("Categorias", [[Date.now().toString(), tipo, nome]]);
+    mostrarToast("Categoria salva!");
+  }
+
+  async function salvarOrcamento() {
+    const cat = document.getElementById('orcCategoria').value;
+    const val = num(document.getElementById('orcValor').value);
+    await adicionarLinhas("Orcamentos", [[Date.now().toString(), cat, val]]);
+    mostrarToast("Orçamento salvo!");
+  }
+
+  async function deletarLinha(aba, row) {
+    if (!confirm("Deseja excluir este registro?")) return;
+    document.getElementById('loading').classList.remove('hidden');
+    if (modoOffline) {
+      const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
+      const key = aba.toLowerCase();
+      localData[key] = (localData[key] || []).filter(x => x.row !== row);
+      localStorage.setItem("mfp_local_db", JSON.stringify(localData));
+    } else {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, "POST", {
+        requests: [{ deleteDimension: { range: { sheetId: sheetIdsMap[aba], dimension: "ROWS", startIndex: row - 1, endIndex: row } } }]
+      });
+    }
+    mostrarToast("Excluído!");
+    await carregarTodosDados();
+  }
+
+  function exportarCSV() {
+    let csv = "ID;Tipo;Descricao;Valor;Data;Categoria;Conta;Status\n";
+    db.lancamentos.forEach(l => { csv += l.cols.slice(0, 8).join(";") + "\n"; });
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `AppFinance.csv`;
+    a.click();
+  }
+
+  function exportarBackup() {
+    const blob = new Blob([JSON.stringify({ db }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `Backup_AppFinance.json`;
+    a.click();
+  }
+
+  function resetarBancoDados() {
+    if (!confirm("Recriar base?")) return;
+    localStorage.removeItem("mfp_gdrive_sheet_id");
+    localStorage.removeItem("mfp_local_db");
+    location.reload();
+  }
+
+  function salvarPreferenciasLocal() {
+    localStorage.setItem("mfp_integracao", document.getElementById('cfgIntegracao').value);
+    localStorage.setItem("mfp_auto_sync_agenda", document.getElementById('cfgAutoSyncAgenda').checked);
+  }
+  function carregarPreferenciasLocal() {}
+  function aplicarBloqueioLogin() {}
+</script>
+</body>
+</html>
