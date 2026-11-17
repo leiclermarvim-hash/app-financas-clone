@@ -561,6 +561,14 @@
     .qty b{min-width:20px;text-align:center}
     .msg-cobranca{background:var(--bg);border:1px dashed var(--border);border-radius:12px;padding:10px;font-size:.76rem;color:var(--muted);margin:8px 0;white-space:pre-wrap}
     #saudacao{font-size:.72rem;color:var(--muted);cursor:pointer;margin-top:2px}
+
+    .perfil-chip{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:3px 12px 3px 3px;cursor:pointer;max-width:160px}
+    .perfil-chip img,.perfil-chip .ini{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0}
+    .perfil-chip .ini{background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
+    #perfilNome{font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .itens-tx{font-size:.74rem;color:var(--muted);margin-top:6px;line-height:1.55}
+    nav.bottom-nav .nav-btn{font-size:.6rem;padding:4px 1px}
+    @media (max-width:520px){.header-left h1{font-size:.92rem}#perfilNome{max-width:54px}.btn-top{padding:6px 8px}}
   </style>
 </head>
 <body>
@@ -596,6 +604,7 @@
     <button class="side-btn active" data-target="telaResumo" onclick="navegar('telaResumo')">🏠 Visão Geral</button>
     <button class="side-btn" data-target="telaTransacoes" onclick="navegar('telaTransacoes')">↕️ Extrato & Lançamentos</button>
     <button class="side-btn" data-target="telaCartoes" onclick="navegar('telaCartoes')">💳 Cartões de Crédito</button>
+    <button class="side-btn" data-target="telaCompras" onclick="navegar('telaCompras')">🛒 Listas de Compras</button>
     <button class="side-btn" data-target="telaDevedores" onclick="navegar('telaDevedores')">💰 Devedores</button>
     <button class="side-btn" data-target="telaOrcamentos" onclick="navegar('telaOrcamentos')">🎯 Orçamentos & Metas</button>
     <button class="side-btn" data-target="telaAjustes" onclick="navegar('telaAjustes')">⚙️ Configurações</button>
@@ -607,7 +616,7 @@
     <header>
       <div class="header-inner">
         <div class="header-left">
-          <div><h1>📊 Finanças <span id="badgeModoApp" class="badge-mode">CLOUD</span></h1><div id="saudacao" onclick="editarNome()" title="Toque para alterar o nome"></div></div>
+          <h1>📊 Finanças <span id="badgeModoApp" class="badge-mode">CLOUD</span></h1>
         </div>
 
         <div class="month-nav">
@@ -617,6 +626,7 @@
         </div>
 
         <div class="header-actions">
+          <div id="perfilChip" class="perfil-chip" onclick="editarNome()" title="Toque para alterar o nome"><img id="perfilFoto" class="hidden" alt="" referrerpolicy="no-referrer"><span id="perfilIni" class="ini"></span><span id="perfilNome"></span></div>
           <button id="btnInstall" class="btn-top btn-install" onclick="instalarApp()">📲 Instalar</button>
           <button class="btn-top" onclick="carregarTodosDados()" title="Sincronizar">↻</button>
           <button class="btn-top" style="background:rgba(239,68,68,0.2); color:#fca5a5; border-color:rgba(239,68,68,0.3);" onclick="sairConta()">Sair</button>
@@ -726,6 +736,13 @@
         <div id="listaFaturasDetalhadas" class="desktop-grid-2"></div>
       </div>
 
+      <!-- ABA: LISTAS DE COMPRAS -->
+      <div id="telaCompras" class="view-section hidden">
+        <button class="btn-primary" style="background:var(--green); margin-top:0; margin-bottom:14px;" onclick="abrirModalListaNova()">+ Nova Lista de Compras</button>
+        <div id="listaComprasAbertas" class="desktop-grid-2"></div>
+        <div id="listaComprasHist"></div>
+      </div>
+
       <!-- ABA: DEVEDORES -->
       <div id="telaDevedores" class="view-section hidden">
         <button class="btn-primary" style="background:var(--amber); color:#1c1300; margin-top:0; margin-bottom:14px;" onclick="abrirModalDevedor()">+ Nova Cobrança / Devedor</button>
@@ -744,7 +761,7 @@
             </div>
             <div>
               <label>Limite Mensal (R$):</label>
-              <input type="number" id="orcValor" step="0.01" inputmode="decimal" placeholder="0,00">
+              <input type="text" id="orcValor" inputmode="decimal" placeholder="0,00">
             </div>
           </div>
           <button class="btn-primary" onclick="salvarOrcamento()">Salvar Orçamento</button>
@@ -754,7 +771,7 @@
           <h3 style="margin:0 0 8px; font-size:0.95rem;">🐷 Metas de Economia (Reserva, Viagem, Carro...)</h3>
           <div class="grid-2">
             <div><label>Nome da meta:</label><input type="text" id="metaNome" placeholder="Ex: Reserva de emergência"></div>
-            <div><label>Valor alvo (R$):</label><input type="number" id="metaAlvo" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+            <div><label>Valor alvo (R$):</label><input type="text" id="metaAlvo" inputmode="decimal" placeholder="0,00"></div>
           </div>
           <label>Prazo (opcional):</label>
           <input type="date" id="metaPrazo">
@@ -788,7 +805,7 @@
             </div>
             <div>
               <label>Saldo Inicial (R$):</label>
-              <input type="number" id="contaSaldo" step="0.01" inputmode="decimal" value="0">
+              <input type="text" id="contaSaldo" inputmode="decimal" value="0">
             </div>
           </div>
           <button class="btn-primary" onclick="salvarConta()">Salvar Conta</button>
@@ -873,30 +890,80 @@
       <label>Contato (WhatsApp com DDD):</label><input type="tel" id="devFone" placeholder="22999998888">
       <label>Descrição da cobrança:</label><input type="text" id="devDesc" placeholder="Ex: Empréstimo, venda de celular...">
       <div class="grid-2">
-        <div><label>Valor total (R$):</label><input type="number" id="devValor" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+        <div><label>Valor total (R$):</label><input type="text" id="devValor" inputmode="decimal" placeholder="0,00"></div>
         <div><label>Qtd. de parcelas:</label><input type="number" id="devParcelas" min="1" max="60" value="1"></div>
       </div>
       <label>Vencimento da 1ª parcela:</label><input type="date" id="devVenc">
+      <label class="checkbox-row"><input type="checkbox" id="devAgenda"><span style="font-size:0.82rem;">📅 Criar lembrete de cobrança no <strong>Google Agenda</strong> para cada parcela</span></label>
       <button class="btn-primary" style="background:var(--amber); color:#1c1300;" onclick="salvarDevedor()">Salvar Cobrança</button>
+      <button class="btn-primary" style="background:#334155;" onclick="salvarDevedor(true)">Salvar e continuar adicionando</button>
+    </div>
+  </div>
+
+  <div id="modalListaNova" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><h3 style="margin:0; font-size:1.05rem;">🛒 Nova Lista de Compras</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalListaNova')">✕</button></div>
+      <label>Nome da lista:</label><input type="text" id="lnNome" placeholder="Ex: Mercado do mês, Feira, Farmácia">
+      <label>Categoria:</label><select id="lnCat"></select>
+      <label>Conta que será debitada:</label><select id="lnConta"></select>
+      <button class="btn-primary" style="background:var(--green);" onclick="salvarLista()">Criar e adicionar itens</button>
+    </div>
+  </div>
+
+  <div id="modalListaDet" class="modal-overlay hidden">
+    <div class="modal-box" style="max-height:92vh; overflow-y:auto;">
+      <div class="modal-header"><h3 id="ldTitulo" style="margin:0; font-size:1.05rem;"></h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalListaDet')">✕</button></div>
+      <small id="ldSub" style="color:var(--muted);"></small>
+      <div id="ldItens" style="margin:10px 0;"></div>
+      <div class="section-card">
+        <label>Descrição do item:</label><input type="text" id="liDesc" placeholder="Ex: Arroz 5kg">
+        <div class="grid-2">
+          <div><label>Quantidade:</label><input type="text" id="liQtd" inputmode="decimal" value="1"></div>
+          <div><label>Valor unitário (R$):</label><input type="text" id="liValor" inputmode="decimal" placeholder="0,00" onkeydown="if(event.key==='Enter')addItemLista()"></div>
+        </div>
+        <button class="btn-primary" style="background:#334155;" onclick="addItemLista()">+ Adicionar item à lista</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:12px;"><strong>Total da compra</strong><strong id="ldTotal" style="color:var(--red);">R$ 0,00</strong></div>
+      <button class="btn-primary" style="background:var(--green);" onclick="efetivarLista()">✔ Efetivar compra (lançar no extrato)</button>
+      <button class="btn-mini" style="background:#334155; color:#fca5a5; margin-top:10px;" onclick="excluirListaAtual()">🗑 Excluir lista</button>
+    </div>
+  </div>
+
+  <div id="modalReceber" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header"><h3 style="margin:0; font-size:1.05rem;">💵 Receber Parcela</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalReceber')">✕</button></div>
+      <p id="recInfo" style="color:var(--muted); font-size:0.85rem; margin:0 0 6px;"></p>
+      <div class="grid-2">
+        <div><label>Valor recebido (R$):</label><input type="text" id="recValor" inputmode="decimal" oninput="avisoRecebimento()"></div>
+        <div><label>Data:</label><input type="date" id="recData"></div>
+      </div>
+      <small id="recAviso" style="color:var(--amber); display:block; min-height:1.1em; margin-top:4px;"></small>
+      <label>Entrou em qual conta?</label><select id="recConta"></select>
+      <button class="btn-primary" style="background:var(--green);" onclick="confirmarRecebimento()">Confirmar recebimento</button>
     </div>
   </div>
 
   <div id="modalRapido" class="modal-overlay hidden">
     <div class="modal-box" style="max-height:92vh; overflow-y:auto;">
       <div class="modal-header"><h3 style="margin:0; font-size:1.05rem;">⚡ Despesa Rápida</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalRapido')">✕</button></div>
-      <div id="rapidoLista"></div>
-      <div class="section-card" style="margin-top:10px;">
-        <strong style="font-size:0.85rem;">+ Novo item</strong>
-        <div class="grid-2">
-          <div><label>Nome:</label><input type="text" id="rpNome" placeholder="Ex: Pão"></div>
-          <div><label>Preço (R$):</label><input type="number" id="rpPreco" step="0.01" inputmode="decimal" placeholder="0,00"></div>
-        </div>
-        <label>Categoria:</label><select id="rpCat"></select>
-        <button class="btn-primary" style="background:#334155;" onclick="salvarItemRapido()">Salvar item</button>
+      <label>Item:</label>
+      <select id="rpItem" onchange="rapidoEscolheu()"></select>
+      <div id="boxRpNovo" class="hidden">
+        <label>Nome do novo item:</label>
+        <input type="text" id="rpNome" placeholder="Ex: Pão francês">
       </div>
-      <label>Debitar da conta:</label><select id="rpConta"></select>
-      <div style="display:flex; justify-content:space-between; margin-top:12px;"><strong>Total</strong><strong id="rpTotal" style="color:var(--red);">R$ 0,00</strong></div>
-      <button class="btn-primary" onclick="confirmarRapido()">Lançar despesa</button>
+      <div id="boxRpDetalhes" class="hidden">
+        <label>Categoria:</label><select id="rpCat"></select>
+        <div class="grid-2">
+          <div><label>Valor unitário (R$):</label><input type="text" id="rpValor" inputmode="decimal" placeholder="0,50" oninput="rapidoTotal()"></div>
+          <div><label>Quantidade:</label><input type="text" id="rpQtd" inputmode="decimal" value="1" oninput="rapidoTotal()"></div>
+        </div>
+        <label>Debitar da conta:</label><select id="rpConta"></select>
+        <div style="display:flex; justify-content:space-between; margin-top:12px;"><strong>Total</strong><strong id="rpTotal" style="color:var(--red);">R$ 0,00</strong></div>
+        <button class="btn-primary" onclick="confirmarRapido()">Lançar despesa</button>
+        <button class="btn-primary" style="background:#334155;" onclick="confirmarRapido(true)">Lançar e continuar adicionando</button>
+        <button id="btnRpRemover" class="btn-mini hidden" style="background:#334155; color:#fca5a5; margin-top:10px;" onclick="removerItemRapido()">🗑 Remover este item da lista</button>
+      </div>
     </div>
   </div>
 
@@ -921,7 +988,7 @@
       <div class="grid-2">
         <div>
           <label>Valor (R$):</label>
-          <input type="number" id="txValor" step="0.01" inputmode="decimal" placeholder="0,00">
+          <input type="text" id="txValor" inputmode="decimal" placeholder="0,00">
         </div>
         <div>
           <label>Data:</label>
@@ -982,6 +1049,7 @@
       </label>
 
       <button class="btn-primary" id="btnSalvarTx" onclick="salvarLancamento()">Salvar Lançamento</button>
+      <button class="btn-primary" id="btnSalvarContinuar" style="background:#334155;" onclick="salvarLancamento(true)">Salvar e continuar adicionando</button>
     </div>
   </div>
 
@@ -1020,7 +1088,7 @@
       </div>
 
       <label>Limite Total (R$):</label>
-      <input type="number" id="ccLimite" step="0.01" inputmode="decimal" placeholder="5000,00">
+      <input type="text" id="ccLimite" inputmode="decimal" placeholder="5000,00">
 
       <div class="grid-2">
         <div>
@@ -1045,6 +1113,7 @@
     <button class="nav-btn active" data-target="telaResumo" onclick="navegar('telaResumo')"><span class="nav-icon">🏠</span><span>Resumo</span></button>
     <button class="nav-btn" data-target="telaTransacoes" onclick="navegar('telaTransacoes')"><span class="nav-icon">↕️</span><span>Extrato</span></button>
     <button class="nav-btn" data-target="telaCartoes" onclick="navegar('telaCartoes')"><span class="nav-icon">💳</span><span>Cartões</span></button>
+    <button class="nav-btn" data-target="telaCompras" onclick="navegar('telaCompras')"><span class="nav-icon">🛒</span><span>Compras</span></button>
     <button class="nav-btn" data-target="telaDevedores" onclick="navegar('telaDevedores')"><span class="nav-icon">💰</span><span>Devedores</span></button>
     <button class="nav-btn" data-target="telaOrcamentos" onclick="navegar('telaOrcamentos')"><span class="nav-icon">🎯</span><span>Metas</span></button>
     <button class="nav-btn" data-target="telaAjustes" onclick="navegar('telaAjustes')"><span class="nav-icon">⚙️</span><span>Ajustes</span></button>
@@ -1082,7 +1151,8 @@
     orcamentos: [], // [ID, Categoria, Limite]
     metas: [],       // [ID, Nome, Alvo, Guardado, Prazo]
     devedores: [],   // [ID, Nome, Telefone, Descricao, ValorTotal, Parcelas, PrimeiroVenc, Pagas]
-    itens: []        // [ID, Nome, Preco, Categoria]
+    itens: [],       // [ID, Nome, Preco, Categoria]
+    listas: []       // [ID, Nome, Categoria, Conta, Status, ItensJSON, Criada]
   };
 
   // PWA Manifest
@@ -1180,6 +1250,7 @@
     localStorage.removeItem("mfp_gdrive_sheet_id");
     localStorage.removeItem("mfp_offline_mode");
     localStorage.removeItem("mfp_user_name");
+    localStorage.removeItem("mfp_user_photo");
     accessToken = ""; spreadsheetId = ""; modoOffline = false;
     document.getElementById('appPrincipal').classList.add('hidden');
     document.getElementById('telaLogin').classList.remove('hidden');
@@ -1241,7 +1312,7 @@
       await fetchGoogle(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?addParents=${folder.id}&removeParents=root`, "PATCH");
 
       await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
-        valueInputOption: "USER_ENTERED",
+        valueInputOption: "RAW",
         data: [
           { range: "Contas!A1:D3", values: [
             ["ID", "Nome", "Tipo", "SaldoInicial"],
@@ -1315,7 +1386,8 @@
           orcamentos: localData.orcamentos || [],
           metas: localData.metas || [],
           devedores: localData.devedores || [],
-          itens: localData.itensrapidos || []
+          itens: localData.itensrapidos || [],
+          listas: localData.listas || []
         };
       } else {
         const metaRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
@@ -1323,7 +1395,7 @@
         meta.sheets.forEach(s => { sheetIdsMap[s.properties.title] = s.properties.sheetId; });
         await garantirAbas();
 
-        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:H&ranges=Categorias!A2:C&ranges=Lancamentos!A2:M&ranges=Orcamentos!A2:C&ranges=Metas!A2:E&ranges=Devedores!A2:H&ranges=ItensRapidos!A2:D";
+        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:H&ranges=Categorias!A2:C&ranges=Lancamentos!A2:N&ranges=Orcamentos!A2:C&ranges=Metas!A2:E&ranges=Devedores!A2:I&ranges=ItensRapidos!A2:D&ranges=Listas!A2:G";
         const valRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
         const valData = await valRes.json();
 
@@ -1335,6 +1407,7 @@
         db.metas = (valData.valueRanges[5].values || []).map((r, i) => ({ row: i + 2, cols: r }));
         db.devedores = (valData.valueRanges[6].values || []).map((r, i) => ({ row: i + 2, cols: r }));
         db.itens = (valData.valueRanges[7].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        db.listas = ((valData.valueRanges[8] || {}).values || []).map((r, i) => ({ row: i + 2, cols: r }));
       }
       sanitizarDb();
       renderizarTudo();
@@ -1401,18 +1474,38 @@
     return syncIds.join("|");
   }
 
+  function num(v) {
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    let t = String(v == null ? '' : v).replace(/[^\d,.\-]/g, '');
+    if (!t) return 0;
+    const lc = t.lastIndexOf(','), ld = t.lastIndexOf('.');
+    if (lc > -1 && ld > -1) t = lc > ld ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, '');
+    else if (lc > -1) t = t.replace(',', '.');
+    else if ((t.match(/\./g) || []).length > 1) t = t.replace(/\./g, '');
+    const n = Number(t);
+    return isNaN(n) ? 0 : n;
+  }
+  function r2(x) { return Math.round(num(x) * 100) / 100; }
   function integ() { const v = localStorage.getItem("mfp_integracao"); return (!v || v === "nenhum") ? "agenda" : v; }
   function modoSync() { return integ(); }
   function dataISO(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
   function hojeISO() { return dataISO(new Date()); }
   function sanitizarDb() {
     Object.values(db).forEach(tab => tab.forEach(r => { r.cols = r.cols.map(c => String(c).replace(/</g, '&lt;').replace(/>/g, '&gt;')); }));
+    const dt = v => /^\d{2}\/\d{2}\/\d{4}$/.test(v || '') ? v.split('/').reverse().join('-') : v;
+    db.lancamentos.forEach(r => { r.cols[4] = dt(r.cols[4]); });
+    db.devedores.forEach(r => { r.cols[6] = dt(r.cols[6]); });
+    db.metas.forEach(r => { r.cols[4] = dt(r.cols[4]); });
   }
   async function garantirAbas() {
+    if (!localStorage.getItem('mfp_hdrN')) {
+      try { await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!N1?valueInputOption=RAW`, "PUT", { values: [["Itens"]] }); localStorage.setItem('mfp_hdrN', '1'); } catch (e) {}
+    }
     const abas = [
       ["Metas", ["ID", "Nome", "Alvo", "Guardado", "Prazo"]],
-      ["Devedores", ["ID", "Nome", "Telefone", "Descricao", "ValorTotal", "Parcelas", "PrimeiroVenc", "Pagas"]],
-      ["ItensRapidos", ["ID", "Nome", "Preco", "Categoria"]]
+      ["Devedores", ["ID", "Nome", "Telefone", "Descricao", "ValorTotal", "Parcelas", "PrimeiroVenc", "Pagas", "Lembretes"]],
+      ["ItensRapidos", ["ID", "Nome", "Preco", "Categoria"]],
+      ["Listas", ["ID", "Nome", "Categoria", "Conta", "Status", "Itens", "Criada"]]
     ];
     for (const [nome, cab] of abas) {
       if (sheetIdsMap[nome] !== undefined) continue;
@@ -1439,7 +1532,7 @@
       if (it) it.cols[idx] = valor;
       localStorage.setItem("mfp_local_db", JSON.stringify(ld));
     } else {
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!${col}${row}?valueInputOption=USER_ENTERED`, "PUT", { values: [[valor]] });
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!${col}${row}?valueInputOption=RAW`, "PUT", { values: [[valor]] });
     }
   }
 
@@ -1465,7 +1558,7 @@
   }
 
   function formatarMoeda(v) {
-    return parseFloat(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return num(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
   function mostrarToast(msg) {
@@ -1489,12 +1582,12 @@
     // 1. Saldo das Contas
     const saldosContas = {};
     db.contas.forEach(c => {
-      saldosContas[c.cols[1]] = parseFloat(c.cols[3]) || 0;
+      saldosContas[c.cols[1]] = num(c.cols[3]) || 0;
     });
 
     db.lancamentos.forEach(l => {
       const [id, tipo, desc, valStr, data, mesFat, cat, conta, contaDest, status] = l.cols;
-      const val = parseFloat(valStr) || 0;
+      const val = num(valStr) || 0;
       if (status === "Efetivado") {
         if (tipo === "receita" && saldosContas[conta] !== undefined) saldosContas[conta] += val;
         if (tipo === "despesa" && saldosContas[conta] !== undefined) saldosContas[conta] -= val;
@@ -1522,7 +1615,7 @@
         row: c.row,
         bandeira: c.cols[2] || "Mastercard",
         cor: c.cols[3] || "linear-gradient(135deg, #6d28d9, #4c1d95)",
-        limite: parseFloat(c.cols[4]) || 0,
+        limite: num(c.cols[4]) || 0,
         fech: parseInt(c.cols[5]) || 5,
         venc: parseInt(c.cols[6]) || 12,
         contaPadrao: c.cols[7] || "",
@@ -1534,7 +1627,7 @@
 
     db.lancamentos.forEach(l => {
       const [id, tipo, desc, valStr, data, mesFat, cat, contaOuCartao, contaDest, status, parcela] = l.cols;
-      const val = parseFloat(valStr) || 0;
+      const val = num(valStr) || 0;
       const mesData = (data || "").substring(0, 7);
       const nomeCat = cat || "Sem Categoria";
 
@@ -1731,7 +1824,7 @@
         </div>`;
 
       const itensAbertos = info.itens.filter(x => x.cols[9] !== "Pago");
-      const valorAberto = itensAbertos.reduce((acc, x) => acc + (parseFloat(x.cols[3]) || 0), 0);
+      const valorAberto = itensAbertos.reduce((acc, x) => acc + (num(x.cols[3]) || 0), 0);
 
       let htmlItensFat = info.itens.map(item => `
         <div class="row-item" style="font-size:0.82rem;">
@@ -1791,7 +1884,7 @@
     listaOrc.innerHTML = '';
     db.orcamentos.forEach(o => {
       const cat = o.cols[1];
-      const limite = parseFloat(o.cols[2]) || 0;
+      const limite = num(o.cols[2]) || 0;
       const gasto = gastosAgrupadosCat[cat] ? gastosAgrupadosCat[cat].total : 0;
       const pct = limite > 0 ? Math.min(100, (gasto / limite) * 100) : 0;
       const cor = gasto > limite ? 'var(--red)' : (pct > 80 ? 'var(--amber)' : 'var(--green)');
@@ -1816,6 +1909,8 @@
     renderizarMetas();
     renderizarDevedores();
     renderizarRapido();
+    renderizarListas();
+    renderizarListaDetalhe();
   }
 
   function renderizarEvolucao() {
@@ -1825,7 +1920,7 @@
     meses.forEach(m => { rec[m] = 0; des[m] = 0; });
     db.lancamentos.forEach(l => {
       const [id, t, d, v, dt, mf] = l.cols;
-      const val = parseFloat(v) || 0, m = (dt || '').substring(0, 7);
+      const val = num(v) || 0, m = (dt || '').substring(0, 7);
       if (t === 'receita' && rec[m] !== undefined) rec[m] += val;
       if (t === 'despesa' && des[m] !== undefined && !(d || '').startsWith('Fatura ')) des[m] += val;
       if (t === 'cartao' && des[mf] !== undefined) des[mf] += val;
@@ -1836,7 +1931,7 @@
 
     const hoje = hojeISO();
     const atr = db.lancamentos.filter(l => l.cols[9] === 'Pendente' && (l.cols[4] || '') < hoje && ['receita', 'despesa'].includes(l.cols[1]));
-    const aPagar = atr.filter(l => l.cols[1] === 'despesa').reduce((a, l) => a + (parseFloat(l.cols[3]) || 0), 0);
+    const aPagar = atr.filter(l => l.cols[1] === 'despesa').reduce((a, l) => a + (num(l.cols[3]) || 0), 0);
     document.getElementById('dashAtrasados').innerHTML = atr.length === 0 ? '' :
       `<div class="alerta-atraso" onclick="navegar('telaTransacoes')">⚠️ ${atr.length} lançamento(s) vencido(s) e pendente(s)${aPagar > 0 ? ' • ' + formatarMoeda(aPagar) + ' a pagar' : ''} — toque para ver</div>`;
   }
@@ -1846,7 +1941,7 @@
     el.innerHTML = db.metas.length === 0 ? '<p style="color:var(--muted); font-size:0.82rem;">Nenhuma meta criada ainda.</p>' : '';
     db.metas.forEach(m => {
       const [id, nome, alvoS, guardS, prazo] = m.cols;
-      const alvo = parseFloat(alvoS) || 0, guard = parseFloat(guardS) || 0;
+      const alvo = num(alvoS) || 0, guard = num(guardS) || 0;
       const pct = alvo > 0 ? Math.min(100, guard / alvo * 100) : 0;
       el.innerHTML += `
         <div class="section-card">
@@ -1868,7 +1963,7 @@
 
   async function salvarMeta() {
     const nome = document.getElementById('metaNome').value.trim();
-    const alvo = parseFloat(document.getElementById('metaAlvo').value);
+    const alvo = num(document.getElementById('metaAlvo').value);
     const prazo = document.getElementById('metaPrazo').value;
     if (!nome || !alvo) return alert("Informe o nome e o valor alvo da meta!");
     await adicionarLinhas("Metas", [[Date.now().toString(), nome, alvo, 0, prazo]]);
@@ -1878,22 +1973,27 @@
 
   async function depositarMeta(row) {
     const m = db.metas.find(x => x.row === row);
-    const v = parseFloat((prompt("Quanto deseja guardar nesta meta? (use negativo para retirar)", "100") || "").replace(',', '.'));
+    const v = num((prompt("Quanto deseja guardar nesta meta? (use negativo para retirar)", "100") || "").replace(',', '.'));
     if (!m || isNaN(v)) return;
-    const novo = Math.max(0, (parseFloat(m.cols[3]) || 0) + v);
+    const novo = Math.max(0, (num(m.cols[3]) || 0) + v);
     document.getElementById('loading').classList.remove('hidden');
     await atualizarCelula("Metas", row, "D", 3, novo);
     mostrarToast("Meta atualizada!");
     await carregarTodosDados();
   }
 
-  // ----- Nome do usuário -----
+  // ----- Perfil (nome + foto) -----
   async function carregarNomeUsuario() {
     let nome = localStorage.getItem("mfp_user_name") || "";
-    if (!nome && !modoOffline && accessToken) {
+    let foto = localStorage.getItem("mfp_user_photo") || "";
+    if ((!nome || !foto) && !modoOffline && accessToken) {
       try {
         const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: "Bearer " + accessToken } });
-        if (r.ok) { const j = await r.json(); nome = j.given_name || j.name || ""; }
+        if (r.ok) {
+          const j = await r.json();
+          if (!nome) nome = j.given_name || j.name || "";
+          if (!foto && j.picture) { foto = j.picture; localStorage.setItem("mfp_user_photo", foto); }
+        }
       } catch (e) {}
     }
     if (!nome) nome = (prompt("Como devemos te chamar?") || "").trim();
@@ -1901,12 +2001,134 @@
     mostrarNome();
   }
   function mostrarNome() {
-    const n = localStorage.getItem("mfp_user_name");
-    document.getElementById('saudacao').innerText = n ? `👤 Olá, ${n}` : '👤 Definir nome';
+    const n = localStorage.getItem("mfp_user_name") || "";
+    const foto = localStorage.getItem("mfp_user_photo") || "";
+    const img = document.getElementById('perfilFoto'), ini = document.getElementById('perfilIni');
+    document.getElementById('perfilNome').innerText = n || 'Definir nome';
+    ini.innerText = (n || '?').charAt(0).toUpperCase();
+    img.onerror = () => { img.classList.add('hidden'); ini.classList.remove('hidden'); };
+    if (foto) { img.src = foto; img.classList.remove('hidden'); ini.classList.add('hidden'); }
+    else { img.classList.add('hidden'); ini.classList.remove('hidden'); }
   }
   function editarNome() {
     const n = prompt("Seu nome:", localStorage.getItem("mfp_user_name") || "");
     if (n && n.trim()) { localStorage.setItem("mfp_user_name", n.trim()); mostrarNome(); }
+  }
+
+  // ----- Listas de compras -----
+  let listaRow = null;
+  function fmtQ(q) { return String(num(q)).replace('.', ','); }
+  function itensLista(l) { try { const a = JSON.parse(l.cols[5] || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function totalLista(l) { return r2(itensLista(l).reduce((a, i) => a + num(i[1]) * num(i[2]), 0)); }
+  function itensTxHtml(raw) {
+    if (!raw) return '';
+    let a; try { a = JSON.parse(raw); } catch (e) { return ''; }
+    if (!Array.isArray(a) || !a.length) return '';
+    return '<div class="itens-tx">' + a.map(i => `• ${i[0]} quant=${fmtQ(i[1])} <span style="opacity:.7">(${formatarMoeda(num(i[1]) * num(i[2]))})</span>`).join('<br>') + '</div>';
+  }
+  function abrirModalListaNova() {
+    document.getElementById('lnNome').value = '';
+    document.getElementById('lnCat').innerHTML = db.categorias.filter(c => c.cols[1] === 'despesa').map(c => `<option value="${c.cols[2]}">${c.cols[2]}</option>`).join('');
+    document.getElementById('lnConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    document.getElementById('modalListaNova').classList.remove('hidden');
+  }
+  async function salvarLista() {
+    const nome = document.getElementById('lnNome').value.trim();
+    const cat = document.getElementById('lnCat').value || 'Sem Categoria';
+    const conta = document.getElementById('lnConta').value;
+    if (!nome) return alert("Dê um nome para a lista!");
+    if (!conta) return alert("Cadastre uma conta primeiro!");
+    const id = Date.now().toString();
+    fecharModal('modalListaNova');
+    await adicionarLinhas("Listas", [[id, nome, cat, conta, 'Aberta', '[]', hojeISO()]]);
+    const l = db.listas.find(x => String(x.cols[0]) === id);
+    if (l) abrirLista(l.row);
+  }
+  function abrirLista(row) {
+    listaRow = row;
+    document.getElementById('modalListaDet').classList.remove('hidden');
+    ['liDesc', 'liValor'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('liQtd').value = 1;
+    renderizarListaDetalhe();
+  }
+  function renderizarListaDetalhe() {
+    const m = document.getElementById('modalListaDet');
+    if (!m || m.classList.contains('hidden')) return;
+    const l = db.listas.find(x => x.row === listaRow);
+    if (!l) { m.classList.add('hidden'); return; }
+    const itens = itensLista(l);
+    document.getElementById('ldTitulo').innerText = '🛒 ' + l.cols[1];
+    document.getElementById('ldSub').innerText = `${l.cols[2]} • ${l.cols[3]}`;
+    document.getElementById('ldItens').innerHTML = itens.length === 0 ? '<p style="color:var(--muted); font-size:0.82rem;">Nenhum item ainda. Adicione abaixo.</p>' :
+      itens.map((i, k) => `
+        <div class="row-item">
+          <div><strong>${i[0]}</strong><br><small style="color:var(--muted)">quant=${fmtQ(i[1])} × ${formatarMoeda(i[2])}</small></div>
+          <div style="display:flex; align-items:center; gap:8px;"><strong>${formatarMoeda(num(i[1]) * num(i[2]))}</strong>
+            <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="removerItemLista(${k})">✕</button></div>
+        </div>`).join('');
+    document.getElementById('ldTotal').innerText = formatarMoeda(totalLista(l));
+  }
+  async function salvarItensLista(l, itens) {
+    l.cols[5] = JSON.stringify(itens);
+    renderizarListaDetalhe(); renderizarListas();
+    await atualizarCelula("Listas", l.row, "F", 5, l.cols[5]);
+  }
+  async function addItemLista() {
+    const l = db.listas.find(x => x.row === listaRow);
+    const desc = document.getElementById('liDesc').value.trim();
+    const qtd = num(document.getElementById('liQtd').value) || 1;
+    const valor = num(document.getElementById('liValor').value);
+    if (!l || !desc || !valor) return alert("Informe a descrição e o valor do item!");
+    const itens = itensLista(l); itens.push([desc, qtd, valor]);
+    ['liDesc', 'liValor'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('liQtd').value = 1;
+    document.getElementById('liDesc').focus();
+    await salvarItensLista(l, itens);
+  }
+  async function removerItemLista(k) {
+    const l = db.listas.find(x => x.row === listaRow);
+    if (!l) return;
+    const itens = itensLista(l); itens.splice(k, 1);
+    await salvarItensLista(l, itens);
+  }
+  async function excluirListaAtual() { if (listaRow) await deletarLinha('Listas', listaRow); }
+  async function efetivarLista() {
+    const l = db.listas.find(x => x.row === listaRow);
+    if (!l) return;
+    const itens = itensLista(l);
+    if (!itens.length) return alert("Adicione pelo menos um item!");
+    const total = totalLista(l);
+    if (!confirm(`Efetivar "${l.cols[1]}" no valor de ${formatarMoeda(total)}? O valor sairá da conta ${l.cols[3]}.`)) return;
+    const hoje = hojeISO();
+    document.getElementById('modalListaDet').classList.add('hidden');
+    document.getElementById('loading').classList.remove('hidden');
+    await atualizarCelula("Listas", l.row, "E", 4, "Efetivada");
+    await adicionarLinhas("Lancamentos", [[`${Date.now()}-1`, 'despesa', l.cols[1], total, hoje, hoje.substring(0, 7), l.cols[2], l.cols[3], '', 'Efetivado', '1/1', '', '', JSON.stringify(itens)]]);
+    mostrarToast(`Compra efetivada: ${formatarMoeda(total)}`);
+  }
+  function renderizarListas() {
+    const ab = document.getElementById('listaComprasAbertas');
+    if (!ab) return;
+    const abertas = db.listas.filter(l => l.cols[4] !== 'Efetivada');
+    const fim = db.listas.filter(l => l.cols[4] === 'Efetivada');
+    ab.innerHTML = abertas.length === 0 ? '<p style="color:var(--muted); font-size:0.85rem;">Nenhuma lista aberta. Crie uma para ir somando os itens da compra.</p>' : '';
+    abertas.forEach(l => {
+      const n = itensLista(l).length;
+      ab.innerHTML += `
+        <div class="section-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div><strong>🛒 ${l.cols[1]}</strong><br><small style="color:var(--muted)">${l.cols[2]} • ${l.cols[3]} • ${n} ${n === 1 ? 'item' : 'itens'}</small></div>
+            <strong style="color:var(--red)">${formatarMoeda(totalLista(l))}</strong>
+          </div>
+          <div style="display:flex; gap:6px; margin-top:10px;">
+            <button class="btn-mini" style="background:var(--blue); color:#fff;" onclick="abrirLista(${l.row})">Abrir / adicionar itens</button>
+            <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Listas', ${l.row})">✕</button>
+          </div>
+        </div>`;
+    });
+    document.getElementById('listaComprasHist').innerHTML = fim.length === 0 ? '' :
+      '<div class="section-card"><div class="section-title"><span>✔ Compras efetivadas</span></div>' +
+      fim.slice(-8).reverse().map(l => `<div class="row-item"><span>${l.cols[1]} <small style="color:var(--muted)">(${(l.cols[6] || '').split('-').reverse().join('/')})</small></span><strong>${formatarMoeda(totalLista(l))}</strong></div>`).join('') + '</div>';
   }
 
   // ----- Devedores -----
@@ -1919,7 +2141,7 @@
   function foneBR(f) { const l = (f || '').replace(/\D/g, ''); return l.startsWith('55') ? l : '55' + l; }
   function msgCobranca(d) {
     const [id, nome, fone, desc, totS, parcS, venc, pagasS] = d.cols;
-    const tot = parseFloat(totS) || 0, n = Math.max(1, parseInt(parcS) || 1), pagas = parseInt(pagasS) || 0;
+    const tot = num(totS) || 0, n = Math.max(1, parseInt(parcS) || 1), pagas = parseInt(pagasS) || 0;
     const vp = tot / n, aberto = Math.max(0, tot - vp * pagas);
     const dv = vencParcela(venc, Math.min(pagas, n - 1)).split('-').reverse().join('/');
     const user = localStorage.getItem("mfp_user_name");
@@ -1929,19 +2151,28 @@
     ['devNome', 'devFone', 'devDesc', 'devValor'].forEach(i => document.getElementById(i).value = '');
     document.getElementById('devParcelas').value = 1;
     document.getElementById('devVenc').value = hojeISO();
+    const cbA = document.getElementById('devAgenda');
+    cbA.disabled = modoOffline; cbA.checked = !modoOffline;
     document.getElementById('modalDevedor').classList.remove('hidden');
   }
-  async function salvarDevedor() {
+  async function salvarDevedor(continuar = false) {
     const nome = document.getElementById('devNome').value.trim();
     const fone = document.getElementById('devFone').value.trim();
     const desc = document.getElementById('devDesc').value.trim();
-    const valor = parseFloat(document.getElementById('devValor').value);
+    const valor = num(document.getElementById('devValor').value);
     const parc = parseInt(document.getElementById('devParcelas').value) || 1;
     const venc = document.getElementById('devVenc').value;
     if (!nome || !desc || !valor || !venc) return alert("Preencha nome, descrição, valor e vencimento!");
-    fecharModal('modalDevedor');
-    await adicionarLinhas("Devedores", [[Date.now().toString(), nome, fone, desc, valor, parc, venc, 0]]);
+    const querAgenda = document.getElementById('devAgenda').checked && !modoOffline;
+    if (!continuar) fecharModal('modalDevedor');
+    document.getElementById('loading').classList.remove('hidden');
+    const syncs = [];
+    if (querAgenda) {
+      for (let k = 0; k < parc; k++) syncs.push(await criarEventoAgendaETask(`Cobrar ${nome}: ${desc} (${k + 1}/${parc})`, valor / parc, vencParcela(venc, k), 'receita'));
+    }
+    await adicionarLinhas("Devedores", [[Date.now().toString(), nome, fone, desc, valor, parc, venc, 0, syncs.join(';')]]);
     mostrarToast("Cobrança cadastrada!");
+    if (continuar) ['devNome', 'devFone', 'devDesc', 'devValor'].forEach(i => document.getElementById(i).value = '');
   }
   function renderizarDevedores() {
     const el = document.getElementById('listaDevedores');
@@ -1949,7 +2180,7 @@
     el.innerHTML = db.devedores.length === 0 ? '<p style="color:var(--muted); font-size:0.85rem;">Nenhuma cobrança cadastrada.</p>' : '';
     db.devedores.forEach(d => {
       const [id, nome, fone, desc, totS, parcS, venc, pagasS] = d.cols;
-      const tot = parseFloat(totS) || 0, n = Math.max(1, parseInt(parcS) || 1), pagas = Math.min(n, parseInt(pagasS) || 0);
+      const tot = num(totS) || 0, n = Math.max(1, parseInt(parcS) || 1), pagas = Math.min(n, parseInt(pagasS) || 0);
       const vp = tot / n, aberto = Math.max(0, tot - vp * pagas), quit = pagas >= n;
       totalAberto += aberto;
       const prox = quit ? null : vencParcela(venc, pagas);
@@ -1971,7 +2202,7 @@
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             ${fone ? `<a class="btn-mini" style="background:#25D366; color:#fff; text-decoration:none;" target="_blank" href="https://wa.me/${foneBR(fone)}?text=${encodeURIComponent(msg)}">💬 Cobrar no WhatsApp</a>` : ''}
             <button class="btn-mini" style="background:#334155; color:#fff;" onclick="copiarCobranca(${d.row})">Copiar texto</button>
-            <button class="btn-mini" style="background:var(--green); color:#fff;" onclick="receberParcelaDevedor(${d.row})">✔ Recebi parcela</button>
+            <button class="btn-mini" style="background:var(--green); color:#fff;" onclick="abrirModalReceber(${d.row})">✔ Recebi parcela</button>
             <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Devedores', ${d.row})">✕</button>
           </div>`}
           ${quit ? `<button class="btn-mini" style="background:#334155; color:#fca5a5; margin-top:8px;" onclick="deletarLinha('Devedores', ${d.row})">Excluir</button>` : ''}
@@ -1984,71 +2215,114 @@
     const d = db.devedores.find(x => x.row === row);
     try { await navigator.clipboard.writeText(msgCobranca(d)); mostrarToast("Texto copiado!"); } catch (e) { alert(msgCobranca(d)); }
   }
-  async function receberParcelaDevedor(row) {
+  // ----- Receber parcela de devedor (entra no saldo da conta) -----
+  let recRow = null;
+  function abrirModalReceber(row) {
     const d = db.devedores.find(x => x.row === row);
+    if (!db.contas.length) return alert("Cadastre uma conta antes de registrar recebimentos!");
+    recRow = row;
+    const n = Math.max(1, parseInt(d.cols[5]) || 1), pagas = parseInt(d.cols[7]) || 0;
+    document.getElementById('recInfo').innerText = `${d.cols[1]} — ${d.cols[3]} (parcela ${Math.min(pagas + 1, n)}/${n})`;
+    document.getElementById('recValor').value = r2((num(d.cols[4]) || 0) / n);
+    document.getElementById('recData').value = hojeISO();
+    document.getElementById('recConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    avisoRecebimento();
+    document.getElementById('modalReceber').classList.remove('hidden');
+  }
+  function avisoRecebimento() {
+    const d = db.devedores.find(x => x.row === recRow);
+    if (!d) return;
+    const n = Math.max(1, parseInt(d.cols[5]) || 1);
+    const falta = r2(r2(num(d.cols[4]) / n) - num(document.getElementById('recValor').value));
+    document.getElementById('recAviso').innerText = falta > 0.009 ? `Faltam ${formatarMoeda(falta)} — será criado um novo saldo devedor com esse valor.` : '';
+  }
+  async function confirmarRecebimento() {
+    const d = db.devedores.find(x => x.row === recRow);
+    const valor = num(document.getElementById('recValor').value);
+    const data = document.getElementById('recData').value;
+    const conta = document.getElementById('recConta').value;
+    if (!d || !valor || !data || !conta) return alert("Informe valor, data e conta!");
+    const n = Math.max(1, parseInt(d.cols[5]) || 1), pagas = parseInt(d.cols[7]) || 0;
+    const catReceita = (db.categorias.find(c => c.cols[1] === 'receita' && /cobran/i.test(c.cols[2])) || db.categorias.find(c => c.cols[1] === 'receita') || { cols: [0, 0, 'Sem Categoria'] }).cols[2];
+    fecharModal('modalReceber');
     document.getElementById('loading').classList.remove('hidden');
-    await atualizarCelula("Devedores", row, "H", 7, (parseInt(d.cols[7]) || 0) + 1);
-    mostrarToast("Parcela marcada como recebida!");
-    await carregarTodosDados();
+    await atualizarCelula("Devedores", d.row, "H", 7, pagas + 1);
+    await removerSync((d.cols[8] || '').split(';')[pagas]);
+    await adicionarLinhas("Lancamentos", [[`${Date.now()}-1`, 'receita', `Recebido de ${d.cols[1]}: ${d.cols[3]} (${Math.min(pagas + 1, n)}/${n})`, r2(valor), data, data.substring(0, 7), catReceita, conta, '', 'Efetivado', '1/1', d.cols[2] || '', '']]);
+    const falta = r2(r2(num(d.cols[4]) / n) - valor);
+    if (falta > 0.009) {
+      await adicionarLinhas("Devedores", [[Date.now().toString(), d.cols[1], d.cols[2] || '', `Saldo restante: ${d.cols[3]} (parcela ${Math.min(pagas + 1, n)}/${n})`, falta, 1, data, 0, '']]);
+      mostrarToast(`Recebido! Novo saldo devedor de ${formatarMoeda(falta)} criado.`);
+    } else mostrarToast("Recebimento lançado na conta!");
   }
 
-  // ----- Despesa rápida -----
-  let rapidoQtd = {};
+  // ----- Despesa rápida (itens guardam só o nome; valor e quantidade são definidos ao lançar) -----
+  function preencherRpItem(sel) {
+    const el = document.getElementById('rpItem');
+    el.innerHTML = '<option value="">— Escolha um item —</option>' +
+      db.itens.map(i => `<option value="${i.cols[0]}">${i.cols[1]}</option>`).join('') +
+      '<option value="__novo__">➕ Inserir novo item...</option>';
+    el.value = sel || '';
+  }
   function abrirModalRapido() {
-    const cats = db.categorias.filter(c => c.cols[1] === 'despesa');
-    document.getElementById('rpCat').innerHTML = cats.map(c => `<option value="${c.cols[2]}">${c.cols[2]}</option>`).join('');
+    document.getElementById('rpCat').innerHTML = db.categorias.filter(c => c.cols[1] === 'despesa').map(c => `<option value="${c.cols[2]}">${c.cols[2]}</option>`).join('');
     document.getElementById('rpConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
-    rapidoQtd = {};
-    renderizarRapido();
+    ['rpNome', 'rpValor'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('rpQtd').value = 1;
+    preencherRpItem('');
     document.getElementById('modalRapido').classList.remove('hidden');
+    rapidoEscolheu();
   }
   function renderizarRapido() {
-    const el = document.getElementById('rapidoLista');
-    if (!el) return;
-    el.innerHTML = db.itens.length === 0 ? '<p style="color:var(--muted); font-size:0.82rem;">Nenhum item salvo. Cadastre o primeiro abaixo.</p>' : '';
-    let total = 0;
-    db.itens.forEach(it => {
-      const [id, nome, preco, cat] = it.cols;
-      const q = rapidoQtd[id] || 0;
-      total += q * (parseFloat(preco) || 0);
-      el.innerHTML += `
-        <div class="row-item">
-          <div><strong>${nome}</strong><br><small style="color:var(--muted)">${formatarMoeda(preco)} • ${cat || ''}</small></div>
-          <div class="qty">
-            <button onclick="rapidoMudar('${id}', -1)">−</button><b>${q}</b><button onclick="rapidoMudar('${id}', 1)">+</button>
-            <button style="background:transparent; color:#fca5a5;" onclick="deletarLinha('ItensRapidos', ${it.row})">✕</button>
-          </div>
-        </div>`;
-    });
+    const el = document.getElementById('rpItem');
+    if (!el || document.getElementById('modalRapido').classList.contains('hidden')) return;
+    preencherRpItem(el.value);
+    rapidoEscolheu();
+  }
+  function itemRapidoAtual() { return db.itens.find(x => String(x.cols[0]) === document.getElementById('rpItem').value); }
+  function rapidoEscolheu() {
+    const v = document.getElementById('rpItem').value;
+    document.getElementById('boxRpNovo').classList.toggle('hidden', v !== '__novo__');
+    document.getElementById('boxRpDetalhes').classList.toggle('hidden', !v);
+    const it = itemRapidoAtual();
+    document.getElementById('btnRpRemover').classList.toggle('hidden', !it);
+    if (it && it.cols[3]) document.getElementById('rpCat').value = it.cols[3];
+    rapidoTotal();
+  }
+  function rapidoTotal() {
+    const total = num(document.getElementById('rpValor').value) * (num(document.getElementById('rpQtd').value) || 1);
     document.getElementById('rpTotal').innerText = formatarMoeda(total);
   }
-  function rapidoMudar(id, delta) {
-    rapidoQtd[id] = Math.max(0, (rapidoQtd[id] || 0) + delta);
-    renderizarRapido();
+  function removerItemRapido() {
+    const it = itemRapidoAtual();
+    if (it) deletarLinha('ItensRapidos', it.row);
   }
-  async function salvarItemRapido() {
-    const nome = document.getElementById('rpNome').value.trim();
-    const preco = parseFloat(document.getElementById('rpPreco').value);
-    const cat = document.getElementById('rpCat').value;
-    if (!nome || !preco) return alert("Informe nome e preço do item!");
-    await adicionarLinhas("ItensRapidos", [[Date.now().toString(), nome, preco, cat]]);
-    document.getElementById('rpNome').value = ''; document.getElementById('rpPreco').value = '';
-    mostrarToast("Item salvo!");
-  }
-  async function confirmarRapido() {
+  async function confirmarRapido(continuar = false) {
+    const sel = document.getElementById('rpItem').value;
     const conta = document.getElementById('rpConta').value;
-    const escolhidos = db.itens.filter(it => (rapidoQtd[it.cols[0]] || 0) > 0);
-    if (!escolhidos.length) return alert("Escolha a quantidade de pelo menos um item!");
+    const cat = document.getElementById('rpCat').value || 'Sem Categoria';
+    const unit = num(document.getElementById('rpValor').value);
+    const qtd = num(document.getElementById('rpQtd').value) || 1;
+    let nome = '';
+    if (sel === '__novo__') nome = document.getElementById('rpNome').value.trim();
+    else { const it = itemRapidoAtual(); nome = it ? it.cols[1] : ''; }
+    if (!nome) return alert("Escolha um item ou digite o nome do novo item!");
+    if (!unit) return alert("Informe o valor do item!");
     if (!conta) return alert("Cadastre uma conta primeiro!");
-    const hoje = hojeISO(), t = Date.now();
-    const linhas = escolhidos.map((it, i) => {
-      const q = rapidoQtd[it.cols[0]], val = (parseFloat(it.cols[2]) || 0) * q;
-      return [`${t + i}-1`, 'despesa', q > 1 ? `${it.cols[1]} x${q}` : it.cols[1], val.toFixed(2), hoje, hoje.substring(0, 7), it.cols[3] || 'Sem Categoria', conta, '', 'Efetivado', '1/1', '', ''];
-    });
-    fecharModal('modalRapido');
-    rapidoQtd = {};
-    await adicionarLinhas("Lancamentos", linhas);
-    mostrarToast("Despesa rápida lançada!");
+    const total = Number((unit * qtd).toFixed(2));
+    const qtdTxt = String(qtd).replace('.', ',');
+    const hoje = hojeISO();
+    const novoId = Date.now().toString();
+    if (!continuar) fecharModal('modalRapido');
+    if (sel === '__novo__') await adicionarLinhas("ItensRapidos", [[novoId, nome, '', cat]]);
+    await adicionarLinhas("Lancamentos", [[`${Date.now()}-1`, 'despesa', qtd !== 1 ? `${nome} x${qtdTxt}` : nome, total, hoje, hoje.substring(0, 7), cat, conta, '', 'Efetivado', '1/1', '', '']]);
+    mostrarToast(`Despesa lançada: ${formatarMoeda(total)}`);
+    if (continuar) {
+      preencherRpItem(sel === '__novo__' ? novoId : sel);
+      ['rpValor', 'rpNome'].forEach(i => document.getElementById(i).value = '');
+      document.getElementById('rpQtd').value = 1;
+      rapidoEscolheu();
+    }
   }
 
   function exportarBackup() {
@@ -2081,7 +2355,7 @@
 
     txs.forEach(l => {
       const [id, tipo, desc, valStr, data, mesFat, cat, conta, dest, status, parcela, fone, syncId] = l.cols;
-      const val = parseFloat(valStr) || 0;
+      const val = num(valStr) || 0;
       const dataBr = data ? data.split('-').reverse().join('/') : '';
       const isPend = status === "Pendente";
       const sinal = tipo === "receita" ? "+" : (tipo === "transferencia" ? "⇄" : "-");
@@ -2103,6 +2377,7 @@
               <span class="badge ${isPend ? 'badge-pend' : 'badge-ok'}">${status}</span>
               ${syncId ? '<span class="badge badge-cal" title="Sincronizado com Agenda/Tasks">📅</span>' : ''}
             </p>
+            ${itensTxHtml(l.cols[13])}
           </div>
           <div class="tx-right">
             <span class="tx-val" style="color:${corVal}">${sinal} ${formatarMoeda(val)}</span>
@@ -2138,7 +2413,7 @@
     document.querySelectorAll('.nav-btn, .side-btn').forEach(b => {
       b.classList.toggle('active', b.getAttribute('data-target') === telaId);
     });
-    ['telaResumo', 'telaTransacoes', 'telaCartoes', 'telaDevedores', 'telaOrcamentos', 'telaAjustes'].forEach(id => {
+    ['telaResumo', 'telaTransacoes', 'telaCartoes', 'telaCompras', 'telaDevedores', 'telaOrcamentos', 'telaAjustes'].forEach(id => {
       const el = document.getElementById(id);
       el.classList.add('hidden');
     });
@@ -2193,6 +2468,7 @@
   function abrirModalLancamento() {
     editandoRow = null;
     document.getElementById('tituloModalTx').innerText = "Novo Lançamento";
+    document.getElementById('btnSalvarContinuar').classList.remove('hidden');
     document.getElementById('boxRepeticao').classList.remove('hidden');
     document.getElementById('txData').value = hojeISO();
     document.getElementById('txDesc').value = '';
@@ -2215,6 +2491,7 @@
     const [id, tipo, desc, val, data, mesFat, cat, conta, dest, status, parcela, fone] = item.cols;
 
     document.getElementById('tituloModalTx').innerText = "Editar Lançamento";
+    document.getElementById('btnSalvarContinuar').classList.add('hidden');
     document.getElementById('boxRepeticao').classList.add('hidden');
     document.getElementById('boxParcelas').classList.add('hidden');
 
@@ -2225,7 +2502,7 @@
     selecionarTipoTx(tipo, tabEl);
 
     document.getElementById('txDesc').value = desc;
-    document.getElementById('txValor').value = val;
+    document.getElementById('txValor').value = String(num(val)).replace('.', ',');
     document.getElementById('txData').value = data;
     document.getElementById('txCategoria').value = cat;
     if (tipo === 'cartao') {
@@ -2295,7 +2572,7 @@
       });
       localStorage.setItem("mfp_local_db", JSON.stringify(localData));
     } else {
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!A1:append?valueInputOption=USER_ENTERED`, "POST", {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!A1:append?valueInputOption=RAW`, "POST", {
         values: linhas
       });
     }
@@ -2310,16 +2587,16 @@
       if (idx !== -1) localData.lancamentos[idx].cols = novaLinha;
       localStorage.setItem("mfp_local_db", JSON.stringify(localData));
     } else {
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!A${row}:M${row}?valueInputOption=USER_ENTERED`, "PUT", {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!A${row}:N${row}?valueInputOption=RAW`, "PUT", {
         values: [novaLinha]
       });
     }
     await carregarTodosDados();
   }
 
-  async function salvarLancamento() {
+  async function salvarLancamento(continuar = false) {
     const desc = document.getElementById('txDesc').value.trim();
-    const valorTotal = parseFloat(document.getElementById('txValor').value);
+    const valorTotal = num(document.getElementById('txValor').value);
     const data = document.getElementById('txData').value;
     const cat = document.getElementById('txCategoria').value;
     const conta = document.getElementById('txConta').value;
@@ -2344,7 +2621,7 @@
       }
     }
     const rowParaEditar = editandoRow;
-    fecharModal('modalLancamento');
+    if (!continuar || rowParaEditar) fecharModal('modalLancamento');
     document.getElementById('loading').classList.remove('hidden');
 
     // Modo Edição de Registro Existente
@@ -2355,7 +2632,7 @@
       const dest = tipoTxAtual === 'transferencia' ? contaDest : '';
       const statusFinal = tipoTxAtual === 'cartao' ? (antigo[9] === 'Pago' ? 'Pago' : 'Aberto') : status;
       let syncIdFinal = antigo[12] || '';
-      const mudou = antigo[2] !== desc || parseFloat(antigo[3]) !== parseFloat(valorTotal.toFixed(2)) || antigo[4] !== data;
+      const mudou = antigo[2] !== desc || num(antigo[3]) !== num(Number(valorTotal.toFixed(2))) || antigo[4] !== data;
       if (!modoOffline) {
         if (!criarSync && syncIdFinal) { await removerSync(syncIdFinal); syncIdFinal = ''; }
         else if (criarSync && (!syncIdFinal || mudou)) {
@@ -2365,14 +2642,14 @@
       }
 
       const novaLinha = [
-        antigo[0], tipoTxAtual, desc, valorTotal.toFixed(2),
+        antigo[0], tipoTxAtual, desc, Number(valorTotal.toFixed(2)),
         data, mesFatura, tipoTxAtual === 'transferencia' ? 'Transferência' : cat,
-        origem, dest, statusFinal, antigo[10] || '1/1', fone, syncIdFinal
+        origem, dest, statusFinal, antigo[10] || '1/1', fone, syncIdFinal, antigo[13] || ''
       ];
       const itemAtual = db.lancamentos.find(x => x.row === rowParaEditar);
       const extras = selecionarPorEscopo(itemAtual, escopoEdit).filter(o => o.row !== rowParaEditar).map(o => {
         const c = [...o.cols]; while (c.length < 13) c.push('');
-        c[2] = desc; c[3] = valorTotal.toFixed(2); c[6] = novaLinha[6]; c[7] = origem; c[11] = fone;
+        c[2] = desc; c[3] = Number(valorTotal.toFixed(2)); c[6] = novaLinha[6]; c[7] = origem; c[11] = fone;
         return { row: o.row, cols: c };
       });
       await atualizarLinhasLote([{ row: rowParaEditar, cols: novaLinha }, ...extras]);
@@ -2402,7 +2679,7 @@
       }
 
       linhas.push([
-        `${Date.now()}-${i + 1}`, tipoTxAtual, desc, valorParcela.toFixed(2),
+        `${Date.now()}-${i + 1}`, tipoTxAtual, desc, Number(valorParcela.toFixed(2)),
         dataParcela, mesFatura, tipoTxAtual === 'transferencia' ? 'Transferência' : cat,
         origem, dest, statusItem, infoParcela, fone, syncId
       ]);
@@ -2410,6 +2687,11 @@
 
     await adicionarLinhas("Lancamentos", linhas);
     mostrarToast(criarSync ? "Salvo + Agendado no Google!" : "Lançamento salvo!");
+    if (continuar) {
+      document.getElementById('txDesc').value = '';
+      document.getElementById('txValor').value = '';
+      document.getElementById('txDesc').focus();
+    }
   }
 
   async function efetivarLancamento(row) {
@@ -2420,7 +2702,7 @@
       if (item) item.cols[9] = "Efetivado";
       localStorage.setItem("mfp_local_db", JSON.stringify(localData));
     } else {
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!J${row}?valueInputOption=USER_ENTERED`, "PUT", {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!J${row}?valueInputOption=RAW`, "PUT", {
         values: [["Efetivado"]]
       });
     }
@@ -2458,7 +2740,7 @@
       });
       if (updates.length > 0) {
         await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
-          valueInputOption: "USER_ENTERED",
+          valueInputOption: "RAW",
           data: updates
         });
       }
@@ -2467,7 +2749,7 @@
     const hoje = hojeISO();
     await adicionarLinhas("Lancamentos", [[
       Date.now().toString(), "despesa", `Fatura ${nomeCartao} (${chaveMesSel})`,
-      valorFatura.toFixed(2), hoje, chaveMesSel, "Cartão de Crédito",
+      Number(valorFatura.toFixed(2)), hoje, chaveMesSel, "Cartão de Crédito",
       contaEscolhida, "", "Efetivado", "1/1", "", ""
     ]]);
 
@@ -2478,7 +2760,7 @@
   async function salvarConta() {
     const nome = document.getElementById('contaNome').value.trim();
     const tipo = document.getElementById('contaTipo').value;
-    const saldo = parseFloat(document.getElementById('contaSaldo').value) || 0;
+    const saldo = num(document.getElementById('contaSaldo').value) || 0;
     if (!nome) return alert("Digite o nome da conta!");
     await adicionarLinhas("Contas", [[Date.now().toString(), nome, tipo, saldo]]);
     document.getElementById('contaNome').value = '';
@@ -2489,7 +2771,7 @@
     const nome = document.getElementById('ccNome').value.trim();
     const bandeira = document.getElementById('ccBandeira').value;
     const cor = document.getElementById('ccCor').value;
-    const limite = parseFloat(document.getElementById('ccLimite').value) || 0;
+    const limite = num(document.getElementById('ccLimite').value) || 0;
     const fech = parseInt(document.getElementById('ccFechamento').value) || 5;
     const venc = parseInt(document.getElementById('ccVencimento').value) || 12;
     const contaPadrao = document.getElementById('ccContaPadrao').value;
@@ -2511,7 +2793,7 @@
 
   async function salvarOrcamento() {
     const cat = document.getElementById('orcCategoria').value;
-    const val = parseFloat(document.getElementById('orcValor').value);
+    const val = num(document.getElementById('orcValor').value);
     if (!cat || !val) return alert("Selecione a categoria e o limite!");
     await adicionarLinhas("Orcamentos", [[Date.now().toString(), cat, val]]);
     document.getElementById('orcValor').value = '';
@@ -2528,7 +2810,13 @@
         rows = selecionarPorEscopo(it, esc).map(x => x.row);
       } else if (!confirm("Excluir este registro permanentemente?")) return;
       for (const r of rows) { const x = db.lancamentos.find(y => y.row === r); if (x) await removerSync(x.cols[12]); }
-    } else if (!confirm("Excluir este registro permanentemente?")) return;
+    } else {
+      if (!confirm("Excluir este registro permanentemente?")) return;
+      if (aba === 'Devedores') {
+        const dv = db.devedores.find(x => x.row === row);
+        if (dv) for (const part of (dv.cols[8] || '').split(';')) await removerSync(part);
+      }
+    }
 
     document.getElementById('loading').classList.remove('hidden');
     if (modoOffline) {
@@ -2578,8 +2866,8 @@
       localStorage.setItem("mfp_local_db", JSON.stringify(ld));
     } else {
       await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
-        valueInputOption: "USER_ENTERED",
-        data: lista.map(u => ({ range: `Lancamentos!A${u.row}:M${u.row}`, values: [u.cols] }))
+        valueInputOption: "RAW",
+        data: lista.map(u => ({ range: `Lancamentos!A${u.row}:N${u.row}`, values: [u.cols] }))
       });
     }
     await carregarTodosDados();
