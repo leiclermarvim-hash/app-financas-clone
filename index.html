@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Minhas Finanças</title>
+  <link id="manifest-link" rel="manifest">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --card-alt: #263348; --text: #f8fafc; --muted: #94a3b8;
+      --green: #10b981; --red: #ef4444; --blue: #3b82f6; --purple: #8b5cf6; --amber: #f59e0b; --border: #334155;
+    }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; background: var(--bg); color: var(--text); padding-bottom: 88px; }
+
+    /* Login */
+    #telaLogin { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center; }
+    .login-card { background: var(--card); padding: 32px 24px; border-radius: 20px; max-width: 400px; width: 100%; border: 1px solid var(--border); box-shadow: 0 12px 30px rgba(0,0,0,0.45); }
+    .btn-google { background: #fff; color: #1e293b; border: none; padding: 14px 20px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; width: 100%; margin-top: 20px; }
+
+    /* Header & Seletor de Mês */
+    header { background: var(--card); padding: 12px 14px; position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--border); }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    h1 { margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 6px; }
+    .header-actions { display: flex; gap: 6px; }
+    .btn-top { background: #334155; color: #fff; border: none; padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; width: auto; margin: 0; }
+    .btn-install { background: var(--blue); display: none; }
+
+    .month-nav { display: flex; align-items: center; justify-content: space-between; background: var(--bg); padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); }
+    .month-btn { background: none; border: none; color: var(--text); font-size: 1.1rem; font-weight: 700; cursor: pointer; width: 36px; padding: 4px; margin: 0; }
+    .month-label { font-weight: 700; font-size: 0.92rem; text-transform: capitalize; }
+
+    .container { padding: 14px 12px; max-width: 640px; margin: 0 auto; }
+
+    /* Cards Dashboard */
+    .saldo-hero { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+    .saldo-hero small { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .saldo-hero .valor-grande { font-size: 1.65rem; font-weight: 800; margin: 4px 0 12px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mini-stat { background: rgba(15, 23, 42, 0.7); padding: 10px; border-radius: 10px; border: 1px solid var(--border); }
+    .mini-stat span { display: block; font-size: 0.7rem; color: var(--muted); }
+    .mini-stat strong { font-size: 0.95rem; }
+
+    .section-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .section-title { display: flex; justify-content: space-between; align-items: center; margin: 0 0 10px; font-size: 0.92rem; font-weight: 700; }
+
+    /* Listas de Contas e Cartões */
+    .row-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .row-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+
+    /* Barra de Progresso (Orçamentos e Limite Cartão) */
+    .progress-bg { width: 100%; height: 8px; background: var(--bg); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    .progress-fill { height: 100%; border-radius: 99px; transition: width 0.3s; }
+
+    /* Lançamentos / Extrato */
+    .filter-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; }
+    .pill { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; cursor: pointer; width: auto; margin: 0; }
+    .pill.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+    .tx-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); }
+    .tx-card.receita { border-left-color: var(--green); }
+    .tx-card.despesa { border-left-color: var(--red); }
+    .tx-card.cartao { border-left-color: var(--purple); }
+    .tx-card.transferencia { border-left-color: var(--amber); }
+    .tx-card.pendente { opacity: 0.85; border-style: dashed; border-width: 1px 1px 1px 4px; border-color: var(--border); }
+
+    .tx-info { flex: 1; padding-right: 8px; }
+    .tx-info h4 { margin: 0 0 3px; font-size: 0.92rem; }
+    .tx-info p { margin: 0; font-size: 0.75rem; color: var(--muted); }
+    .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; margin-left: 4px; }
+    .badge-ok { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+    .badge-pend { background: rgba(245,158,11,0.2); color: #fcd34d; }
+
+    .tx-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .tx-val { font-weight: 700; font-size: 0.92rem; }
+    .btn-mini { padding: 5px 8px; font-size: 0.7rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; width: auto; margin: 0; }
+
+    /* Formulários & Modais */
+    label { font-size: 0.78rem; color: var(--muted); margin-top: 10px; display: block; }
+    input, select, button { width: 100%; padding: 11px; margin-top: 4px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.92rem; }
+    button.btn-primary { background: var(--blue); border: none; font-weight: 700; margin-top: 14px; cursor: pointer; }
+    .sub-tabs { display: flex; gap: 6px; margin-bottom: 12px; background: var(--card); padding: 4px; border-radius: 12px; }
+    .sub-tab { flex: 1; text-align: center; padding: 8px 4px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; color: var(--muted); cursor: pointer; }
+    .sub-tab.active { background: var(--blue); color: #fff; }
+
+    /* FAB + Navegação Inferior */
+    .fab { position: fixed; bottom: 72px; right: 18px; width: 54px; height: 54px; border-radius: 50%; background: var(--blue); color: #fff; border: none; font-size: 1.8rem; font-weight: 700; box-shadow: 0 6px 18px rgba(59,130,246,0.5); cursor: pointer; z-index: 35; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; }
+
+    nav.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 6px 2px 8px; z-index: 30; }
+    .nav-btn { flex: 1; background: none; border: none; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.68rem; font-weight: 600; padding: 4px; margin: 0; cursor: pointer; }
+    .nav-btn.active { color: var(--blue); }
+    .nav-icon { font-size: 1.15rem; }
+
+    /* Modal Novo Lançamento */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+    .modal-box { background: var(--card); width: 100%; max-width: 600px; border-radius: 20px 20px 0 0; padding: 18px 16px 28px; max-height: 92vh; overflow-y: auto; border-top: 1px solid var(--border); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+    .hidden { display: none !important; }
+    #loading { text-align: center; padding: 8px; color: var(--blue); font-size: 0.8rem; font-weight: 600; background: rgba(59,130,246,0.12); border-radius: 8px; margin-bottom: 10px; }
+    #toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; padding: 9px 18px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; z-index: 60; display: none; }
+  </style>
+</head>
+<body>
+
+<div id="toast">Salvo!</div>
+
+<!-- TELA DE LOGIN -->
+<div id="telaLogin">
+  <div class="login-card">
+    <div style="font-size:3rem; margin-bottom:10px;">📊</div>
+    <h2 style="margin:0 0 8px;">Minhas Finanças</h2>
+    <p style="color:var(--muted); font-size:0.88rem; line-height:1.45; margin:0;">
+      Controle completo de contas, cartões de crédito, faturas, orçamentos e fluxo de caixa sincronizado diretamente na sua planilha do Google Drive.
+    </p>
+    <button class="btn-google" onclick="fazerLoginGoogle()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Entrar com Google
+    </button>
+    <p id="statusLogin" style="color:var(--blue); font-size:0.8rem; margin-top:14px;"></p>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="appPrincipal" class="hidden">
+  <header>
+    <div class="header-top">
+      <h1>📊 Minhas Finanças</h1>
+      <div class="header-actions">
+        <button id="btnInstall" class="btn-top btn-install" onclick="instalarApp()">📲 Instalar</button>
+        <button class="btn-top" onclick="carregarTodosDados()">↻</button>
+        <button class="btn-top" style="background:#7f1d1d;" onclick="sairConta()">Sair</button>
+      </div>
+    </div>
+    <div class="month-nav">
+      <button class="month-btn" onclick="alterarMes(-1)">‹</button>
+      <span class="month-label" id="labelMesAtual">Novembro 2026</span>
+      <button class="month-btn" onclick="alterarMes(1)">›</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="loading" class="hidden">Sincronizando dados com Google Sheets...</div>
+
+    <!-- ABA 1: VISÃO GERAL (DASHBOARD) -->
+    <div id="telaResumo">
+      <div class="saldo-hero">
+        <small>Saldo Atual em Contas</small>
+        <div class="valor-grande" id="dashSaldoAtual">R$ 0,00</div>
+        <div class="grid-2">
+          <div class="mini-stat">
+            <span>Receitas (Mês)</span>
+            <strong id="dashReceitas" style="color:var(--green)">R$ 0,00</strong>
+          </div>
+          <div class="mini-stat">
+            <span>Despesas (Mês)</span>
+            <strong id="dashDespesas" style="color:var(--red)">R$ 0,00</strong>
+          </div>
+          <div class="mini-stat">
+            <span>Faturas Cartões</span>
+            <strong id="dashFaturas" style="color:var(--purple)">R$ 0,00</strong>
+          </div>
+          <div class="mini-stat">
+            <span>Previsão Fim do Mês</span>
+            <strong id="dashPrevisao" style="color:var(--blue)">R$ 0,00</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumo Contas -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>🏦 Minhas Contas</span>
+          <a href="#" onclick="navegar('telaAjustes', document.querySelectorAll('.nav-btn')[4]); return false;" style="color:var(--blue); font-size:0.78rem; text-decoration:none;">Gerenciar</a>
+        </div>
+        <div id="dashListaContas"></div>
+      </div>
+
+      <!-- Resumo Cartões -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>💳 Cartões de Crédito</span>
+          <a href="#" onclick="navegar('telaCartoes', document.querySelectorAll('.nav-btn')[2]); return false;" style="color:var(--blue); font-size:0.78rem; text-decoration:none;">Ver Faturas</a>
+        </div>
+        <div id="dashListaCartoes"></div>
+      </div>
+
+      <!-- Despesas por Categoria -->
+      <div class="section-card">
+        <div class="section-title"><span>🍩 Gastos por Categoria (Mês)</span></div>
+        <div id="dashCategorias"></div>
+      </div>
+    </div>
+
+    <!-- ABA 2: TRANSAÇÕES (EXTRATO) -->
+    <div id="telaTransacoes" class="hidden">
+      <div class="filter-pills">
+        <button class="pill active" onclick="filtrarTx('TODOS', this)">Todos</button>
+        <button class="pill" onclick="filtrarTx('receita', this)">Receitas</button>
+        <button class="pill" onclick="filtrarTx('despesa', this)">Despesas</button>
+        <button class="pill" onclick="filtrarTx('cartao', this)">Cartão</button>
+        <button class="pill" onclick="filtrarTx('PENDENTE', this)">Pendentes</button>
+      </div>
+      <div id="listaTransacoes"></div>
+    </div>
+
+    <!-- ABA 3: CARTÕES & FATURAS -->
+    <div id="telaCartoes" class="hidden">
+      <div id="listaFaturasDetalhadas"></div>
+    </div>
+
+    <!-- ABA 4: ORÇAMENTOS / METAS -->
+    <div id="telaOrcamentos" class="hidden">
+      <div class="section-card">
+        <h3 style="margin:0 0 10px; font-size:0.95rem;">Definir Meta Mensal de Gasto</h3>
+        <label>Categoria de Despesa:</label>
+        <select id="orcCategoria"></select>
+        <label>Limite Mensal (R$):</label>
+        <input type="number" id="orcValor" step="0.01" inputmode="decimal" placeholder="0,00">
+        <button class="btn-primary" onclick="salvarOrcamento()">Salvar Meta</button>
+      </div>
+      <div id="listaOrcamentos"></div>
+    </div>
+
+    <!-- ABA 5: CONTAS, CARTÕES E CATEGORIAS -->
+    <div id="telaAjustes" class="hidden">
+      <div class="sub-tabs">
+        <div class="sub-tab active" onclick="mudarSubAba('cadContas', this)">Contas</div>
+        <div class="sub-tab" onclick="mudarSubAba('cadCartoes', this)">Cartões</div>
+        <div class="sub-tab" onclick="mudarSubAba('cadCats', this)">Categorias</div>
+      </div>
+
+      <!-- Cadastro Contas -->
+      <div id="cadContas" class="section-card">
+        <h3 style="margin:0 0 8px; font-size:0.95rem;">Nova Conta / Carteira</h3>
+        <label>Nome da Conta:</label>
+        <input type="text" id="contaNome" placeholder="Ex: Nubank, Carteira, Itaú">
+        <label>Saldo Inicial (R$):</label>
+        <input type="number" id="contaSaldo" step="0.01" inputmode="decimal" value="0">
+        <button class="btn-primary" onclick="salvarConta()">Adicionar Conta</button>
+        <div id="listaCadContas" style="margin-top:14px;"></div>
+      </div>
+
+      <!-- Cadastro Cartões -->
+      <div id="cadCartoes" class="section-card hidden">
+        <h3 style="margin:0 0 8px; font-size:0.95rem;">Novo Cartão de Crédito</h3>
+        <label>Nome do Cartão:</label>
+        <input type="text" id="cartaoNome" placeholder="Ex: Nubank Roxinho, Inter Black">
+        <label>Limite Total (R$):</label>
+        <input type="number" id="cartaoLimite" step="0.01" inputmode="decimal" placeholder="2000,00">
+        <div class="grid-2">
+          <div>
+            <label>Dia Fechamento:</label>
+            <input type="number" id="cartaoFech" min="1" max="31" value="5">
+          </div>
+          <div>
+            <label>Dia Vencimento:</label>
+            <input type="number" id="cartaoVenc" min="1" max="31" value="12">
+          </div>
+        </div>
+        <button class="btn-primary" style="background:var(--purple)" onclick="salvarCartao()">Adicionar Cartão</button>
+        <div id="listaCadCartoes" style="margin-top:14px;"></div>
+      </div>
+
+      <!-- Cadastro Categorias -->
+      <div id="cadCats" class="section-card hidden">
+        <h3 style="margin:0 0 8px; font-size:0.95rem;">Nova Categoria</h3>
+        <label>Tipo:</label>
+        <select id="catTipo">
+          <option value="despesa">Despesa</option>
+          <option value="receita">Receita</option>
+        </select>
+        <label>Nome da Categoria:</label>
+        <input type="text" id="catNome" placeholder="Ex: Mercado, Combustível, Salário">
+        <button class="btn-primary" onclick="salvarCategoria()">Adicionar Categoria</button>
+        <div id="listaCadCats" style="margin-top:14px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTÃO FLUTUANTE (+) -->
+  <button class="fab" onclick="abrirModalLancamento()">+</button>
+
+  <!-- MODAL NOVO LANÇAMENTO -->
+  <div id="modalLancamento" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="margin:0; font-size:1.05rem;">Novo Lançamento</h3>
+        <button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModalLancamento()">✕</button>
+      </div>
+
+      <div class="sub-tabs">
+        <div class="sub-tab active" onclick="selecionarTipoTx('despesa', this)">Despesa</div>
+        <div class="sub-tab" onclick="selecionarTipoTx('receita', this)">Receita</div>
+        <div class="sub-tab" onclick="selecionarTipoTx('cartao', this)">Cartão</div>
+        <div class="sub-tab" onclick="selecionarTipoTx('transferencia', this)">Transf.</div>
+      </div>
+
+      <label>Descrição:</label>
+      <input type="text" id="txDesc" placeholder="Ex: Supermercado, Salário, Aluguel...">
+
+      <div class="grid-2">
+        <div>
+          <label>Valor (R$):</label>
+          <input type="number" id="txValor" step="0.01" inputmode="decimal" placeholder="0,00">
+        </div>
+        <div>
+          <label>Data:</label>
+          <input type="date" id="txData">
+        </div>
+      </div>
+
+      <div id="boxCategoria">
+        <label>Categoria:</label>
+        <select id="txCategoria"></select>
+      </div>
+
+      <div id="boxContaOrigem">
+        <label id="lblContaOrigem">Conta:</label>
+        <select id="txConta"></select>
+      </div>
+
+      <div id="boxContaDestino" class="hidden">
+        <label>Conta de Destino:</label>
+        <select id="txContaDestino"></select>
+      </div>
+
+      <div id="boxCartao" class="hidden">
+        <label>Cartão de Crédito:</label>
+        <select id="txCartao"></select>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <label>Repetição:</label>
+          <select id="txRepeticao" onchange="toggleParcelas()">
+            <option value="unica">Única</option>
+            <option value="parcelada">Parcelada (Nx)</option>
+            <option value="fixa">Fixa Mensal (12x)</option>
+          </select>
+        </div>
+        <div id="boxParcelas" class="hidden">
+          <label>Qtd. Parcelas:</label>
+          <input type="number" id="txParcelas" min="2" max="48" value="2">
+        </div>
+        <div id="boxStatus">
+          <label>Situação:</label>
+          <select id="txStatus">
+            <option value="Efetivado">Pago / Recebido</option>
+            <option value="Pendente">Pendente</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="boxContatoZap" class="hidden">
+        <label>WhatsApp p/ Cobrança (opcional):</label>
+        <input type="tel" id="txFone" placeholder="Ex: 22999998888">
+      </div>
+
+      <button class="btn-primary" id="btnSalvarTx" onclick="salvarLancamento()">Salvar Lançamento</button>
+    </div>
+  </div>
+
+  <!-- BARRA INFERIOR -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="navegar('telaResumo', this)"><span class="nav-icon">🏠</span><span>Resumo</span></button>
+    <button class="nav-btn" onclick="navegar('telaTransacoes', this)"><span class="nav-icon">↕️</span><span>Extrato</span></button>
+    <button class="nav-btn" onclick="navegar('telaCartoes', this)"><span class="nav-icon">💳</span><span>Cartões</span></button>
+    <button class="nav-btn" onclick="navegar('telaOrcamentos', this)"><span class="nav-icon">🎯</span><span>Metas</span></button>
+    <button class="nav-btn" onclick="navegar('telaAjustes', this)"><span class="nav-icon">⚙️</span><span>Ajustes</span></button>
+  </nav>
+</div>
+
+<script>
+  const CLIENT_ID = "484331620797-5eva98kl1vhk31jnl6m83ofpr6425ro2.apps.googleusercontent.com";
+  const SCOPES = "https://www.googleapis.com/auth/drive.file";
+
+  let tokenClient;
+  let accessToken = localStorage.getItem("mf_gdrive_token") || "";
+  let spreadsheetId = localStorage.getItem("mf_gdrive_sheet_id") || "";
+  let sheetIdsMap = {};
+  let deferredPrompt;
+
+  // Estado Global do App
+  let mesAtual = new Date(); // Controla o mês visualizado
+  let tipoTxAtual = "despesa";
+  let filtroTxAtual = "TODOS";
+
+  let db = {
+    contas: [],      // [ID, Nome, SaldoInicial]
+    cartoes: [],     // [ID, Nome, Limite, Fechamento, Vencimento]
+    categorias: [],  // [ID, Tipo, Nome]
+    lancamentos: [], // [ID, Tipo, Descricao, Valor, Data, MesFatura, Categoria, ContaOuCartao, ContaDestino, Status, ParcelaInfo, Telefone]
+    orcamentos: []   // [ID, Categoria, Limite]
+  };
+
+  // PWA Manifest
+  const manifestData = {
+    name: "Minhas Finanças", short_name: "Finanças", start_url: ".", display: "standalone",
+    background_color: "#0f172a", theme_color: "#0f172a",
+    icons: [{
+      src: "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#1e293b"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="240" fill="#10b981" font-family="sans-serif" font-weight="bold">R$</text></svg>'),
+      sizes: "512x512", type: "image/svg+xml"
+    }]
+  };
+  document.getElementById('manifest-link').setAttribute('href', 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifestData)));
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e;
+    document.getElementById('btnInstall').style.display = 'inline-block';
+  });
+
+  async function instalarApp() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  }
+
+  // Autenticação Google
+  window.onload = () => {
+    atualizarLabelMes();
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if (resp.error) {
+          document.getElementById('statusLogin').innerText = "Erro no login: " + resp.error;
+          return;
+        }
+        accessToken = resp.access_token;
+        localStorage.setItem("mf_gdrive_token", accessToken);
+        await prepararEstruturaDrive();
+      }
+    });
+
+    if (accessToken && spreadsheetId) {
+      iniciarAppLogado();
+    }
+  };
+
+  function fazerLoginGoogle() {
+    document.getElementById('statusLogin').innerText = "Conectando ao Google...";
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  function sairConta() {
+    localStorage.removeItem("mf_gdrive_token");
+    localStorage.removeItem("mf_gdrive_sheet_id");
+    accessToken = ""; spreadsheetId = "";
+    document.getElementById('appPrincipal').classList.add('hidden');
+    document.getElementById('telaLogin').classList.remove('hidden');
+  }
+
+  async function fetchGoogle(url, method = "GET", body = null) {
+    const opts = {
+      method,
+      headers: { "Authorization": "Bearer " + accessToken, "Content-Type": "application/json" }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    if (res.status === 401) {
+      tokenClient.requestAccessToken({ prompt: '' });
+      throw new Error("Sessão expirada, renovando...");
+    }
+    return res;
+  }
+
+  // Cria Pasta e Planilha no formato Minhas Finanças
+  async function prepararEstruturaDrive() {
+    const statusEl = document.getElementById('statusLogin');
+    statusEl.innerText = "Verificando banco de dados no Google Drive...";
+
+    try {
+      const q = encodeURIComponent("name = 'Minhas Financas App DB' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false");
+      const searchRes = await fetchGoogle(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+      const searchData = await searchRes.json();
+
+      if (searchData.files && searchData.files.length > 0) {
+        spreadsheetId = searchData.files[0].id;
+        localStorage.setItem("mf_gdrive_sheet_id", spreadsheetId);
+        iniciarAppLogado();
+        return;
+      }
+
+      statusEl.innerText = "Criando pasta 'Minhas Finanças' no seu Drive...";
+      const folderRes = await fetchGoogle("https://www.googleapis.com/drive/v3/files", "POST", {
+        name: "Minhas Finanças",
+        mimeType: "application/vnd.google-apps.folder"
+      });
+      const folder = await folderRes.json();
+
+      statusEl.innerText = "Configurando planilhas de Contas, Cartões e Lançamentos...";
+      const sheetRes = await fetchGoogle("https://sheets.googleapis.com/v4/spreadsheets", "POST", {
+        properties: { title: "Minhas Financas App DB" },
+        sheets: [
+          { properties: { title: "Contas" } },
+          { properties: { title: "Cartoes" } },
+          { properties: { title: "Categorias" } },
+          { properties: { title: "Lancamentos" } },
+          { properties: { title: "Orcamentos" } }
+        ]
+      });
+      const sheet = await sheetRes.json();
+      spreadsheetId = sheet.spreadsheetId;
+      localStorage.setItem("mf_gdrive_sheet_id", spreadsheetId);
+
+      await fetchGoogle(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?addParents=${folder.id}&removeParents=root`, "PATCH");
+
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
+        valueInputOption: "USER_ENTERED",
+        data: [
+          { range: "Contas!A1:C3", values: [
+            ["ID", "Nome", "SaldoInicial"],
+            ["1", "Carteira", "0"],
+            ["2", "Conta Corrente", "0"]
+          ]},
+          { range: "Cartoes!A1:E2", values: [
+            ["ID", "Nome", "Limite", "Fechamento", "Vencimento"],
+            ["1", "Cartão Principal", "3000", "5", "12"]
+          ]},
+          { range: "Categorias!A1:C10", values: [
+            ["ID", "Tipo", "Nome"],
+            ["1", "despesa", "Alimentação"],
+            ["2", "despesa", "Moradia & Contas"],
+            ["3", "despesa", "Transporte"],
+            ["4", "despesa", "Lazer"],
+            ["5", "despesa", "Saúde"],
+            ["6", "despesa", "Outros Gastos"],
+            ["7", "receita", "Salário"],
+            ["8", "receita", "Renda Extra / Cobranças"],
+            ["9", "receita", "Investimentos"]
+          ]},
+          { range: "Lancamentos!A1:L1", values: [
+            ["ID", "Tipo", "Descricao", "Valor", "Data", "MesFatura", "Categoria", "ContaOuCartao", "ContaDestino", "Status", "Parcela", "Telefone"]
+          ]},
+          { range: "Orcamentos!A1:C1", values: [
+            ["ID", "Categoria", "Limite"]
+          ]}
+        ]
+      });
+
+      iniciarAppLogado();
+    } catch (err) {
+      statusEl.innerText = "Erro: " + err.message;
+    }
+  }
+
+  function iniciarAppLogado() {
+    document.getElementById('telaLogin').classList.add('hidden');
+    document.getElementById('appPrincipal').classList.remove('hidden');
+    carregarTodosDados();
+  }
+
+  async function carregarTodosDados() {
+    const loading = document.getElementById('loading');
+    loading.classList.remove('hidden');
+    try {
+      const metaRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
+      const meta = await metaRes.json();
+      meta.sheets.forEach(s => { sheetIdsMap[s.properties.title] = s.properties.sheetId; });
+
+      const ranges = "ranges=Contas!A2:C&ranges=Cartoes!A2:E&ranges=Categorias!A2:C&ranges=Lancamentos!A2:L&ranges=Orcamentos!A2:C";
+      const valRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
+      const valData = await valRes.json();
+
+      db.contas = (valData.valueRanges[0].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+      db.cartoes = (valData.valueRanges[1].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+      db.categorias = (valData.valueRanges[2].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+      db.lancamentos = (valData.valueRanges[3].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+      db.orcamentos = (valData.valueRanges[4].values || []).map((r, i) => ({ row: i + 2, cols: r }));
+
+      renderizarTudo();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loading.classList.add('hidden');
+    }
+  }
+
+  // Controle de Mês
+  function getChaveMes(dateObj) {
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  }
+
+  function atualizarLabelMes() {
+    const label = mesAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    document.getElementById('labelMesAtual').innerText = label;
+  }
+
+  function alterarMes(delta) {
+    mesAtual.setMonth(mesAtual.getMonth() + delta);
+    atualizarLabelMes();
+    renderizarTudo();
+  }
+
+  function formatarMoeda(v) {
+    return parseFloat(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function mostrarToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg; t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 2200);
+  }
+
+  // Cálculo e Renderização Geral
+  function renderizarTudo() {
+    const chaveMesSel = getChaveMes(mesAtual);
+
+    // 1. Calcular saldo atual real de cada conta (Saldo Inicial + Receitas Efetivadas - Despesas Efetivadas +- Transferências)
+    const saldosContas = {};
+    db.contas.forEach(c => {
+      saldosContas[c.cols[1]] = parseFloat(c.cols[2]) || 0;
+    });
+
+    db.lancamentos.forEach(l => {
+      const [id, tipo, desc, valStr, data, mesFat, cat, conta, contaDest, status] = l.cols;
+      const val = parseFloat(valStr) || 0;
+      if (status === "Efetivado") {
+        if (tipo === "receita" && saldosContas[conta] !== undefined) saldosContas[conta] += val;
+        if (tipo === "despesa" && saldosContas[conta] !== undefined) saldosContas[conta] -= val;
+        if (tipo === "transferencia") {
+          if (saldosContas[conta] !== undefined) saldosContas[conta] -= val;
+          if (saldosContas[contaDest] !== undefined) saldosContas[contaDest] += val;
+        }
+      }
+    });
+
+    const saldoTotalContas = Object.values(saldosContas).reduce((acc, v) => acc + v, 0);
+
+    // 2. Calcular indicadores do mês selecionado
+    let receitasMes = 0, receitasPendMes = 0;
+    let despesasMes = 0, despesasPendMes = 0;
+    let faturasMesTotal = 0;
+    const gastosPorCat = {};
+    const faturasPorCartao = {}; // { NomeCartao: { total: 0, itens: [], pago: false } }
+
+    db.cartoes.forEach(c => {
+      faturasPorCartao[c.cols[1]] = {
+        limite: parseFloat(c.cols[2]) || 0,
+        fech: c.cols[3],
+        venc: c.cols[4],
+        faturaMes: 0,
+        usoTotalLimite: 0,
+        itens: []
+      };
+    });
+
+    db.lancamentos.forEach(l => {
+      const [id, tipo, desc, valStr, data, mesFat, cat, contaOuCartao, contaDest, status] = l.cols;
+      const val = parseFloat(valStr) || 0;
+      const mesData = (data || "").substring(0, 7);
+
+      // Uso total do limite do cartão (compras pendentes/não pagas)
+      if (tipo === "cartao" && faturasPorCartao[contaOuCartao] && status !== "Pago") {
+        faturasPorCartao[contaOuCartao].usoTotalLimite += val;
+      }
+
+      if (tipo === "receita" && mesData === chaveMesSel) {
+        receitasMes += val;
+        if (status === "Pendente") receitasPendMes += val;
+      }
+
+      if (tipo === "despesa" && mesData === chaveMesSel) {
+        despesasMes += val;
+        if (status === "Pendente") despesasPendMes += val;
+        gastosPorCat[cat] = (gastosPorCat[cat] || 0) + val;
+      }
+
+      if (tipo === "cartao" && mesFat === chaveMesSel) {
+        if (status !== "Pago") faturasMesTotal += val;
+        gastosPorCat[cat] = (gastosPorCat[cat] || 0) + val;
+        if (faturasPorCartao[contaOuCartao]) {
+          faturasPorCartao[contaOuCartao].faturaMes += val;
+          faturasPorCartao[contaOuCartao].itens.push(l);
+        }
+      }
+    });
+
+    const previsaoFimMes = saldoTotalContas + receitasPendMes - despesasPendMes - faturasMesTotal;
+
+    // Atualiza Dashboard Hero
+    document.getElementById('dashSaldoAtual').innerText = formatarMoeda(saldoTotalContas);
+    document.getElementById('dashSaldoAtual').style.color = saldoTotalContas >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('dashReceitas').innerText = formatarMoeda(receitasMes);
+    document.getElementById('dashDespesas').innerText = formatarMoeda(despesasMes + faturasMesTotal);
+    document.getElementById('dashFaturas').innerText = formatarMoeda(faturasMesTotal);
+    document.getElementById('dashPrevisao').innerText = formatarMoeda(previsaoFimMes);
+
+    // Renderiza Contas no Dashboard e Ajustes
+    const dashContas = document.getElementById('dashListaContas');
+    const cadContas = document.getElementById('listaCadContas');
+    dashContas.innerHTML = ''; cadContas.innerHTML = '';
+
+    db.contas.forEach(c => {
+      const nome = c.cols[1];
+      const saldo = saldosContas[nome] || 0;
+      dashContas.innerHTML += `
+        <div class="row-item">
+          <span><span class="dot" style="background:var(--blue)"></span>${nome}</span>
+          <strong style="color:${saldo >= 0 ? 'var(--text)' : 'var(--red)'}">${formatarMoeda(saldo)}</strong>
+        </div>`;
+      cadContas.innerHTML += `
+        <div class="row-item">
+          <div><strong>${nome}</strong><br><small style="color:var(--muted)">Inicial: ${formatarMoeda(c.cols[2])}</small></div>
+          <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Contas', ${c.row})">Excluir</button>
+        </div>`;
+    });
+
+    // Renderiza Cartões no Dashboard, Aba Cartões e Ajustes
+    const dashCartoes = document.getElementById('dashListaCartoes');
+    const detCartoes = document.getElementById('listaFaturasDetalhadas');
+    const cadCartoes = document.getElementById('listaCadCartoes');
+    dashCartoes.innerHTML = ''; detCartoes.innerHTML = ''; cadCartoes.innerHTML = '';
+
+    db.cartoes.forEach(c => {
+      const nome = c.cols[1];
+      const info = faturasPorCartao[nome];
+      const pct = info.limite > 0 ? Math.min(100, (info.usoTotalLimite / info.limite) * 100) : 0;
+      const disp = Math.max(0, info.limite - info.usoTotalLimite);
+
+      dashCartoes.innerHTML += `
+        <div class="row-item" style="display:block;">
+          <div style="display:flex; justify-content:space-between;">
+            <strong>💳 ${nome}</strong>
+            <span style="color:var(--purple); font-weight:700;">Fatura: ${formatarMoeda(info.faturaMes)}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted); margin-top:3px;">
+            <span>Disp: ${formatarMoeda(disp)}</span>
+            <span>Limite: ${formatarMoeda(info.limite)}</span>
+          </div>
+          <div class="progress-bg"><div class="progress-fill" style="width:${pct}%; background:var(--purple);"></div></div>
+        </div>`;
+
+      // Card Detalhado na Aba Cartões
+      const itensAbertos = info.itens.filter(x => x.cols[9] !== "Pago");
+      const valorAberto = itensAbertos.reduce((acc, x) => acc + (parseFloat(x.cols[3]) || 0), 0);
+
+      let htmlItensFat = info.itens.map(item => `
+        <div class="row-item" style="font-size:0.82rem;">
+          <div>
+            <strong>${item.cols[2]}</strong> <small style="color:var(--muted)">(${item.cols[10] || '1/1'})</small><br>
+            <small style="color:var(--muted)">${item.cols[4].split('-').reverse().join('/')} • ${item.cols[6]}</small>
+          </div>
+          <div style="text-align:right;">
+            <strong>${formatarMoeda(item.cols[3])}</strong><br>
+            <small style="color:${item.cols[9] === 'Pago' ? 'var(--green)' : 'var(--amber)'}">${item.cols[9]}</small>
+          </div>
+        </div>
+      `).join('');
+
+      detCartoes.innerHTML += `
+        <div class="section-card">
+          <div class="section-title">
+            <span>💳 ${nome}</span>
+            <span style="font-size:0.75rem; color:var(--muted);">Fecha dia ${info.fech} • Vence dia ${info.venc}</span>
+          </div>
+          <div class="grid-2" style="margin-bottom:10px;">
+            <div class="mini-stat"><span>Fatura (${chaveMesSel})</span><strong style="color:var(--purple)">${formatarMoeda(info.faturaMes)}</strong></div>
+            <div class="mini-stat"><span>Limite Disponível</span><strong style="color:var(--green)">${formatarMoeda(disp)}</strong></div>
+          </div>
+          ${valorAberto > 0 ? `<button class="btn-primary" style="background:var(--purple); margin-top:0; margin-bottom:12px;" onclick="pagarFaturaCartao('${nome}', ${valorAberto})">✔ Pagar Fatura (${formatarMoeda(valorAberto)})</button>` : '<p style="color:var(--green); font-size:0.8rem; margin:0 0 8px;">✔ Fatura quitada ou sem lançamentos em aberto.</p>'}
+          <div>${htmlItensFat || '<p style="color:var(--muted); font-size:0.8rem;">Nenhuma compra nesta fatura.</p>'}</div>
+        </div>`;
+
+      cadCartoes.innerHTML += `
+        <div class="row-item">
+          <div><strong>${nome}</strong><br><small style="color:var(--muted)">Limite: ${formatarMoeda(info.limite)} | Venc: dia ${info.venc}</small></div>
+          <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Cartoes', ${c.row})">Excluir</button>
+        </div>`;
+    });
+
+    // Renderiza Categorias no Dashboard
+    const dashCats = document.getElementById('dashCategorias');
+    const totalGastoCat = Object.values(gastosPorCat).reduce((a, b) => a + b, 0);
+    const catsOrdenadas = Object.entries(gastosPorCat).sort((a, b) => b[1] - a[1]);
+    dashCats.innerHTML = catsOrdenadas.length === 0 ? '<p style="color:var(--muted); font-size:0.82rem; margin:0;">Sem despesas registradas neste mês.</p>' : '';
+    catsOrdenadas.forEach(([cat, val]) => {
+      const pct = totalGastoCat > 0 ? ((val / totalGastoCat) * 100).toFixed(0) : 0;
+      dashCats.innerHTML += `
+        <div style="margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
+            <span>${cat} (${pct}%)</span>
+            <strong>${formatarMoeda(val)}</strong>
+          </div>
+          <div class="progress-bg"><div class="progress-fill" style="width:${pct}%; background:var(--red);"></div></div>
+        </div>`;
+    });
+
+    // Renderiza Orçamentos / Metas
+    const listaOrc = document.getElementById('listaOrcamentos');
+    listaOrc.innerHTML = '';
+    db.orcamentos.forEach(o => {
+      const cat = o.cols[1];
+      const limite = parseFloat(o.cols[2]) || 0;
+      const gasto = gastosPorCat[cat] || 0;
+      const pct = limite > 0 ? Math.min(100, (gasto / limite) * 100) : 0;
+      const cor = gasto > limite ? 'var(--red)' : (pct > 80 ? 'var(--amber)' : 'var(--green)');
+
+      listaOrc.innerHTML += `
+        <div class="section-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>🎯 ${cat}</strong>
+            <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Orcamentos', ${o.row})">Excluir</button>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:6px; color:var(--muted);">
+            <span>Gasto: <strong style="color:${cor}">${formatarMoeda(gasto)}</strong></span>
+            <span>Meta: ${formatarMoeda(limite)}</span>
+          </div>
+          <div class="progress-bg"><div class="progress-fill" style="width:${pct}%; background:${cor};"></div></div>
+        </div>`;
+    });
+
+    // Renderiza Extrato / Transações
+    renderizarExtrato(chaveMesSel);
+
+    // Popula Selects de Ajustes e Modal
+    popularSelects();
+  }
+
+  function renderizarExtrato(chaveMesSel) {
+    const lista = document.getElementById('listaTransacoes');
+    let txs = db.lancamentos.filter(l => {
+      const [id, tipo, desc, val, data, mesFat, cat, conta, dest, status] = l.cols;
+      const mesRef = tipo === "cartao" ? mesFat : (data || "").substring(0, 7);
+      if (mesRef !== chaveMesSel) return false;
+      if (filtroTxAtual === "TODOS") return true;
+      if (filtroTxAtual === "PENDENTE") return status === "Pendente";
+      return tipo === filtroTxAtual;
+    });
+
+    txs.sort((a, b) => (b.cols[4] || "").localeCompare(a.cols[4] || ""));
+
+    lista.innerHTML = txs.length === 0 ? '<p style="text-align:center; color:var(--muted); padding:20px;">Nenhum lançamento neste filtro.</p>' : '';
+
+    txs.forEach(l => {
+      const [id, tipo, desc, valStr, data, mesFat, cat, conta, dest, status, parcela, fone] = l.cols;
+      const val = parseFloat(valStr) || 0;
+      const dataBr = data ? data.split('-').reverse().join('/') : '';
+      const isPend = status === "Pendente";
+      const sinal = tipo === "receita" ? "+" : (tipo === "transferencia" ? "⇄" : "-");
+      const corVal = tipo === "receita" ? "var(--green)" : (tipo === "cartao" ? "var(--purple)" : (tipo === "transferencia" ? "var(--amber)" : "var(--red)"));
+
+      let zapBtn = '';
+      if (tipo === "receita" && isPend && fone) {
+        const foneLimpo = fone.replace(/\D/g, '');
+        const foneBr = foneLimpo.startsWith('55') ? foneLimpo : '55' + foneLimpo;
+        const msg = encodeURIComponent(`Olá! Lembrete referente a "${desc}" no valor de ${formatarMoeda(val)}, vencimento em ${dataBr}.`);
+        zapBtn = `<a href="https://wa.me/${foneBr}?text=${msg}" target="_blank" class="btn-mini" style="background:#25D366; color:#fff; text-decoration:none;">Cobrar</a>`;
+      }
+
+      lista.innerHTML += `
+        <div class="tx-card ${tipo} ${isPend ? 'pendente' : ''}">
+          <div class="tx-info">
+            <h4>${desc} ${parcela && parcela !== '1/1' ? `<small style="color:var(--muted)">(${parcela})</small>` : ''}</h4>
+            <p>${dataBr} • ${cat || 'Transferência'} • <strong>${conta}</strong>${dest ? ` → ${dest}` : ''}
+              <span class="badge ${isPend ? 'badge-pend' : 'badge-ok'}">${status}</span>
+            </p>
+          </div>
+          <div class="tx-right">
+            <span class="tx-val" style="color:${corVal}">${sinal} ${formatarMoeda(val)}</span>
+            <div style="display:flex; gap:4px;">
+              ${zapBtn}
+              ${isPend ? `<button class="btn-mini" style="background:var(--green); color:#fff;" onclick="efetivarLancamento(${l.row})">Efetivar</button>` : ''}
+              <button class="btn-mini" style="background:#334155; color:#cbd5e1;" onclick="deletarLinha('Lancamentos', ${l.row})">✕</button>
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  function popularSelects() {
+    // Select de Categorias para Orçamento e Lista de Ajustes
+    const selOrc = document.getElementById('orcCategoria');
+    const listaCadCats = document.getElementById('listaCadCats');
+    selOrc.innerHTML = ''; listaCadCats.innerHTML = '';
+
+    db.categorias.forEach(c => {
+      const [id, tipo, nome] = c.cols;
+      if (tipo === "despesa") selOrc.innerHTML += `<option value="${nome}">${nome}</option>`;
+      listaCadCats.innerHTML += `
+        <div class="row-item">
+          <span><span class="dot" style="background:${tipo === 'receita' ? 'var(--green)' : 'var(--red)'}"></span>${nome} <small style="color:var(--muted)">(${tipo})</small></span>
+          <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Categorias', ${c.row})">Excluir</button>
+        </div>`;
+    });
+  }
+
+  // Navegação e Modais
+  function navegar(telaId, el) {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    ['telaResumo', 'telaTransacoes', 'telaCartoes', 'telaOrcamentos', 'telaAjustes'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    document.getElementById(telaId).classList.remove('hidden');
+  }
+
+  function mudarSubAba(idAlvo, el) {
+    const parent = el.parentElement;
+    parent.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    parent.parentElement.querySelectorAll('.section-card').forEach(c => c.classList.add('hidden'));
+    document.getElementById(idAlvo).classList.remove('hidden');
+  }
+
+  function filtrarTx(tipo, el) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    filtroTxAtual = tipo;
+    renderizarExtrato(getChaveMes(mesAtual));
+  }
+
+  // Modal de Lançamento
+  function abrirModalLancamento() {
+    document.getElementById('txData').value = new Date().toISOString().split('T')[0];
+    document.getElementById('txDesc').value = '';
+    document.getElementById('txValor').value = '';
+    document.getElementById('txFone').value = '';
+
+    // Preenche contas e cartões
+    const selConta = document.getElementById('txConta');
+    const selDest = document.getElementById('txContaDestino');
+    const selCartao = document.getElementById('txCartao');
+    selConta.innerHTML = ''; selDest.innerHTML = ''; selCartao.innerHTML = '';
+
+    db.contas.forEach(c => {
+      selConta.innerHTML += `<option value="${c.cols[1]}">${c.cols[1]}</option>`;
+      selDest.innerHTML += `<option value="${c.cols[1]}">${c.cols[1]}</option>`;
+    });
+    db.cartoes.forEach(c => {
+      selCartao.innerHTML += `<option value="${c.cols[1]}">${c.cols[1]}</option>`;
+    });
+
+    selecionarTipoTx('despesa', document.querySelector('#modalLancamento .sub-tab'));
+    document.getElementById('modalLancamento').classList.remove('hidden');
+  }
+
+  function fecharModalLancamento() {
+    document.getElementById('modalLancamento').classList.add('hidden');
+  }
+
+  function selecionarTipoTx(tipo, el) {
+    tipoTxAtual = tipo;
+    document.querySelectorAll('#modalLancamento .sub-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+
+    const selCat = document.getElementById('txCategoria');
+    selCat.innerHTML = '';
+    const tipoCatFiltro = tipo === 'receita' ? 'receita' : 'despesa';
+    db.categorias.filter(c => c.cols[1] === tipoCatFiltro).forEach(c => {
+      selCat.innerHTML += `<option value="${c.cols[2]}">${c.cols[2]}</option>`;
+    });
+
+    document.getElementById('boxCategoria').classList.toggle('hidden', tipo === 'transferencia');
+    document.getElementById('boxContaOrigem').classList.toggle('hidden', tipo === 'cartao');
+    document.getElementById('boxContaDestino').classList.toggle('hidden', tipo !== 'transferencia');
+    document.getElementById('boxCartao').classList.toggle('hidden', tipo !== 'cartao');
+    document.getElementById('boxStatus').classList.toggle('hidden', tipo === 'cartao');
+    document.getElementById('boxContatoZap').classList.toggle('hidden', tipo !== 'receita');
+    document.getElementById('lblContaOrigem').innerText = tipo === 'transferencia' ? 'Conta de Origem:' : 'Conta:';
+  }
+
+  function toggleParcelas() {
+    const rep = document.getElementById('txRepeticao').value;
+    document.getElementById('boxParcelas').classList.toggle('hidden', rep !== 'parcelada');
+  }
+
+  // Calcula em qual mês de fatura uma compra no cartão cai com base no dia de fechamento
+  function calcularMesFatura(dataStr, nomeCartao, offsetMeses) {
+    const [ano, mes, dia] = dataStr.split('-').map(Number);
+    const cartao = db.cartoes.find(c => c.cols[1] === nomeCartao);
+    const diaFech = cartao ? (parseInt(cartao.cols[3]) || 5) : 5;
+
+    let mesBase = mes - 1 + offsetMeses;
+    if (dia >= diaFech) mesBase += 1; // Comprou no dia ou após fechamento -> próxima fatura
+
+    const d = new Date(ano, mesBase, 1);
+    return getChaveMes(d);
+  }
+
+  // Escrita no Google Sheets
+  async function adicionarLinhas(aba, linhas) {
+    document.getElementById('loading').classList.remove('hidden');
+    await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!A1:append?valueInputOption=USER_ENTERED`, "POST", {
+      values: linhas
+    });
+    await carregarTodosDados();
+  }
+
+  async function salvarLancamento() {
+    const desc = document.getElementById('txDesc').value.trim();
+    const valorTotal = parseFloat(document.getElementById('txValor').value);
+    const data = document.getElementById('txData').value;
+    const cat = document.getElementById('txCategoria').value;
+    const conta = document.getElementById('txConta').value;
+    const contaDest = document.getElementById('txContaDestino').value;
+    const cartao = document.getElementById('txCartao').value;
+    const rep = document.getElementById('txRepeticao').value;
+    const qtdParcelas = rep === 'parcelada' ? (parseInt(document.getElementById('txParcelas').value) || 2) : (rep === 'fixa' ? 12 : 1);
+    const status = tipoTxAtual === 'cartao' ? 'Aberto' : document.getElementById('txStatus').value;
+    const fone = document.getElementById('txFone').value.trim();
+
+    if (!desc || !valorTotal || !data) return alert("Preencha descrição, valor e data!");
+    if (tipoTxAtual === 'transferencia' && conta === contaDest) return alert("Escolha contas diferentes para transferência!");
+
+    const valorParcela = rep === 'parcelada' ? (valorTotal / qtdParcelas) : valorTotal;
+    const [ano, mes, dia] = data.split('-').map(Number);
+    const linhas = [];
+
+    for (let i = 0; i < qtdParcelas; i++) {
+      const d = new Date(ano, mes - 1 + i, dia);
+      const dataParcela = d.toISOString().split('T')[0];
+      const mesFatura = tipoTxAtual === 'cartao' ? calcularMesFatura(data, cartao, i) : dataParcela.substring(0, 7);
+      const infoParcela = qtdParcelas > 1 ? `${i + 1}/${qtdParcelas}` : '1/1';
+      const statusItem = (i === 0) ? status : (tipoTxAtual === 'cartao' ? 'Aberto' : 'Pendente');
+      const origem = tipoTxAtual === 'cartao' ? cartao : conta;
+      const dest = tipoTxAtual === 'transferencia' ? contaDest : '';
+
+      linhas.push([
+        `${Date.now()}-${i + 1}`, tipoTxAtual, desc, valorParcela.toFixed(2),
+        dataParcela, mesFatura, tipoTxAtual === 'transferencia' ? 'Transferência' : cat,
+        origem, dest, statusItem, infoParcela, fone
+      ]);
+    }
+
+    fecharModalLancamento();
+    await adicionarLinhas("Lancamentos", linhas);
+    mostrarToast("Lançamento registrado!");
+  }
+
+  async function efetivarLancamento(row) {
+    document.getElementById('loading').classList.remove('hidden');
+    await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!J${row}?valueInputOption=USER_ENTERED`, "PUT", {
+      values: [["Efetivado"]]
+    });
+    mostrarToast("Lançamento efetivado!");
+    await carregarTodosDados();
+  }
+
+  async function pagarFaturaCartao(nomeCartao, valorFatura) {
+    if (db.contas.length === 0) return alert("Cadastre uma conta antes de pagar a fatura!");
+    const nomesContas = db.contas.map((c, idx) => `${idx + 1} - ${c.cols[1]}`).join('\n');
+    const escolha = prompt(`Pagar fatura de ${formatarMoeda(valorFatura)} com qual conta?\nDigite o número:\n${nomesContas}`, "1");
+    if (!escolha) return;
+
+    const idxConta = parseInt(escolha) - 1;
+    const contaEscolhida = db.contas[idxConta] ? db.contas[idxConta].cols[1] : db.contas[0].cols[1];
+    const chaveMesSel = getChaveMes(mesAtual);
+
+    document.getElementById('loading').classList.remove('hidden');
+
+    // 1. Marca os itens da fatura deste mês como "Pago"
+    const updates = [];
+    db.lancamentos.forEach(l => {
+      if (l.cols[1] === "cartao" && l.cols[7] === nomeCartao && l.cols[5] === chaveMesSel && l.cols[9] !== "Pago") {
+        updates.push({ range: `Lancamentos!J${l.row}`, values: [["Pago"]] });
+      }
+    });
+
+    if (updates.length > 0) {
+      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
+        valueInputOption: "USER_ENTERED",
+        data: updates
+      });
+    }
+
+    // 2. Lança a despesa efetivada na conta bancária escolhida
+    const hoje = new Date().toISOString().split('T')[0];
+    await adicionarLinhas("Lancamentos", [[
+      Date.now().toString(), "despesa", `Fatura ${nomeCartao} (${chaveMesSel})`,
+      valorFatura.toFixed(2), hoje, chaveMesSel, "Cartão de Crédito",
+      contaEscolhida, "", "Efetivado", "1/1", ""
+    ]]);
+
+    mostrarToast("Fatura paga com sucesso!");
+  }
+
+  // Cadastros Auxiliares
+  async function salvarConta() {
+    const nome = document.getElementById('contaNome').value.trim();
+    const saldo = parseFloat(document.getElementById('contaSaldo').value) || 0;
+    if (!nome) return alert("Digite o nome da conta!");
+    await adicionarLinhas("Contas", [[Date.now().toString(), nome, saldo]]);
+    document.getElementById('contaNome').value = '';
+    mostrarToast("Conta adicionada!");
+  }
+
+  async function salvarCartao() {
+    const nome = document.getElementById('cartaoNome').value.trim();
+    const limite = parseFloat(document.getElementById('cartaoLimite').value) || 0;
+    const fech = parseInt(document.getElementById('cartaoFech').value) || 5;
+    const venc = parseInt(document.getElementById('cartaoVenc').value) || 12;
+    if (!nome || !limite) return alert("Preencha nome e limite do cartão!");
+    await adicionarLinhas("Cartoes", [[Date.now().toString(), nome, limite, fech, venc]]);
+    document.getElementById('cartaoNome').value = '';
+    document.getElementById('cartaoLimite').value = '';
+    mostrarToast("Cartão cadastrado!");
+  }
+
+  async function salvarCategoria() {
+    const tipo = document.getElementById('catTipo').value;
+    const nome = document.getElementById('catNome').value.trim();
+    if (!nome) return alert("Digite o nome da categoria!");
+    await adicionarLinhas("Categorias", [[Date.now().toString(), tipo, nome]]);
+    document.getElementById('catNome').value = '';
+    mostrarToast("Categoria salva!");
+  }
+
+  async function salvarOrcamento() {
+    const cat = document.getElementById('orcCategoria').value;
+    const val = parseFloat(document.getElementById('orcValor').value);
+    if (!cat || !val) return alert("Selecione a categoria e o valor limite!");
+    await adicionarLinhas("Orcamentos", [[Date.now().toString(), cat, val]]);
+    document.getElementById('orcValor').value = '';
+    mostrarToast("Meta definida!");
+  }
+
+  async function deletarLinha(aba, row) {
+    if (!confirm("Excluir este registro permanentemente?")) return;
+    document.getElementById('loading').classList.remove('hidden');
+    await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, "POST", {
+      requests: [{
+        deleteDimension: {
+          range: { sheetId: sheetIdsMap[aba], dimension: "ROWS", startIndex: row - 1, endIndex: row }
+        }
+      }]
+    });
+    mostrarToast("Registro excluído!");
+    await carregarTodosDados();
+  }
+</script>
+</body>
+</html>
