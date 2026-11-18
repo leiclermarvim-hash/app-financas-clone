@@ -687,7 +687,6 @@
               <span>Balanço Mensal</span>
               <strong id="dashBalanco">R$ 0,00</strong>
             </div>
-            <!-- Card dinâmico: Previsão Fim do Mês APENAS no mês corrente -->
             <div class="mini-stat" id="cardPrevisaoMes" style="cursor:pointer" onclick="abrirVisao('previsao')">
               <span id="lblPrevisaoMes">Previsão Fim do Mês</span>
               <strong id="dashPrevisao" style="color:var(--blue)">R$ 0,00</strong>
@@ -703,7 +702,6 @@
               <div id="dashEvolucao"></div>
             </div>
             <div id="dashUsuarios"></div>
-            <!-- Despesas por Categoria (Acordeão Clicável) -->
             <div class="section-card">
               <div class="section-title">
                 <span>🍩 Despesas por Categoria</span>
@@ -712,7 +710,6 @@
               <div id="dashCategorias"></div>
             </div>
 
-            <!-- Próximos Vencimentos / Pendentes -->
             <div class="section-card">
               <div class="section-title">
                 <span>🔔 Pendências do Mês</span>
@@ -723,7 +720,6 @@
           </div>
 
           <div>
-            <!-- Contas -->
             <div class="section-card">
               <div class="section-title">
                 <span>🏦 Minhas Contas</span>
@@ -732,7 +728,6 @@
               <div id="dashListaContas"></div>
             </div>
 
-            <!-- Cartões -->
             <div class="section-card">
               <div class="section-title">
                 <span>💳 Cartões de Crédito</span>
@@ -821,7 +816,6 @@
           <div class="sub-tab" onclick="mudarSubAba('cfgSistema', this)">Google & Backup</div>
         </div>
 
-        <!-- Contas -->
         <div id="cfgContas" class="section-card">
           <h3 style="margin:0 0 8px; font-size:0.95rem;">🏦 Adicionar Conta / Carteira</h3>
           <label>Nome da Conta:</label>
@@ -844,7 +838,6 @@
           <div id="listaCadContas" style="margin-top:14px;"></div>
         </div>
 
-        <!-- Cartões -->
         <div id="cfgCartoes" class="section-card hidden">
           <div class="section-title">
             <span>💳 Meus Cartões de Crédito</span>
@@ -853,7 +846,6 @@
           <div id="listaCadCartoes"></div>
         </div>
 
-        <!-- Categorias -->
         <div id="cfgCats" class="section-card hidden">
           <h3 style="margin:0 0 8px; font-size:0.95rem;">🏷️ Nova Categoria</h3>
           <div class="grid-2">
@@ -873,7 +865,6 @@
           <div id="listaCadCats" style="margin-top:14px;"></div>
         </div>
 
-        <!-- Google & Sistema -->
         <div id="cfgSistema" class="section-card hidden">
           <h3 style="margin:0 0 10px; font-size:0.95rem;">☁️ Integração Google & Preferências</h3>
           <div class="mini-stat" style="margin-bottom:10px;">
@@ -915,7 +906,6 @@
     </div>
   </div>
 
-  <!-- BOTÃO FLUTUANTE MOBILE (+) -->
   <button class="fab" onclick="abrirModalLancamento()">+</button>
   <button class="fab-rapido" onclick="abrirModalRapido()" title="Despesa rápida">⚡</button>
 
@@ -1017,7 +1007,6 @@
     </div>
   </div>
 
-  <!-- MODAL NOVO / EDITAR LANÇAMENTO -->
   <div id="modalLancamento" class="modal-overlay hidden">
     <div class="modal-box">
       <div class="modal-header">
@@ -1103,7 +1092,6 @@
     </div>
   </div>
 
-  <!-- MODAL ADICIONAR CARTÃO DE CRÉDITO -->
   <div id="modalCartao" class="modal-overlay hidden">
     <div class="modal-box">
       <div class="modal-header">
@@ -1155,7 +1143,6 @@
     </div>
   </div>
 
-  <!-- BARRA INFERIOR MOBILE -->
   <nav class="bottom-nav">
     <button class="nav-btn active" data-target="telaResumo" onclick="navegar('telaResumo')"><span class="nav-icon">🏠</span><span>Resumo</span></button>
     <button class="nav-btn" data-target="telaTransacoes" onclick="navegar('telaTransacoes')"><span class="nav-icon">↕️</span><span>Extrato</span></button>
@@ -1185,29 +1172,26 @@
   let sheetIdsMap = {};
   let deferredPrompt;
 
-  // Estado Global
   let mesAtual = new Date();
   let tipoTxAtual = "despesa";
   let filtroTxAtual = "TODOS";
-  let editandoRow = null; // Guarda o número da linha ao editar lançamento
+  let editandoRow = null;
 
   let db = {
-    contas: [],      // [ID, Nome, Tipo, SaldoInicial]
-    cartoes: [],     // [ID, Nome, Bandeira, Cor, Limite, Fechamento, Vencimento, ContaPadrao]
-    categorias: [],  // [ID, Tipo, Nome]
-    lancamentos: [], // [ID, Tipo, Descricao, Valor, Data, MesFatura, Categoria, ContaOuCartao, ContaDestino, Status, Parcela, Telefone, GoogleSyncId]
-    orcamentos: [], // [ID, Categoria, Limite]
-    metas: [],       // [ID, Nome, Alvo, Guardado, Prazo]
-    devedores: [],   // [ID, Nome, Telefone, Descricao, ValorTotal, Parcelas, PrimeiroVenc, Pagas]
-    itens: [],       // [ID, Nome, Preco, Categoria]
-    listas: []       // [ID, Nome, Categoria, Conta, Status, ItensJSON, Criada]
+    contas: [],
+    cartoes: [],
+    categorias: [],
+    lancamentos: [],
+    orcamentos: [],
+    metas: [],
+    devedores: [],
+    itens: [],
+    listas: []
   };
 
-  // Versão do app — somar +1 a cada atualização
-  const APP_VERSION = 8;
-  const APP_RELEASE = "17/11/2026";
+  const APP_VERSION = 9;
+  const APP_RELEASE = "18/11/2026";
 
-  // PWA Manifest
   const manifestData = {
     name: "AppFinance", short_name: "AppFinance", start_url: ".", display: "standalone",
     background_color: "#090e1a", theme_color: "#090e1a",
@@ -1324,7 +1308,6 @@
     return res;
   }
 
-  // Criação Automática do Banco de Dados no Google Drive + Sheets
   async function prepararEstruturaDrive() {
     const statusEl = document.getElementById('statusLogin');
     statusEl.innerText = "Verificando banco de dados no Google Drive...";
@@ -1478,7 +1461,6 @@
     }
   }
 
-  // Integração com Google Calendar (Agenda) e Google Tasks
   async function criarEventoAgendaETask(titulo, valor, dataStr, tipo) {
     if (modoOffline || !accessToken) return "";
     const hora = document.getElementById('cfgHoraLembrete').value || "09:00";
@@ -1497,35 +1479,35 @@
       const endDateTime = `${dataStr}T${endHour}:${hora.split(':')[1]}:00`;
 
       if (modo === "agenda" || modo === "ambos") {
-      const calRes = await fetchGoogle("https://www.googleapis.com/calendar/v3/calendars/primary/events", "POST", {
-        summary,
-        description,
-        start: { dateTime: startDateTime, timeZone: tz },
-        end: { dateTime: endDateTime, timeZone: tz },
-        reminders: {
-          useDefault: false,
-          overrides: [
-            { method: "popup", minutes: 60 },
-            { method: "popup", minutes: 1440 }
-          ]
+        const calRes = await fetchGoogle("https://www.googleapis.com/calendar/v3/calendars/primary/events", "POST", {
+          summary,
+          description,
+          start: { dateTime: startDateTime, timeZone: tz },
+          end: { dateTime: endDateTime, timeZone: tz },
+          reminders: {
+            useDefault: false,
+            overrides: [
+              { method: "popup", minutes: 60 },
+              { method: "popup", minutes: 1440 }
+            ]
+          }
+        });
+        if (calRes.ok) {
+          const calData = await calRes.json();
+          syncIds.push("CAL:" + calData.id);
         }
-      });
-      if (calRes.ok) {
-        const calData = await calRes.json();
-        syncIds.push("CAL:" + calData.id);
-      }
       }
 
       if (modo === "tasks" || modo === "ambos") {
-      const taskRes = await fetchGoogle("https://tasks.googleapis.com/tasks/v1/lists/@default/tasks", "POST", {
-        title: summary,
-        notes: description,
-        due: `${dataStr}T00:00:00.000Z`
-      });
-      if (taskRes.ok) {
-        const taskData = await taskRes.json();
-        syncIds.push("TSK:" + taskData.id);
-      }
+        const taskRes = await fetchGoogle("https://tasks.googleapis.com/tasks/v1/lists/@default/tasks", "POST", {
+          title: summary,
+          notes: description,
+          due: `${dataStr}T00:00:00.000Z`
+        });
+        if (taskRes.ok) {
+          const taskData = await taskRes.json();
+          syncIds.push("TSK:" + taskData.id);
+        }
       }
     } catch (err) {
       console.error("Erro ao sincronizar Agenda/Tasks:", err);
@@ -1547,7 +1529,6 @@
   }
   function r2(x) { return Math.round(num(x) * 100) / 100; }
   function integ() { const v = localStorage.getItem("mfp_integracao"); return (!v || v === "nenhum") ? "agenda" : v; }
-  function modoSync() { return integ(); }
   function dataISO(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
   function hojeISO() { return dataISO(new Date()); }
   function sanitizarDb() {
@@ -1596,7 +1577,6 @@
     }
   }
 
-  // Navegação Temporal
   function getChaveMes(dateObj) {
     return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
   }
@@ -1627,19 +1607,15 @@
     setTimeout(() => { t.style.display = 'none'; }, 2400);
   }
 
-  // Acordeão de Categorias
   function toggleCategoriaCard(elHeader) {
     const card = elHeader.parentElement;
     card.classList.toggle('open');
   }
-
-  // Renderização Geral
   function renderizarTudo() {
     const chaveMesSel = getChaveMes(mesAtual);
     const chaveMesHoje = getChaveMes(new Date());
     const isMesCorrente = chaveMesSel === chaveMesHoje;
 
-    // 1. Saldo das Contas
     const saldosContas = {};
     db.contas.forEach(c => {
       saldosContas[c.cols[1]] = num(c.cols[3]) || 0;
@@ -1660,12 +1636,10 @@
 
     const saldoTotalContas = Object.values(saldosContas).reduce((a, b) => a + b, 0);
 
-    // 2. Indicadores do Mês e Agrupamento por Categoria
     let receitasMes = 0, receitasPendMes = 0;
     let despesasMes = 0, despesasPendMes = 0;
     let faturasMesAberto = 0;
 
-    // Estrutura: { Categoria: { total: 0, itens: [...] } }
     const gastosAgrupadosCat = {};
     const pendentesLista = [];
     const faturasPorCartao = {};
@@ -1738,7 +1712,6 @@
     document.getElementById('dashBalanco').innerText = formatarMoeda(balancoMes);
     document.getElementById('dashBalanco').style.color = balancoMes >= 0 ? 'var(--green)' : 'var(--red)';
 
-    // Controle Inteligente do Card "Previsão Fim do Mês" (somente no mês corrente)
     const cardPrev = document.getElementById('cardPrevisaoMes');
     const badgeMes = document.getElementById('badgeMesStatus');
     if (isMesCorrente) {
@@ -1761,7 +1734,6 @@
       }
     }
 
-    // 3. Despesas por Categoria Interativas (Acordeão)
     const dashCats = document.getElementById('dashCategorias');
     const totalGastoCat = Object.values(gastosAgrupadosCat).reduce((a, b) => a + b.total, 0);
     const catsOrdenadas = Object.entries(gastosAgrupadosCat).sort((a, b) => b[1].total - a[1].total);
@@ -1814,7 +1786,6 @@
         </div>`;
     });
 
-    // 4. Pendências no Dashboard
     const dashPend = document.getElementById('dashPendentes');
     pendentesLista.sort((a, b) => (a.cols[4] || "").localeCompare(b.cols[4] || ""));
     dashPend.innerHTML = pendentesLista.length === 0 ? '<p style="color:var(--muted); font-size:0.8rem; margin:0;">Nenhuma pendência neste mês.</p>' : '';
@@ -1834,7 +1805,6 @@
         </div>`;
     });
 
-    // 5. Contas no Dashboard e Ajustes
     const dashContas = document.getElementById('dashListaContas');
     const cadContas = document.getElementById('listaCadContas');
     dashContas.innerHTML = ''; cadContas.innerHTML = '';
@@ -1858,7 +1828,6 @@
         </div>`;
     });
 
-    // 6. Cartões no Dashboard, Aba Cartões e Ajustes
     const dashCartoes = document.getElementById('dashListaCartoes');
     const detCartoes = document.getElementById('listaFaturasDetalhadas');
     const cadCartoes = document.getElementById('listaCadCartoes');
@@ -1943,7 +1912,6 @@
         </div>`;
     });
 
-    // 7. Orçamentos
     const listaOrc = document.getElementById('listaOrcamentos');
     listaOrc.innerHTML = '';
     db.orcamentos.forEach(o => {
@@ -2050,7 +2018,6 @@
     await carregarTodosDados();
   }
 
-  // ----- Perfil (nome + foto) -----
   async function carregarNomeUsuario() {
     let nome = localStorage.getItem("mfp_user_name") || "";
     let foto = localStorage.getItem("mfp_user_photo") || "";
@@ -2103,7 +2070,6 @@
     if (n && n.trim()) { localStorage.setItem("mfp_user_name", n.trim()); mostrarNome(); }
   }
 
-  // ----- Listas de compras -----
   let listaRow = null, liEditIdx = null, listaEditRow = null, listaEditVoltar = false;
   function fmtQ(q) { return String(num(q)).replace('.', ','); }
   function itensLista(l) { try { const a = JSON.parse(l.cols[5] || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
@@ -2270,7 +2236,6 @@
       fim.slice(-8).reverse().map(l => `<div class="row-item"><span>${l.cols[1]} <small style="color:var(--muted)">(${(l.cols[6] || '').split('-').reverse().join('/')})</small></span><div style="display:flex; align-items:center; gap:6px;"><strong>${formatarMoeda(totalLista(l))}</strong><button class="btn-mini" style="background:#334155; color:#fff;" onclick="duplicarLista(${l.row})">📄 Repetir</button><button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Listas', ${l.row})">✕</button></div></div>`).join('') + '</div>';
   }
 
-  // ----- Lembrete mensal da fatura (Google Agenda) -----
   async function alternarLembreteFatura(row) {
     if (modoOffline) return alert("Entre com sua conta Google para usar lembretes no Google Agenda.");
     const c = db.cartoes.find(x => x.row === row);
@@ -2306,7 +2271,6 @@
     await carregarTodosDados();
   }
 
-  // ----- Limite do modo gratuito (offline) -----
   const LIMITE_OFFLINE = 3;
   function grupoTx(id) { return String(id).split('-')[0]; }
   function gruposOffline(extra) {
@@ -2340,8 +2304,6 @@
     document.getElementById('badgeModoApp').innerText = `OFFLINE ${Math.min(gruposOffline(), LIMITE_OFFLINE)}/${LIMITE_OFFLINE}`;
   }
 
-  // ----- Usuário, compartilhamento e cor de cartão -----
-  function usuarioAtual() { return localStorage.getItem("mfp_user_name") || "Usuário"; }
   function gradienteCor(hex) {
     const h = /^#[0-9a-f]{6}$/i.test(hex) ? hex : '#6d28d9';
     const n = parseInt(h.slice(1), 16), f = 0.55;
@@ -2427,7 +2389,6 @@
       us.map(u => `<div class="row-item"><strong>👤 ${u}</strong><span style="font-size:0.8rem;"><span style="color:var(--green)">+ ${formatarMoeda(rec[u] || 0)}</span> &nbsp; <span style="color:var(--red)">− ${formatarMoeda(des[u] || 0)}</span></span></div>`).join('') + '</div>';
   }
 
-  // ----- Visões do extrato (cards do topo e pendências) -----
   let visaoExtrato = null, _manterVisao = false;
   function abrirVisao(v) {
     visaoExtrato = v; _manterVisao = true;
@@ -2492,7 +2453,6 @@
     return '';
   }
 
-  // ----- Devedores -----
   function vencParcela(iso, k) {
     const [a, m, d] = iso.split('-').map(Number);
     const dt = new Date(a, m - 1 + k, 1);
@@ -2576,7 +2536,7 @@
     const d = db.devedores.find(x => x.row === row);
     try { await navigator.clipboard.writeText(msgCobranca(d)); mostrarToast("Texto copiado!"); } catch (e) { alert(msgCobranca(d)); }
   }
-  // ----- Receber parcela de devedor (entra no saldo da conta) -----
+
   let recRow = null;
   function abrirModalReceber(row) {
     const d = db.devedores.find(x => x.row === row);
@@ -2618,7 +2578,6 @@
     } else mostrarToast("Recebimento lançado na conta!");
   }
 
-  // ----- Despesa rápida (itens guardam só o nome; valor e quantidade são definidos ao lançar) -----
   function preencherRpItem(sel) {
     const el = document.getElementById('rpItem');
     el.innerHTML = '<option value="">— Escolha um item —</option>' +
@@ -2787,7 +2746,6 @@
     });
   }
 
-  // Navegação Unificada (Mobile + Desktop Sidebar)
   function navegar(telaId) {
     if (!(telaId === 'telaTransacoes' && _manterVisao)) visaoExtrato = null;
     document.querySelectorAll('.nav-btn, .side-btn').forEach(b => {
@@ -2941,7 +2899,6 @@
     return getChaveMes(new Date(ano, mesBase, 1));
   }
 
-  // Persistência Unificada
   async function adicionarLinhas(aba, linhas) {
     if (aba === 'Lancamentos') {
       if (!checarLimiteOffline(linhas)) return;
@@ -3009,7 +2966,6 @@
     if (!continuar || rowParaEditar) fecharModal('modalLancamento');
     document.getElementById('loading').classList.remove('hidden');
 
-    // Modo Edição de Registro Existente
     if (rowParaEditar) {
       const antigo = db.lancamentos.find(x => x.row === rowParaEditar).cols;
       const mesFatura = tipoTxAtual === 'cartao' ? calcularMesFatura(data, cartao, 0) : data.substring(0, 7);
@@ -3042,7 +2998,6 @@
       return;
     }
 
-    // Modo Novo Lançamento
     const valorParcela = rep === 'parcelada' ? (valorTotal / qtdParcelas) : valorTotal;
     const [ano, mes, dia] = data.split('-').map(Number);
     const linhas = [];
@@ -3143,7 +3098,6 @@
     mostrarToast("Fatura paga com sucesso!");
   }
 
-  // Cadastros Auxiliares
   async function salvarConta() {
     const nome = document.getElementById('contaNome').value.trim();
     const tipo = document.getElementById('contaTipo').value;
@@ -3222,7 +3176,6 @@
     await carregarTodosDados();
   }
 
-  // ----- Parcelas: escopo de edição/exclusão -----
   let _escopoRes = null;
   function totalParcelas(it) { return parseInt((it.cols[10] || '1/1').split('/')[1]) || 1; }
   function ehParcelado(it) { return totalParcelas(it) > 1; }
@@ -3236,7 +3189,6 @@
     const pref = id.includes('-') ? id.substring(0, id.lastIndexOf('-')) + '-' : null;
     const porId = pref ? db.lancamentos.filter(x => String(x.cols[0]).startsWith(pref) && x.cols[1] === it.cols[1]) : [];
     if (porId.length >= n) return porId;
-    // Lançamentos antigos (IDs diferentes por parcela): reconhece a série pelos dados e pela sequência de meses
     const mi = mesNum(mesRefTx(it)), ii = idxParcela(it);
     const serie = db.lancamentos.filter(x => x.cols[1] === it.cols[1] && x.cols[2] === it.cols[2] && x.cols[7] === it.cols[7] && x.cols[6] === it.cols[6] &&
       totalParcelas(x) === n && (mesNum(mesRefTx(x)) - mi) === (idxParcela(x) - ii));
