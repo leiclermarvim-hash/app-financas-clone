@@ -184,7 +184,7 @@
         transition: transform 0.15s;
       }
       .side-new-btn:hover { transform: translateY(-2px); }
-      nav.bottom-nav { display: none !important; }
+      nav.bottom-nav, .fab { display: none !important; }
       .desktop-grid-2 {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -573,18 +573,6 @@
     .box-share{background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:14px;margin:12px 0}
     .sb-av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0}
     .sb-ini{background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem}
-
-    .fab-rapido{left:auto;right:18px}
-    .fab{right:84px}
-    @media (min-width:900px){
-      .fab-rapido{right:28px;bottom:28px}
-      .fab{right:94px;bottom:28px}
-      .sidebar{overflow-y:auto}
-      #perfilChip,.btn-sair-top{display:none!important}
-    }
-    .side-sair{margin-top:6px;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);border-radius:999px;padding:3px 10px;font-size:.7rem;font-weight:600;cursor:pointer}
-    .side-sair:hover{background:rgba(239,68,68,.28)}
-    .sidebar-footer{margin-top:auto;border-top:1px solid var(--border);padding-top:12px;font-size:.7rem;color:var(--muted);line-height:1.6}
   </style>
 </head>
 <body>
@@ -619,10 +607,10 @@
         <div style="min-width:0;">
           <div id="sbNome" style="font-size:0.95rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
           <div id="sbStatus" style="font-size:0.72rem; font-weight:600;"></div>
-          <button class="side-sair" onclick="event.stopPropagation(); sairConta()">⎋ Sair da conta</button>
         </div>
       </div>
       <div id="sbSync" style="font-size:0.7rem; color:var(--muted); font-weight:400;"></div>
+      <div style="font-size:0.7rem; color:var(--muted); font-weight:400;">AppFinance <b id="sbVersao"></b></div>
     </div>
     <button class="side-btn active" data-target="telaResumo" onclick="navegar('telaResumo')">🏠 Visão Geral</button>
     <button class="side-btn" data-target="telaTransacoes" onclick="navegar('telaTransacoes')">↕️ Extrato & Lançamentos</button>
@@ -632,10 +620,7 @@
     <button class="side-btn" data-target="telaOrcamentos" onclick="navegar('telaOrcamentos')">🎯 Orçamentos & Metas</button>
     <button class="side-btn" data-target="telaAjustes" onclick="navegar('telaAjustes')">⚙️ Configurações</button>
 
-    <div class="sidebar-footer">
-      Desenvolvido por <b>Leicler Marvim</b><br>
-      AppFinance <b id="sbVersao"></b> • lançada em <b id="sbRelease"></b>
-    </div>
+    <button class="side-new-btn" onclick="abrirModalLancamento()">+ Novo Lançamento</button>
   </aside>
 
   <div>
@@ -655,7 +640,7 @@
           <div id="perfilChip" class="perfil-chip" onclick="editarNome()" title="Toque para alterar o nome"><img id="perfilFoto" class="hidden" alt="" referrerpolicy="no-referrer"><span id="perfilIni" class="ini"></span><span id="perfilNome"></span></div>
           <button id="btnInstall" class="btn-top btn-install" onclick="instalarApp()">📲 Instalar</button>
           <button class="btn-top" onclick="carregarTodosDados()" title="Sincronizar">↻</button>
-          <button class="btn-top btn-sair-top" style="background:rgba(239,68,68,0.2); color:#fca5a5; border-color:rgba(239,68,68,0.3);" onclick="sairConta()">Sair</button>
+          <button class="btn-top" style="background:rgba(239,68,68,0.2); color:#fca5a5; border-color:rgba(239,68,68,0.3);" onclick="sairConta()">Sair</button>
         </div>
       </div>
     </header>
@@ -1204,8 +1189,7 @@
   };
 
   // Versão do app — somar +1 a cada atualização
-  const APP_VERSION = 8;
-  const APP_RELEASE = "17/11/2026";
+  const APP_VERSION = 7;
 
   // PWA Manifest
   const manifestData = {
@@ -2095,8 +2079,7 @@
     if (modoOffline) { st.innerText = '📴 Modo local (sem sincronização)'; st.style.color = 'var(--amber)'; document.getElementById('sbSync').innerText = 'Última gravação: ' + fmt; }
     else { st.innerText = '☁️ Sincronizado com o Google'; st.style.color = 'var(--green)'; document.getElementById('sbSync').innerText = 'Última sincronização: ' + fmt; }
     document.getElementById('sbVersao').innerText = 'v' + APP_VERSION;
-    document.getElementById('sbRelease').innerText = APP_RELEASE;
-    const iv = document.getElementById('infoVersao'); if (iv) iv.innerText = `AppFinance v${APP_VERSION} • ${APP_RELEASE}`;
+    const iv = document.getElementById('infoVersao'); if (iv) iv.innerText = 'AppFinance v' + APP_VERSION;
   }
   function editarNome() {
     const n = prompt("Seu nome:", localStorage.getItem("mfp_user_name") || "");
@@ -3001,7 +2984,7 @@
     if (editandoRow) {
       const itx = db.lancamentos.find(x => x.row === editandoRow);
       if (itx && ehParcelado(itx)) {
-        escopoEdit = await perguntarEscopo('Editar lançamento parcelado', 'Aplicar descrição, valor, categoria e conta em quais parcelas? Data e situação mudam só nesta. ' + txtEscopoParcelas(itx));
+        escopoEdit = await perguntarEscopo('Editar lançamento parcelado', 'Aplicar as alterações (descrição, valor, categoria e conta) em quais parcelas? Data e situação mudam só nesta.');
         if (!escopoEdit) return;
       }
     }
@@ -3046,7 +3029,6 @@
     const valorParcela = rep === 'parcelada' ? (valorTotal / qtdParcelas) : valorTotal;
     const [ano, mes, dia] = data.split('-').map(Number);
     const linhas = [];
-    const idBase = Date.now();
 
     for (let i = 0; i < qtdParcelas; i++) {
       const d = new Date(ano, mes - 1 + i, 1);
@@ -3065,7 +3047,7 @@
       }
 
       linhas.push([
-        `${idBase}-${i + 1}`, tipoTxAtual, desc, Number(valorParcela.toFixed(2)),
+        `${Date.now()}-${i + 1}`, tipoTxAtual, desc, Number(valorParcela.toFixed(2)),
         dataParcela, mesFatura, tipoTxAtual === 'transferencia' ? 'Transferência' : cat,
         origem, dest, statusItem, infoParcela, fone, syncId
       ]);
@@ -3192,7 +3174,7 @@
     if (aba === 'Lancamentos') {
       const it = db.lancamentos.find(x => x.row === row);
       if (it && ehParcelado(it)) {
-        const esc = await perguntarEscopo('Excluir lançamento parcelado', txtEscopoParcelas(it));
+        const esc = await perguntarEscopo('Excluir lançamento parcelado', 'Este lançamento tem parcelas. O que deseja excluir?');
         if (!esc) return;
         rows = selecionarPorEscopo(it, esc).map(x => x.row);
       } else if (!confirm("Excluir este registro permanentemente?")) return;
@@ -3224,31 +3206,14 @@
 
   // ----- Parcelas: escopo de edição/exclusão -----
   let _escopoRes = null;
-  function totalParcelas(it) { return parseInt((it.cols[10] || '1/1').split('/')[1]) || 1; }
-  function ehParcelado(it) { return totalParcelas(it) > 1; }
+  function ehParcelado(it) { return (parseInt((it.cols[10] || '1/1').split('/')[1]) || 1) > 1 && String(it.cols[0]).includes('-'); }
   function idxParcela(x) { return parseInt((x.cols[10] || '1/1').split('/')[0]) || 1; }
-  function mesRefTx(x) { return x.cols[1] === 'cartao' ? (x.cols[5] || '') : (x.cols[4] || '').substring(0, 7); }
-  function mesNum(m) { const [a, b] = (m || '').split('-').map(Number); return (a || 0) * 12 + (b || 0); }
-  function grupoLancamento(it) {
-    const n = totalParcelas(it);
-    if (n <= 1) return [it];
-    const id = String(it.cols[0]);
-    const pref = id.includes('-') ? id.substring(0, id.lastIndexOf('-')) + '-' : null;
-    const porId = pref ? db.lancamentos.filter(x => String(x.cols[0]).startsWith(pref) && x.cols[1] === it.cols[1]) : [];
-    if (porId.length >= n) return porId;
-    // Lançamentos antigos (IDs diferentes por parcela): reconhece a série pelos dados e pela sequência de meses
-    const mi = mesNum(mesRefTx(it)), ii = idxParcela(it);
-    const serie = db.lancamentos.filter(x => x.cols[1] === it.cols[1] && x.cols[2] === it.cols[2] && x.cols[7] === it.cols[7] && x.cols[6] === it.cols[6] &&
-      totalParcelas(x) === n && (mesNum(mesRefTx(x)) - mi) === (idxParcela(x) - ii));
-    return serie.length > porId.length ? serie : (porId.length ? porId : [it]);
-  }
   function selecionarPorEscopo(it, escopo) {
     if (escopo === 'uma') return [it];
-    const grupo = grupoLancamento(it);
+    const id = String(it.cols[0]);
+    const g = id.substring(0, id.lastIndexOf('-')) + '-';
+    const grupo = db.lancamentos.filter(x => String(x.cols[0]).startsWith(g) && x.cols[1] === it.cols[1]);
     return escopo === 'todas' ? grupo : grupo.filter(x => idxParcela(x) >= idxParcela(it));
-  }
-  function txtEscopoParcelas(it) {
-    return `Esta é a parcela ${idxParcela(it)}/${totalParcelas(it)}. "Esta e as seguintes" atinge ${selecionarPorEscopo(it, 'seguintes').length} parcela(s); "Todas" atinge ${selecionarPorEscopo(it, 'todas').length}.`;
   }
   function perguntarEscopo(titulo, texto) {
     return new Promise(res => {
