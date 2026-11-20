@@ -644,12 +644,12 @@
 
           <div class="kpi-grid">
             <div class="mini-stat" style="cursor:pointer" onclick="abrirVisao('receitas')">
-              <span>Receitas do Mês</span>
-              <strong id="dashReceitas" style="color:var(--green)">R$ 0,00</strong>
+              <span>Recebido no Mês</span>
+              <strong id="dashReceitas" style="color:var(--green)">R$ 0,00</strong><small id="dashReceitasSub" style="display:block;color:var(--muted);font-size:0.68rem;"></small>
             </div>
             <div class="mini-stat" style="cursor:pointer" onclick="abrirVisao('pagas')">
-              <span>Despesas + Faturas</span>
-              <strong id="dashDespesas" style="color:var(--red)">R$ 0,00</strong>
+              <span>Gasto no Mês</span>
+              <strong id="dashDespesas" style="color:var(--red)">R$ 0,00</strong><small id="dashDespesasSub" style="display:block;color:var(--muted);font-size:0.68rem;"></small>
             </div>
             <div class="mini-stat" style="cursor:pointer" onclick="abrirVisao('balanco')">
               <span>Balanço Mensal</span>
@@ -672,7 +672,7 @@
             <div id="dashUsuarios"></div>
             <div class="section-card">
               <div class="section-title">
-                <span>🍩 Despesas por Categoria</span>
+                <span>🍩 Despesas por Centro de Custo › Categoria</span>
                 <small style="color:var(--muted); font-weight:500;">Toque para detalhar</small>
               </div>
               <div id="dashCategorias"></div>
@@ -736,6 +736,15 @@
       </div>
 
       <div id="telaDevedores" class="view-section hidden">
+        <div class="section-card">
+          <div class="section-title"><span>👥 Pessoas (também são seus centros de custo)</span></div>
+          <div class="grid-2">
+            <div><label>Nome:</label><input type="text" id="pesNome" placeholder="Ex: Raquel"></div>
+            <div><label>WhatsApp (DDD):</label><input type="tel" id="pesFone" placeholder="22999998888"></div>
+          </div>
+          <button class="btn-primary" style="background:var(--blue);" onclick="salvarPessoa()">Cadastrar pessoa</button>
+          <div id="listaPessoas" style="margin-top:10px;"></div>
+        </div>
         <button class="btn-primary" style="background:var(--amber); color:#1c1300; margin-top:0; margin-bottom:14px;" onclick="abrirModalDevedor()">+ Nova Cobrança / Devedor</button>
         <div id="resumoDevedores"></div>
         <div id="listaDevedores" class="desktop-grid-2"></div>
@@ -916,8 +925,7 @@
   <div id="modalDevedor" class="modal-overlay hidden">
     <div class="modal-box">
       <div class="modal-header"><h3 style="margin:0; font-size:1.05rem;">💰 Nova Cobrança</h3><button class="btn-mini" style="background:#334155; color:#fff;" onclick="fecharModal('modalDevedor')">✕</button></div>
-      <label>Nome do devedor:</label><input type="text" id="devNome" placeholder="Ex: João Silva">
-      <label>Contato (WhatsApp com DDD):</label><input type="tel" id="devFone" placeholder="22999998888">
+      <label>Pessoa:</label><select id="devPessoa"></select>
       <label>Descrição da cobrança:</label><input type="text" id="devDesc" placeholder="Ex: Empréstimo, venda de celular...">
       <div class="grid-2">
         <div><label>Valor total (R$):</label><input type="text" id="devValor" inputmode="decimal" placeholder="0,00"></div>
@@ -946,15 +954,23 @@
       <small id="ldSub" style="color:var(--muted);"></small>
       <div id="ldItens" style="margin:10px 0;"></div>
       <div class="section-card">
-        <label>Descrição do item:</label><input type="text" id="liDesc" placeholder="Ex: Arroz 5kg">
+        <label>Descrição do item:</label><input type="text" id="liDesc" list="dlItens" oninput="itemSalvoEscolhido()" placeholder="Ex: Arroz 5kg"><datalist id="dlItens"></datalist>
         <div class="grid-2">
           <div><label>Quantidade:</label><input type="text" id="liQtd" inputmode="decimal" value="1"></div>
           <div><label>Valor unitário (R$):</label><input type="text" id="liValor" inputmode="decimal" placeholder="0,00" onkeydown="if(event.key==='Enter')addItemLista()"></div>
         </div>
+        <label>Unidade (un, kg, L...):</label><input type="text" id="liUn" value="un">
         <button class="btn-primary" style="background:#334155;" id="btnAddItem" onclick="addItemLista()">+ Adicionar item à lista</button>
       </div>
       <div style="display:flex; justify-content:space-between; margin-top:12px;"><strong>Total da compra</strong><strong id="ldTotal" style="color:var(--red);">R$ 0,00</strong></div>
-      <button class="btn-primary" style="background:var(--green);" onclick="efetivarLista()">✔ Efetivar compra (lançar no extrato)</button>
+      <small id="ldResumo" style="color:var(--muted); display:block; margin-top:4px;"></small>
+      <button class="btn-primary" id="btnPagarSel" style="background:var(--green);" onclick="pagarItens(false)">✔ Pagar selecionados</button>
+      <button class="btn-primary" style="background:#334155;" onclick="pagarItens(true)">Pagar todos os pendentes</button>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
+        <button class="btn-mini" style="background:#25D366; color:#fff;" onclick="compartilharLista(true)">💬 WhatsApp</button>
+        <button class="btn-mini" style="background:#334155; color:#fff;" onclick="compartilharLista(false)">Copiar</button>
+        <button class="btn-mini" style="background:#334155; color:#fff;" onclick="reiniciarLista()">🔄 Reiniciar lista</button>
+      </div>
       <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
         <button class="btn-mini" style="background:var(--blue); color:#fff;" onclick="editarListaAtual()">✏️ Editar lista</button>
         <button class="btn-mini" style="background:#334155; color:#fff;" onclick="duplicarLista(listaRow)">📄 Duplicar</button>
@@ -1032,6 +1048,11 @@
       <div id="boxCategoria">
         <label>Categoria:</label>
         <select id="txCategoria"></select>
+      </div>
+
+      <div id="boxCentro">
+        <label>Centro de custo:</label>
+        <select id="txCentro"></select>
       </div>
 
       <div id="boxContaOrigem">
@@ -1183,7 +1204,8 @@
     metas: [],
     devedores: [],
     itens: [],
-    listas: []
+    listas: [],
+    pessoas: []
   };
 
   const APP_VERSION = 9;
@@ -1582,7 +1604,8 @@
           metas: localData.metas || [],
           devedores: localData.devedores || [],
           itens: localData.itensrapidos || [],
-          listas: localData.listas || []
+          listas: localData.listas || [],
+          pessoas: localData.pessoas || []
         };
       } else {
         const metaRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
@@ -1593,18 +1616,20 @@
         sheetIdsMap = ids;
         await garantirAbas();
 
-        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:I&ranges=Categorias!A2:C&ranges=Lancamentos!A2:O&ranges=Orcamentos!A2:C&ranges=Metas!A2:E&ranges=Devedores!A2:I&ranges=ItensRapidos!A2:D&ranges=Listas!A2:G";
+        const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:I&ranges=Categorias!A2:C&ranges=Lancamentos!A2:P&ranges=Orcamentos!A2:C&ranges=Metas!A2:E&ranges=Devedores!A2:J&ranges=ItensRapidos!A2:E&ranges=Listas!A2:G&ranges=Pessoas!A2:D";
         const valRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
         if (!valRes.ok) throw new Error(`Falha ao ler a planilha (${valRes.status}).`);
         const valData = await valRes.json();
         const lin = i => ((((valData.valueRanges || [])[i]) || {}).values || []).map((r, k) => ({ row: k + 2, cols: r }));
-        novo = { contas: lin(0), cartoes: lin(1), categorias: lin(2), lancamentos: lin(3), orcamentos: lin(4), metas: lin(5), devedores: lin(6), itens: lin(7), listas: lin(8) };
+        novo = { contas: lin(0), cartoes: lin(1), categorias: lin(2), lancamentos: lin(3), orcamentos: lin(4), metas: lin(5), devedores: lin(6), itens: lin(7), listas: lin(8), pessoas: lin(9) };
       }
       if (seq !== _loadSeq) return;
       db = novo;
       sanitizarDb();
       localStorage.setItem('mfp_last_sync', new Date().toISOString());
       renderizarTudo();
+      if (await limparDuplicados()) return;
+      await migrarPessoas();
       await verificarPendenciasVencidas();
     } catch (e) {
       console.error(e);
@@ -1613,6 +1638,26 @@
     } finally {
       if (seq === _loadSeq) loading.classList.add('hidden');
     }
+  }
+
+  let _limpando = false, _migrando = false;
+  async function limparDuplicados() {
+    if (_limpando) return false;
+    const vistos = new Set(), rem = [];
+    db.lancamentos.forEach(l => { const k = l.cols.slice(0, 14).map(x => String(x == null ? '' : x)).join('|'); if (vistos.has(k)) rem.push(l.row); else vistos.add(k); });
+    if (!rem.length) return false;
+    _limpando = true;
+    try { await persistencia.excluirRows("Lancamentos", rem); mostrarToast(`${rem.length} lançamento(s) duplicado(s) removido(s).`); await carregarTodosDados(); } finally { _limpando = false; }
+    return true;
+  }
+  async function migrarPessoas() {
+    if (_migrando) return;
+    const tem = new Set(db.pessoas.map(p => (p.cols[1] || '').trim().toLowerCase()));
+    const novas = [];
+    db.devedores.forEach(d => { const n = (d.cols[1] || '').trim(), k = n.toLowerCase(); if (n && !tem.has(k)) { tem.add(k); novas.push([`${Date.now()}${novas.length}`, n, d.cols[2] || '', '']); } });
+    if (!novas.length) return;
+    _migrando = true;
+    try { await adicionarLinhas("Pessoas", novas); } finally { _migrando = false; }
   }
 
   function proximoDiaAposVencimento(dataIso) {
@@ -1810,8 +1855,9 @@
     }
     const abas = [
       ["Metas", ["ID", "Nome", "Alvo", "Guardado", "Prazo"]],
-      ["Devedores", ["ID", "Nome", "Telefone", "Descricao", "ValorTotal", "Parcelas", "PrimeiroVenc", "Pagas", "Lembretes"]],
-      ["ItensRapidos", ["ID", "Nome", "Preco", "Categoria"]],
+      ["Devedores", ["ID", "Nome", "Telefone", "Descricao", "ValorTotal", "Parcelas", "PrimeiroVenc", "Pagas", "Lembretes", "Pagamentos"]],
+      ["ItensRapidos", ["ID", "Nome", "Preco", "Categoria", "Unidade"]],
+      ["Pessoas", ["ID", "Nome", "Telefone", "Obs"]],
       ["Listas", ["ID", "Nome", "Categoria", "Conta", "Status", "Itens", "Criada"]]
     ];
     for (const [nome, cab] of abas) {
@@ -1820,6 +1866,15 @@
       const j = await r.json();
       sheetIdsMap[nome] = j.replies[0].addSheet.properties.sheetId;
       await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${nome}!A1:${String.fromCharCode(64 + cab.length)}1?valueInputOption=RAW`, "PUT", { values: [cab] });
+    }
+    if (!localStorage.getItem('mfp_hdr3' + spreadsheetId)) {
+      try {
+        await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
+          valueInputOption: "RAW",
+          data: [{ range: "Lancamentos!P1", values: [["CentroCusto"]] }, { range: "Devedores!J1", values: [["Pagamentos"]] }, { range: "ItensRapidos!E1", values: [["Unidade"]] }]
+        });
+        localStorage.setItem('mfp_hdr3' + spreadsheetId, '1');
+      } catch (e) { if (e.sessaoExpirada) throw e; console.warn(e); }
     }
   }
 
@@ -1844,7 +1899,8 @@
     Metas: { dbKey: "metas", localKey: "metas" },
     Devedores: { dbKey: "devedores", localKey: "devedores" },
     ItensRapidos: { dbKey: "itens", localKey: "itensrapidos" },
-    Listas: { dbKey: "listas", localKey: "listas" }
+    Listas: { dbKey: "listas", localKey: "listas" },
+    Pessoas: { dbKey: "pessoas", localKey: "pessoas" }
   };
 
   function reindexarRows(lista) {
@@ -1860,8 +1916,9 @@
         if (!checarLimiteOffline(linhas)) return false;
         linhas = linhas.map(c => {
           const r = [...c];
-          while (r.length < 14) r.push("");
+          while (r.length < 16) r.push("");
           if (!r[14]) r[14] = usuarioAtual();
+          if (!r[15]) r[15] = "Geral";
           return r;
         });
       }
@@ -1903,7 +1960,7 @@
         const ld = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
         const lista = ld[cfg.localKey] || [];
         const item = idAlvo ? lista.find(x => String(x.cols[0]) === idAlvo) : lista.find(x => x.row === row);
-        if (item) item.cols[colIdx] = valor;
+        if (item) { while (item.cols.length < colIdx) item.cols.push(''); item.cols[colIdx] = valor; }
         reindexarRows(lista);
         localStorage.setItem("mfp_local_db", JSON.stringify(ld));
       } else {
@@ -1917,6 +1974,7 @@
 
     async atualizarLoteLancamentos(updates) {
       if (!updates || !updates.length) return;
+    { const m = new Map(); updates.forEach(u => m.set(u.row, u)); updates = [...m.values()]; }
       document.getElementById("loading").classList.remove("hidden");
 
       if (modoOffline) {
@@ -1927,7 +1985,7 @@
           const idAlvo = String(u.cols[0]);
           const item = lista.find(x => String(x.cols[0]) === idAlvo) || lista.find(x => x.row === u.row);
           if (item) {
-            item.cols = [...u.cols.slice(0, 14), ...item.cols.slice(14)];
+            item.cols = [...u.cols];
           }
         }
         reindexarRows(lista);
@@ -1939,8 +1997,8 @@
           {
             valueInputOption: "RAW",
             data: updates.map(u => ({
-              range: `Lancamentos!A${u.row}:N${u.row}`,
-              values: [u.cols.slice(0, 14)]
+              range: `Lancamentos!A${u.row}:P${u.row}`,
+              values: [u.cols.slice(0, 16)]
             }))
           }
         );
@@ -1999,7 +2057,7 @@
     if (modoOffline) return true;
     const cfg = ABA_MAP[aba];
     const tab = cfg ? (db[cfg.dbKey] || []) : [];
-    const ranges = rows.map(r => `ranges=${aba}!A${r}:O${r}`).join('&');
+    const ranges = rows.map(r => `ranges=${aba}!A${r}:P${r}`).join('&');
     const res = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
     if (!res.ok) return false;
     const j = await res.json();
@@ -2048,6 +2106,41 @@
     _toastT = setTimeout(() => { t.style.display = 'none'; }, erro ? 5000 : 2400);
   }
 
+  let filtrosDash = {};
+  try { filtrosDash = JSON.parse(localStorage.getItem('mfp_fdash') || '{}'); } catch (e) {}
+  function setFiltroDash(k, v) { filtrosDash[k] = v; localStorage.setItem('mfp_fdash', JSON.stringify(filtrosDash)); renderizarTudo(); }
+  function itemGastoHtml(item) {
+    const [, tipo, desc, val, data, , , origem, , status, parcela] = item.cols;
+    const pend = status === 'Pendente' || status === 'Aberto';
+    return `<div class="cat-expense-row"><div style="flex:1; padding-right:8px;"><strong style="color:var(--text); display:block;">${esc(desc)}</strong><span style="color:var(--muted); font-size:0.73rem;">${(data || '').split('-').reverse().join('/')} • ${tipo === 'cartao' ? '💳' : '🏦'} ${esc(origem)}${parcela && parcela !== '1/1' ? ' • ' + esc(parcela) : ''} • <span style="color:${pend ? 'var(--amber)' : 'var(--green)'}; font-weight:600;">${esc(status)}</span></span></div><div style="display:flex; align-items:center; gap:8px;"><strong style="color:var(--red);">${formatarMoeda(val)}</strong>${status === 'Pendente' ? `<button class="btn-mini" style="background:var(--green); color:#fff;" onclick="event.stopPropagation(); efetivarLancamento(${item.row})">✔</button>` : ''}</div></div>`;
+  }
+  function accHtml(key, titulo, n, total, pct, corpo, cor) {
+    return `<div class="cat-accordion${catsAbertas.has(key) ? ' open' : ''}" data-cat="${esc(key)}"><div class="cat-header" onclick="toggleCategoriaCard(this)"><div class="cat-header-top"><span><strong>${esc(titulo)}</strong> <small style="color:var(--muted);">(${n} ${n === 1 ? 'item' : 'itens'} • ${pct}%)</small></span><span><strong style="color:var(--text);">${formatarMoeda(total)}</strong> <span class="cat-chevron">▼</span></span></div><div class="progress-bg" style="background:var(--bg); margin-top:4px;"><div class="progress-fill" style="width:${pct}%; background:${cor};"></div></div></div><div class="cat-details">${corpo}</div></div>`;
+  }
+  function renderizarCategoriasDash(est) {
+    const F = filtrosDash, todos = [];
+    Object.values(est.gastosAgrupadosCat).forEach(g => g.itens.forEach(l => todos.push(l)));
+    const centros = ['Geral', ...db.pessoas.map(p => p.cols[1])];
+    todos.forEach(l => { const c = l.cols[15] || 'Geral'; if (!centros.includes(c)) centros.push(c); });
+    const cats = [...new Set(todos.map(l => l.cols[6] || 'Sem Categoria'))].sort();
+    const itens = todos.filter(l => {
+      const st = l.cols[9], pend = st === 'Pendente' || st === 'Aberto';
+      return (!F.centro || (l.cols[15] || 'Geral') === F.centro) && (!F.cat || (l.cols[6] || 'Sem Categoria') === F.cat) &&
+        (!F.status || (F.status === 'pend') === pend) && (!F.origem || (F.origem === 'cartao') === (l.cols[1] === 'cartao'));
+    });
+    const sel = (k, ops) => `<select style="width:auto; margin:0; padding:6px 8px; font-size:0.74rem;" onchange="setFiltroDash('${k}', this.value)">${ops.map(([v, t]) => `<option value="${esc(v)}"${(F[k] || '') === v ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>`;
+    const barra = `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">${sel('visao', [['', 'Centro › Categoria'], ['cat', 'Só categoria']])}${sel('centro', [['', 'Todos os centros'], ...centros.map(c => [c, c])])}${sel('cat', [['', 'Todas as categorias'], ...cats.map(c => [c, c])])}${sel('status', [['', 'Pagas e pendentes'], ['pago', 'Só pagas'], ['pend', 'Só pendentes']])}${sel('origem', [['', 'Contas e cartões'], ['conta', 'Só contas'], ['cartao', 'Só cartões']])}</div>`;
+    const total = itens.reduce((a, l) => a + num(l.cols[3]), 0);
+    const pct = x => total > 0 ? ((x / total) * 100).toFixed(0) : 0;
+    const grupo = (arr, fn) => { const m = {}; arr.forEach(l => { const k = fn(l); (m[k] = m[k] || []).push(l); }); return Object.entries(m).map(([k, a]) => [k, a, a.reduce((t, l) => t + num(l.cols[3]), 0)]).sort((a, b) => b[2] - a[2]); };
+    const porCat = (arr, pref) => { const t = arr.reduce((a, l) => a + num(l.cols[3]), 0); return grupo(arr, l => l.cols[6] || 'Sem Categoria').map(([c, a, tt]) => accHtml(pref + '›' + c, c, a.length, tt, t > 0 ? ((tt / t) * 100).toFixed(0) : 0, a.sort((x, y) => (y.cols[4] || '').localeCompare(x.cols[4] || '')).map(itemGastoHtml).join(''), 'var(--red)')).join(''); };
+    let corpo;
+    if (!itens.length) corpo = '<p style="color:var(--muted); font-size:0.82rem; margin:0;">Nenhuma despesa para estes filtros.</p>';
+    else if (F.visao === 'cat') corpo = grupo(itens, l => l.cols[6] || 'Sem Categoria').map(([c, a, tt]) => accHtml('c:' + c, c, a.length, tt, pct(tt), a.sort((x, y) => (y.cols[4] || '').localeCompare(x.cols[4] || '')).map(itemGastoHtml).join(''), 'var(--red)')).join('');
+    else corpo = grupo(itens, l => l.cols[15] || 'Geral').map(([c, a, tt]) => accHtml('cc:' + c, '📍 ' + c, a.length, tt, pct(tt), porCat(a, 'cc:' + c), 'var(--purple)')).join('');
+    document.getElementById('dashCategorias').innerHTML = barra + corpo;
+  }
+
   function toggleCategoriaCard(elHeader) {
     const card = elHeader.parentElement;
     card.classList.toggle('open');
@@ -2056,6 +2149,26 @@
   }
 
   // ----- Motor Único de Cálculo Financeiro (Ponto 2 + Pendências contínuas) -----
+  function fluxoDoMes(lancs, mes) {
+    const f = { recOk: [], recPend: [], recAtr: [], desOk: [], desPend: [], desAtr: [], fat: [] };
+    for (const l of lancs) {
+      const tipo = l.cols[1], st = l.cols[9], m = (l.cols[4] || '').substring(0, 7);
+      if (tipo === 'receita') {
+        if (st === 'Efetivado' && m === mes) f.recOk.push(l);
+        else if (st === 'Pendente' && m && m <= mes) (m === mes ? f.recPend : f.recAtr).push(l);
+      } else if (tipo === 'despesa') {
+        if (st === 'Efetivado' && m === mes) f.desOk.push(l);
+        else if (st === 'Pendente' && m && m <= mes) (m === mes ? f.desPend : f.desAtr).push(l);
+      } else if (tipo === 'cartao' && l.cols[5] === mes && st !== 'Pago') f.fat.push(l);
+    }
+    const sm = a => r2(a.reduce((t, l) => t + num(l.cols[3]), 0));
+    f.recebido = sm(f.recOk); f.aReceber = sm([...f.recPend, ...f.recAtr]);
+    f.pago = sm(f.desOk); f.aPagar = sm([...f.desPend, ...f.desAtr, ...f.fat]);
+    f.balanco = r2(f.recebido - f.pago);
+    f.previsao = r2((f.recebido + f.aReceber) - (f.pago + f.aPagar));
+    return f;
+  }
+
   function computarEstadoFinanceiro(dbState, dataRef, hojeStr) {
     const chaveMesSel = getChaveMes(dataRef);
     const saldosContas = {};
@@ -2143,9 +2256,10 @@
     }
 
     const saldoTotalContas = r2(Object.values(saldosContas).reduce((a, b) => a + b, 0));
-    const totalDespesasGeral = r2(despesasMes + faturasMesAberto);
-    const balancoMes = r2(receitasMes - totalDespesasGeral);
-    const previsaoFimMes = r2(saldoTotalContas + receitasPendMes - despesasPendMes - faturasMesAberto);
+    const fluxo = fluxoDoMes(dbState.lancamentos, chaveMesSel);
+    const totalDespesasGeral = fluxo.pago;
+    const balancoMes = fluxo.balanco;
+    const previsaoFimMes = fluxo.previsao;
     const atrasados = dbState.lancamentos.filter(
       l => l.cols[9] === "Pendente" && (l.cols[4] || "") < hojeStr && ["receita", "despesa"].includes(l.cols[1])
     );
@@ -2154,7 +2268,9 @@
       chaveMesSel,
       saldosContas,
       saldoTotalContas,
-      receitasMes: r2(receitasMes),
+      receitasMes: fluxo.recebido,
+      fluxo,
+      saldoProjetado: r2(saldoTotalContas + fluxo.aReceber - fluxo.aPagar),
       totalDespesasGeral,
       balancoMes,
       previsaoFimMes,
@@ -2176,12 +2292,14 @@
     document.getElementById('dashSaldoAtual').style.color = est.saldoTotalContas >= 0 ? 'var(--green)' : 'var(--red)';
     document.getElementById('dashReceitas').innerText = formatarMoeda(est.receitasMes);
     document.getElementById('dashDespesas').innerText = formatarMoeda(est.totalDespesasGeral);
+    document.getElementById('dashReceitasSub').innerText = 'a receber: ' + formatarMoeda(est.fluxo.aReceber);
+    document.getElementById('dashDespesasSub').innerText = 'a pagar: ' + formatarMoeda(est.fluxo.aPagar);
     document.getElementById('dashBalanco').innerText = formatarMoeda(est.balancoMes);
     document.getElementById('dashBalanco').style.color = est.balancoMes >= 0 ? 'var(--green)' : 'var(--red)';
 
     const cardPrev = document.getElementById('cardPrevisaoMes');
     const badgeMes = document.getElementById('badgeMesStatus');
-    if (isMesCorrente) {
+    if (chaveMesSel >= chaveMesHoje) {
       cardPrev.classList.remove('hidden');
       document.getElementById('dashPrevisao').innerText = formatarMoeda(est.previsaoFimMes);
       document.getElementById('dashPrevisao').style.color = est.previsaoFimMes >= 0 ? 'var(--blue)' : 'var(--red)';
@@ -2201,57 +2319,7 @@
       }
     }
 
-    const dashCats = document.getElementById('dashCategorias');
-    const totalGastoCat = Object.values(est.gastosAgrupadosCat).reduce((a, b) => a + b.total, 0);
-    const catsOrdenadas = Object.entries(est.gastosAgrupadosCat).sort((a, b) => b[1].total - a[1].total);
-
-    dashCats.innerHTML = catsOrdenadas.length === 0
-      ? '<p style="color:var(--muted); font-size:0.82rem; margin:0;">Nenhuma despesa registrada neste mês.</p>'
-      : '';
-
-    catsOrdenadas.forEach(([cat, dadosCat]) => {
-      const pct = totalGastoCat > 0 ? ((dadosCat.total / totalGastoCat) * 100).toFixed(0) : 0;
-      const itensOrdenados = dadosCat.itens.sort((a, b) => (b.cols[4] || "").localeCompare(a.cols[4] || ""));
-
-      const htmlDetalhes = itensOrdenados.map(item => {
-        const [, tipo, desc, val, data, , , origem, , status, parcela] = item.cols;
-        const dataBr = data ? data.split('-').reverse().join('/') : '';
-        const isPend = status === "Pendente";
-        const iconeOrigem = tipo === "cartao" ? "💳" : "🏦";
-        const tagParcela = parcela && parcela !== "1/1" ? ` • ${esc(parcela)}` : "";
-
-        return `
-          <div class="cat-expense-row">
-            <div style="flex:1; padding-right:8px;">
-              <strong style="color:var(--text); display:block;">${esc(desc)}</strong>
-              <span style="color:var(--muted); font-size:0.73rem;">
-                ${dataBr} • ${iconeOrigem} ${esc(origem)}${tagParcela} •
-                <span style="color:${isPend ? 'var(--amber)' : 'var(--green)'}; font-weight:600;">${esc(status)}</span>
-              </span>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <strong style="color:var(--red);">${formatarMoeda(val)}</strong>
-              ${isPend ? `<button class="btn-mini" style="background:var(--green); color:#fff;" onclick="event.stopPropagation(); efetivarLancamento(${item.row})" title="Marcar como Pago">✔</button>` : ''}
-            </div>
-          </div>`;
-      }).join('');
-
-      dashCats.innerHTML += `
-        <div class="cat-accordion${catsAbertas.has(cat) ? ' open' : ''}" data-cat="${esc(cat)}">
-          <div class="cat-header" onclick="toggleCategoriaCard(this)">
-            <div class="cat-header-top">
-              <span><strong>${esc(cat)}</strong> <small style="color:var(--muted);">(${dadosCat.itens.length} ${dadosCat.itens.length === 1 ? 'item' : 'itens'} • ${pct}%)</small></span>
-              <span><strong style="color:var(--text);">${formatarMoeda(dadosCat.total)}</strong> <span class="cat-chevron">▼</span></span>
-            </div>
-            <div class="progress-bg" style="background:var(--bg); margin-top:4px;">
-              <div class="progress-fill" style="width:${pct}%; background:var(--red);"></div>
-            </div>
-          </div>
-          <div class="cat-details">
-            ${htmlDetalhes}
-          </div>
-        </div>`;
-    });
+    renderizarCategoriasDash(est);
 
     const dashPend = document.getElementById('dashPendentes');
     const pendentesOrdenados = [...est.pendentesLista].sort((a, b) => (a.cols[4] || "").localeCompare(b.cols[4] || ""));
@@ -2558,7 +2626,10 @@
 
   let listaRow = null, liEditIdx = null, listaEditRow = null, listaEditVoltar = false;
   function fmtQ(q) { return String(num(q)).replace('.', ','); }
-  function itensLista(l) { try { const a = JSON.parse(l.cols[5] || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  const selItens = new Set();
+  function itensLista(l) { let a; try { a = JSON.parse(l.cols[5] || '[]'); } catch (e) { a = []; } if (!Array.isArray(a)) return []; return a.map(i => { const r = [...i]; if (r[3] === undefined) r[3] = l.cols[4] === 'Efetivada' ? 'C' : 'P'; return r; }); }
+  function itemOk(i) { return i[3] === 'C' && (!i[5] || db.lancamentos.some(x => String(x.cols[0]) === String(i[5]))); }
+  function pagoLista(l) { return r2(itensLista(l).filter(itemOk).reduce((a, i) => a + num(i[1]) * num(i[2]), 0)); }
   function totalLista(l) { return r2(itensLista(l).reduce((a, i) => a + num(i[1]) * num(i[2]), 0)); }
   function itensTxHtml(raw) {
     if (!raw) return '';
@@ -2615,7 +2686,7 @@
     if (!l) return;
     document.getElementById('modalListaDet').classList.add('hidden');
     const id = Date.now().toString();
-    await adicionarLinhas("Listas", [[id, `${l.cols[1]} (cópia)`, l.cols[2], l.cols[3], 'Aberta', l.cols[5] || '[]', hojeISO()]]);
+    await adicionarLinhas("Listas", [[id, `${l.cols[1]} (cópia)`, l.cols[2], l.cols[3], 'Aberta', JSON.stringify(itensLista(l).map(i => [i[0], i[1], i[2], 'P', '', '', i[6] || 'un'])), hojeISO()]]);
     mostrarToast("Lista duplicada!");
     const n = db.listas.find(x => String(x.cols[0]) === id);
     if (n) abrirLista(n.row);
@@ -2627,6 +2698,7 @@
     if (!it) return;
     document.getElementById('liDesc').value = it[0];
     document.getElementById('liQtd').value = String(it[1]).replace('.', ',');
+    document.getElementById('liUn').value = it[6] || 'un';
     document.getElementById('liValor').value = String(it[2]).replace('.', ',');
     liEditIdx = k;
     document.getElementById('btnAddItem').innerText = '💾 Salvar alteração do item';
@@ -2634,7 +2706,7 @@
   }
 
   function abrirLista(row) {
-    listaRow = row; liEditIdx = null;
+    listaRow = row; liEditIdx = null; selItens.clear();
     document.getElementById('btnAddItem').innerText = '+ Adicionar item à lista';
     document.getElementById('modalListaDet').classList.remove('hidden');
     ['liDesc', 'liValor'].forEach(i => document.getElementById(i).value = '');
@@ -2650,21 +2722,76 @@
     const itens = itensLista(l);
     document.getElementById('ldTitulo').innerText = '🛒 ' + l.cols[1];
     document.getElementById('ldSub').innerText = `${l.cols[2]} • ${l.cols[3]}`;
+    document.getElementById('dlItens').innerHTML = db.itens.map(i => `<option value="${esc(i.cols[1])}"></option>`).join('');
     document.getElementById('ldItens').innerHTML = itens.length === 0 ? '<p style="color:var(--muted); font-size:0.82rem;">Nenhum item ainda. Adicione abaixo.</p>' :
-      itens.map((i, k) => `
+      itens.map((i, k) => { const ok = itemOk(i); return `
         <div class="row-item">
-          <div><strong>${esc(i[0])}</strong><br><small style="color:var(--muted)">${fmtQ(i[1])} × ${formatarMoeda(i[2])}</small></div>
-          <div style="display:flex; align-items:center; gap:8px;"><strong>${formatarMoeda(num(i[1]) * num(i[2]))}</strong>
+          <div style="display:flex; gap:8px; align-items:center;">
+            ${ok ? '<span style="color:var(--green)">✔</span>' : `<input type="checkbox" style="width:auto; margin:0;" ${selItens.has(k) ? 'checked' : ''} onchange="toggleSelItem(${k})">`}
+            <div><strong style="${ok ? 'text-decoration:line-through; opacity:.7;' : ''}">${esc(i[0])}</strong><br><small style="color:var(--muted)">${fmtQ(i[1])} ${esc(i[6] || 'un')} × ${formatarMoeda(i[2])}${ok && i[4] ? ' • pago em ' + i[4].split('-').reverse().join('/') : ''}</small></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;"><strong>${formatarMoeda(num(i[1]) * num(i[2]))}</strong>
+            ${ok ? `<button class="btn-mini" style="background:#334155; color:#fff;" title="Voltar a pendente" onclick="reabrirItem(${k})">↩</button>` : ''}
             <button class="btn-mini" style="background:#334155; color:#fff;" onclick="editarItemLista(${k})">✏️</button>
             <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="removerItemLista(${k})">✕</button></div>
-        </div>`).join('');
-    document.getElementById('ldTotal').innerText = formatarMoeda(totalLista(l));
+        </div>`; }).join('');
+    const tot = totalLista(l), pago = pagoLista(l);
+    document.getElementById('ldTotal').innerText = formatarMoeda(tot);
+    document.getElementById('ldResumo').innerText = `Pago ${formatarMoeda(pago)} • Falta pagar ${formatarMoeda(r2(tot - pago))}`;
+    const sel = itens.reduce((a, i, k) => a + (selItens.has(k) && !itemOk(i) ? num(i[1]) * num(i[2]) : 0), 0);
+    document.getElementById('btnPagarSel').innerText = `✔ Pagar selecionados (${formatarMoeda(sel)})`;
+  }
+  function toggleSelItem(k) { if (selItens.has(k)) selItens.delete(k); else selItens.add(k); renderizarListaDetalhe(); }
+  function itemSalvoEscolhido() {
+    const n = document.getElementById('liDesc').value.trim().toLowerCase();
+    const it = db.itens.find(x => (x.cols[1] || '').toLowerCase() === n);
+    if (it && liEditIdx === null) { if (num(it.cols[2])) document.getElementById('liValor').value = String(num(it.cols[2])).replace('.', ','); if (it.cols[4]) document.getElementById('liUn').value = it.cols[4]; }
+  }
+  function compartilharLista(wpp) {
+    const l = db.listas.find(x => x.row === listaRow);
+    if (!l) return;
+    const itens = itensLista(l), tot = totalLista(l), pago = pagoLista(l);
+    const txt = `🛒 *${l.cols[1]}*\n${l.cols[2]}\n\n` + itens.map(i => `${itemOk(i) ? '✅' : '⬜'} ${fmtQ(i[1])} ${i[6] || 'un'} ${i[0]} — ${formatarMoeda(num(i[1]) * num(i[2]))}`).join('\n') + `\n\nTotal: ${formatarMoeda(tot)}\nPago: ${formatarMoeda(pago)}\nFalta: ${formatarMoeda(r2(tot - pago))}`;
+    if (wpp) window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+    else navigator.clipboard.writeText(txt).then(() => mostrarToast("Lista copiada!"), () => mostrarToast("Não foi possível copiar.", true));
+  }
+  async function reabrirItem(k) {
+    const l = db.listas.find(x => x.row === listaRow); if (!l) return;
+    const itens = itensLista(l); itens[k][3] = 'P'; itens[k][4] = ''; itens[k][5] = '';
+    await salvarItensLista(l, itens);
+  }
+  async function reiniciarLista() {
+    const l = db.listas.find(x => x.row === listaRow); if (!l) return;
+    if (!(await abrirConfirmacao("🔄 Reiniciar lista", "Todos os itens voltam a pendentes para uma nova compra. Os lançamentos já feitos no extrato não são alterados.", "Reiniciar"))) return;
+    selItens.clear();
+    await salvarItensLista(l, itensLista(l).map(i => { i[3] = 'P'; i[4] = ''; i[5] = ''; return i; }));
+  }
+  async function pagarItens(todos) {
+    const l = db.listas.find(x => x.row === listaRow); if (!l) return;
+    const itens = itensLista(l);
+    const idx = itens.map((_, k) => k).filter(k => !itemOk(itens[k]) && (todos || selItens.has(k)));
+    if (!idx.length) return mostrarToast("Marque os itens que você comprou!", true);
+    const total = r2(idx.reduce((a, k) => a + num(itens[k][1]) * num(itens[k][2]), 0));
+    if (total <= 0) return mostrarToast("Os itens precisam ter valor!", true);
+    if (!checarLimiteOffline([[`${Date.now()}-1`]])) return;
+    const cc = await abrirPromptSelecao("✔ Pagar itens", `Pagar ${idx.length} item(ns) = ${formatarMoeda(total)} da conta ${l.cols[3]}. Centro de custo:`, ['Geral', ...db.pessoas.map(p => p.cols[1])].map(n => ({ value: n, label: n })), 'Geral');
+    if (!cc) return;
+    const hoje = hojeISO(), id = `${Date.now()}-1`, lid = l.cols[0];
+    const parcial = idx.length < itens.length;
+    document.getElementById('loading').classList.remove('hidden');
+    await adicionarLinhas("Lancamentos", [[id, 'despesa', parcial ? `${l.cols[1]} (parcial)` : l.cols[1], total, hoje, hoje.substring(0, 7), l.cols[2], l.cols[3], '', 'Efetivado', '1/1', '', '', JSON.stringify(idx.map(k => [itens[k][0], itens[k][1], itens[k][2]])), '', cc]]);
+    const l2 = db.listas.find(x => String(x.cols[0]) === String(lid)); if (!l2) return;
+    idx.forEach(k => { itens[k][3] = 'C'; itens[k][4] = hoje; itens[k][5] = id; });
+    selItens.clear();
+    await salvarItensLista(l2, itens);
+    mostrarToast(`Compra lançada: ${formatarMoeda(total)}`);
   }
 
   async function salvarItensLista(l, itens) {
     l.cols[5] = JSON.stringify(itens);
     renderizarListaDetalhe(); renderizarListas();
     await atualizarCelula("Listas", l.row, "F", 5, l.cols[5]);
+    if (l.cols[4] === 'Efetivada') { l.cols[4] = 'Aberta'; await atualizarCelula("Listas", l.row, "E", 4, 'Aberta'); }
   }
 
   async function addItemLista() {
@@ -2672,14 +2799,19 @@
     const desc = document.getElementById('liDesc').value.trim();
     const qtd = num(document.getElementById('liQtd').value) || 1;
     const valor = num(document.getElementById('liValor').value);
+    const un = document.getElementById('liUn').value.trim() || 'un';
     if (!l || !desc || !valor) return mostrarToast("Informe a descrição e o valor do item!", true);
     const itens = itensLista(l);
-    if (liEditIdx !== null && itens[liEditIdx]) itens[liEditIdx] = [desc, qtd, valor]; else itens.push([desc, qtd, valor]);
+    if (liEditIdx !== null && itens[liEditIdx]) { const o = itens[liEditIdx]; itens[liEditIdx] = [desc, qtd, valor, o[3], o[4] || '', o[5] || '', un]; }
+    else itens.push([desc, qtd, valor, 'P', '', '', un]);
     liEditIdx = null; document.getElementById('btnAddItem').innerText = '+ Adicionar item à lista';
     ['liDesc', 'liValor'].forEach(i => document.getElementById(i).value = '');
-    document.getElementById('liQtd').value = 1;
+    document.getElementById('liQtd').value = 1; document.getElementById('liUn').value = 'un';
     document.getElementById('liDesc').focus();
     await salvarItensLista(l, itens);
+    const ex = db.itens.find(x => (x.cols[1] || '').toLowerCase() === desc.toLowerCase());
+    if (ex) { ex.cols[2] = valor; await atualizarCelula("ItensRapidos", ex.row, "C", 2, valor); await atualizarCelula("ItensRapidos", ex.row, "E", 4, un); }
+    else await adicionarLinhas("ItensRapidos", [[Date.now().toString(), desc, valor, l.cols[2], un]]);
   }
 
   async function removerItemLista(k) {
@@ -2712,28 +2844,25 @@
   function renderizarListas() {
     const ab = document.getElementById('listaComprasAbertas');
     if (!ab) return;
-    const abertas = db.listas.filter(l => l.cols[4] !== 'Efetivada');
-    const fim = db.listas.filter(l => l.cols[4] === 'Efetivada');
-    ab.innerHTML = abertas.length === 0 ? '<p style="color:var(--muted); font-size:0.85rem;">Nenhuma lista aberta. Crie uma para ir somando os itens da compra.</p>' : '';
-    abertas.forEach(l => {
-      const n = itensLista(l).length;
+    document.getElementById('listaComprasHist').innerHTML = '';
+    ab.innerHTML = db.listas.length === 0 ? '<p style="color:var(--muted); font-size:0.85rem;">Nenhuma lista. Crie uma e use-a sempre que precisar.</p>' : '';
+    db.listas.forEach(l => {
+      const it = itensLista(l), n = it.length, ok = it.filter(itemOk).length, tot = totalLista(l), pago = pagoLista(l);
+      const st = n === 0 ? 'Vazia' : (ok === n ? 'Concluída' : (ok > 0 ? 'Parcial' : 'Aberta'));
       ab.innerHTML += `
         <div class="section-card" style="cursor:pointer;" onclick="abrirLista(${l.row})">
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div><strong>🛒 ${esc(l.cols[1])}</strong><br><small style="color:var(--muted)">${esc(l.cols[2])} • ${esc(l.cols[3])} • ${n} ${n === 1 ? 'item' : 'itens'}</small></div>
-            <strong style="color:var(--red)">${formatarMoeda(totalLista(l))}</strong>
+            <div><strong>🛒 ${esc(l.cols[1])}</strong> <span class="badge ${st === 'Concluída' ? 'badge-ok' : ''}">${st}</span><br><small style="color:var(--muted)">${esc(l.cols[2])} • ${esc(l.cols[3])} • ${ok}/${n} itens comprados</small></div>
+            <div style="text-align:right;"><strong style="color:var(--red)">${formatarMoeda(tot)}</strong><br><small style="color:var(--muted)">pago ${formatarMoeda(pago)}</small></div>
           </div>
           <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;" onclick="event.stopPropagation()">
-            <button class="btn-mini" style="background:var(--blue); color:#fff;" onclick="abrirLista(${l.row})">🛒 Abrir carrinho</button>
+            <button class="btn-mini" style="background:var(--blue); color:#fff;" onclick="abrirLista(${l.row})">🛒 Abrir</button>
             <button class="btn-mini" style="background:#334155; color:#fff;" onclick="abrirModalListaNova(${l.row})">✏️ Editar</button>
             <button class="btn-mini" style="background:#334155; color:#fff;" onclick="duplicarLista(${l.row})">📄 Duplicar</button>
             <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Listas', ${l.row})">🗑 Excluir</button>
           </div>
         </div>`;
     });
-    document.getElementById('listaComprasHist').innerHTML = fim.length === 0 ? '' :
-      '<div class="section-card"><div class="section-title"><span>✔ Compras efetivadas</span></div>' +
-      fim.slice(-8).reverse().map(l => `<div class="row-item"><span>${esc(l.cols[1])} <small style="color:var(--muted)">(${(l.cols[6] || '').split('-').reverse().join('/')})</small></span><div style="display:flex; align-items:center; gap:6px;"><strong>${formatarMoeda(totalLista(l))}</strong><button class="btn-mini" style="background:#334155; color:#fff;" onclick="duplicarLista(${l.row})">📄 Repetir</button><button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Listas', ${l.row})">✕</button></div></div>`).join('') + '</div>';
   }
 
   async function alternarLembreteFatura(row) {
@@ -2900,7 +3029,7 @@
   }
   function limparVisao() { visaoExtrato = null; renderizarExtrato(); }
   function bannerVisao(v) {
-    const nomes = { receitas: '💰 Receitas recebidas no mês', pagas: '💸 Despesas + faturas pagas no mês', balanco: '⚖️ Balanço mensal (somente pagos)', previsao: '🔮 Previsão do mês (pagos e pendentes)', 'pend:despesa': '⏳ Despesas pendentes em aberto', 'pend:receita': '⏳ Receitas pendentes em aberto', atrasados: '⚠️ Vencidos e pendentes (todos os meses)' };
+    const nomes = { receitas: '💰 Receitas recebidas no mês', pagas: '💸 Despesas + faturas pagas no mês', balanco: '⚖️ Balanço: recebido − pago no mês', previsao: '🔮 Previsão: (recebido + a receber) − (pago + a pagar)', 'pend:despesa': '⏳ Despesas pendentes em aberto', 'pend:receita': '⏳ Receitas pendentes em aberto', atrasados: '⚠️ Vencidos e pendentes (todos os meses)' };
     const mes = getChaveMes(mesAtual).split('-').reverse().join('/');
     return `<div class="alerta-atraso" style="background:var(--blue-soft); border-color:rgba(59,130,246,.35); color:var(--text); display:flex; justify-content:space-between; align-items:center; cursor:default;"><span>${nomes[v] || ''}${v === 'atrasados' ? '' : ' • até ' + mes}</span><button class="btn-mini" style="background:#334155; color:#fff;" onclick="limparVisao()">✕ Limpar filtro</button></div>`;
   }
@@ -2941,15 +3070,11 @@
         </div>` + (todos.length ? todos.map(l => linha(l, l.cols[1] === 'receita' ? '+' : '−', l.cols[1] === 'receita' ? 'var(--green)' : 'var(--red)')).join('') : vazio);
     }
     if (v === 'previsao') {
-      const recs = db.lancamentos.filter(l => l.cols[1] === 'receita' && (mesTx(l) === mes || (l.cols[9] === 'Pendente' && mesTx(l) <= mes))).sort(porData);
-      const gastos = db.lancamentos.filter(l => (l.cols[1] === 'despesa' && !(l.cols[2] || '').startsWith('Fatura ') && (mesTx(l) === mes || (l.cols[9] === 'Pendente' && mesTx(l) <= mes))) || (l.cols[1] === 'cartao' && mesTx(l) === mes)).sort(porData);
-      const pago = l => ['Efetivado', 'Pago'].includes(l.cols[9]);
-      const lin = l => `<div class="row-item"><span><i style="display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px; background:${pago(l) ? 'var(--green)' : 'var(--amber)'}"></i>${esc(l.cols[2])} <small style="color:var(--muted)">(${dbr(l)})</small></span><strong>${formatarMoeda(val(l))}</strong></div>`;
-      const tr = soma(recs), tg = soma(gastos);
-      return topo('Receitas − Gastos previstos do mês (inclui pendências acumuladas)', tr - tg, tr - tg >= 0 ? 'var(--blue)' : 'var(--red)') +
-        `<small style="color:var(--muted)"><span style="color:var(--green)">●</span> pago/recebido &nbsp; <span style="color:var(--amber)">●</span> pendente</small>` +
-        `<div class="section-card"><div class="section-title"><span>Receitas</span><strong style="color:var(--green)">${formatarMoeda(tr)}</strong></div>${recs.map(lin).join('') || '<small style="color:var(--muted)">Sem receitas.</small>'}</div>` +
-        `<div class="section-card"><div class="section-title"><span>Gastos</span><strong style="color:var(--red)">${formatarMoeda(tg)}</strong></div>${gastos.map(lin).join('') || '<small style="color:var(--muted)">Sem gastos.</small>'}</div>`;
+      const f = fluxoDoMes(db.lancamentos, mes);
+      const sec = (t, a, cor) => `<div class="section-card"><div class="section-title"><span>${t}</span><strong style="color:${cor}">${formatarMoeda(soma(a))}</strong></div>${a.sort(porData).map(l => `<div class="row-item"><span>${esc(l.cols[2])} <small style="color:var(--muted)">(${l.cols[1] === 'cartao' ? 'fatura ' + esc(l.cols[7]) : dbr(l)})</small></span><strong>${formatarMoeda(val(l))}</strong></div>`).join('') || '<small style="color:var(--muted)">Nada aqui.</small>'}</div>`;
+      return topo('(Recebido + A receber) − (Pago + A pagar)', f.previsao, f.previsao >= 0 ? 'var(--blue)' : 'var(--red)') +
+        sec('✔ Recebido', f.recOk, 'var(--green)') + sec('⏳ A receber (mês + atrasados)', [...f.recPend, ...f.recAtr], 'var(--green)') +
+        sec('✔ Pago (inclui faturas pagas)', f.desOk, 'var(--red)') + sec('⏳ A pagar (pendências + faturas em aberto)', [...f.desPend, ...f.desAtr, ...f.fat], 'var(--red)');
     }
     return '';
   }
@@ -2961,16 +3086,44 @@
     return dataISO(dt);
   }
   function foneBR(f) { const l = (f || '').replace(/\D/g, ''); return (l.length >= 12 && l.startsWith('55')) ? l : '55' + l; }
-  function msgCobranca(d) {
-    const [, nome, , desc, totS, parcS, venc, pagasS] = d.cols;
-    const tot = num(totS) || 0, n = Math.max(1, parseInt(parcS, 10) || 1), pagas = parseInt(pagasS, 10) || 0;
-    const vp = tot / n, aberto = Math.max(0, tot - vp * pagas);
-    const dv = vencParcela(venc, Math.min(pagas, n - 1)).split('-').reverse().join('/');
-    const user = localStorage.getItem("mfp_user_name");
-    return `Olá, ${nome.split(' ')[0]}! Tudo bem? 😊\n\nPassando para lembrar da parcela ${Math.min(pagas + 1, n)}/${n} referente a "${desc}", no valor de ${formatarMoeda(vp)}, com vencimento em ${dv}.\n\nSaldo total em aberto: ${formatarMoeda(aberto)}.\n\nQualquer dúvida estou à disposição. Obrigado!${user ? '\n— ' + user : ''}`;
+  function calcDev(d) {
+    const [, nome, fone, desc, totS, parcS, venc, pagasS] = d.cols;
+    const totC = Math.round(num(totS) * 100), n = Math.max(1, parseInt(parcS, 10) || 1);
+    let pags; try { pags = JSON.parse(d.cols[9] || '[]'); } catch (e) { pags = []; }
+    if (!Array.isArray(pags)) pags = [];
+    if (!pags.length) { const lp = parseInt(pagasS, 10) || 0; for (let k = 1; k <= lp; k++) pags.push({ d: '', v: (Math.round(totC * k / n) - Math.round(totC * (k - 1) / n)) / 100, l: '' }); }
+    const pagoC = Math.round(pags.reduce((a, p) => a + num(p.v), 0) * 100);
+    const alvo = k => Math.round(totC * k / n);
+    let pc = 0; while (pc < n && pagoC >= alvo(pc + 1)) pc++;
+    const quit = pagoC >= totC, atual = Math.min(n, pc + 1);
+    return { nome, fone, desc, venc, n, totC, pagoC, pags, quit, pc, atual, restParcC: quit ? 0 : alvo(atual) - pagoC, restC: totC - pagoC, prox: quit ? null : vencParcela(venc, pc) };
   }
-  function abrirModalDevedor() {
-    ['devNome', 'devFone', 'devDesc', 'devValor'].forEach(i => document.getElementById(i).value = '');
+  function msgCobranca(d) {
+    const c = calcDev(d), user = localStorage.getItem("mfp_user_name");
+    const dv = (c.prox || hojeISO()).split('-').reverse().join('/');
+    return `Olá, ${c.nome.split(' ')[0]}! Tudo bem? 😊\n\nPassando para lembrar da parcela ${c.atual}/${c.n} referente a "${c.desc}", saldo desta parcela ${formatarMoeda(c.restParcC / 100)}, com vencimento em ${dv}.\n\nSaldo total em aberto: ${formatarMoeda(c.restC / 100)}.\n\nQualquer dúvida estou à disposição. Obrigado!${user ? '\n— ' + user : ''}`;
+  }
+  async function salvarPessoa() {
+    const nome = document.getElementById('pesNome').value.trim(), fone = document.getElementById('pesFone').value.trim();
+    if (!nome) return mostrarToast("Informe o nome da pessoa!", true);
+    if (nome.toLowerCase() === 'geral' || db.pessoas.some(p => (p.cols[1] || '').toLowerCase() === nome.toLowerCase())) return mostrarToast("Já existe uma pessoa/centro com esse nome!", true);
+    await adicionarLinhas("Pessoas", [[Date.now().toString(), nome, fone, '']]);
+    ['pesNome', 'pesFone'].forEach(i => document.getElementById(i).value = '');
+    mostrarToast("Pessoa cadastrada!");
+  }
+  function renderizarPessoas() {
+    const el = document.getElementById('listaPessoas');
+    if (!el) return;
+    el.innerHTML = db.pessoas.length === 0 ? '<small style="color:var(--muted)">Nenhuma pessoa. Sem pessoas, tudo fica no centro de custo "Geral".</small>' : db.pessoas.map(p => {
+      const aberto = db.devedores.filter(d => (d.cols[1] || '').toLowerCase() === (p.cols[1] || '').toLowerCase()).reduce((a, d) => a + calcDev(d).restC, 0) / 100;
+      return `<div class="row-item"><div><strong>👤 ${esc(p.cols[1])}</strong><br><small style="color:var(--muted)">${esc(p.cols[2]) || 'sem contato'} • em aberto: ${formatarMoeda(aberto)}</small></div><div style="display:flex; gap:6px;"><button class="btn-mini" style="background:var(--amber); color:#1c1300;" onclick="abrirModalDevedor('${esc(p.cols[1]).replace(/'/g, "\\'")}')">+ Cobrança</button><button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Pessoas', ${p.row})">✕</button></div></div>`;
+    }).join('');
+  }
+  function abrirModalDevedor(pessoa) {
+    if (!db.pessoas.length) return mostrarToast("Cadastre uma pessoa antes de criar a cobrança!", true);
+    ['devDesc', 'devValor'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('devPessoa').innerHTML = db.pessoas.map(p => `<option value="${esc(p.cols[1])}">${esc(p.cols[1])}</option>`).join('');
+    if (typeof pessoa === 'string') document.getElementById('devPessoa').value = pessoa;
     document.getElementById('devParcelas').value = 1;
     document.getElementById('devVenc').value = hojeISO();
     const cbA = document.getElementById('devAgenda');
@@ -2978,13 +3131,13 @@
     document.getElementById('modalDevedor').classList.remove('hidden');
   }
   async function salvarDevedor(continuar = false) {
-    const nome = document.getElementById('devNome').value.trim();
-    const fone = document.getElementById('devFone').value.trim();
+    const p = db.pessoas.find(x => x.cols[1] === document.getElementById('devPessoa').value);
     const desc = document.getElementById('devDesc').value.trim();
     const valor = num(document.getElementById('devValor').value);
     const parc = parseInt(document.getElementById('devParcelas').value, 10) || 1;
     const venc = document.getElementById('devVenc').value;
-    if (!nome || !desc || !valor || !venc) return mostrarToast("Preencha nome, descrição, valor e vencimento!", true);
+    if (!p || !desc || !valor || !venc) return mostrarToast("Escolha a pessoa e preencha descrição, valor e vencimento!", true);
+    const nome = p.cols[1], fone = p.cols[2] || '';
     const querAgenda = document.getElementById('devAgenda').checked && !modoOffline;
     if (!continuar) fecharModal('modalDevedor');
     document.getElementById('loading').classList.remove('hidden');
@@ -2992,46 +3145,49 @@
     if (querAgenda) {
       for (let k = 0; k < parc; k++) syncs.push(await criarEventoAgendaETask(`Cobrar ${nome}: ${desc} (${k + 1}/${parc})`, valor / parc, vencParcela(venc, k), 'receita'));
     }
-    await adicionarLinhas("Devedores", [[Date.now().toString(), nome, fone, desc, valor, parc, venc, 0, syncs.join(';')]]);
+    await adicionarLinhas("Devedores", [[Date.now().toString(), nome, fone, desc, valor, parc, venc, 0, syncs.join(';'), '[]']]);
     mostrarToast("Cobrança cadastrada!");
-    if (continuar) ['devNome', 'devFone', 'devDesc', 'devValor'].forEach(i => document.getElementById(i).value = '');
+    if (continuar) ['devDesc', 'devValor'].forEach(i => document.getElementById(i).value = '');
   }
   function renderizarDevedores() {
+    renderizarPessoas();
     const el = document.getElementById('listaDevedores');
-    let totalAberto = 0;
+    let totalAbertoC = 0;
     el.innerHTML = db.devedores.length === 0 ? '<p style="color:var(--muted); font-size:0.85rem;">Nenhuma cobrança cadastrada.</p>' : '';
     db.devedores.forEach(d => {
-      const [, nome, fone, desc, totS, parcS, venc, pagasS] = d.cols;
-      const tot = num(totS) || 0, n = Math.max(1, parseInt(parcS, 10) || 1), pagas = Math.min(n, parseInt(pagasS, 10) || 0);
-      const vp = tot / n, aberto = Math.max(0, tot - vp * pagas), quit = pagas >= n;
-      totalAberto += aberto;
-      const prox = quit ? null : vencParcela(venc, pagas);
-      const atrasada = prox && prox < hojeISO();
-      const msg = msgCobranca(d);
+      const c = calcDev(d), msg = msgCobranca(d);
+      totalAbertoC += c.restC;
+      const atrasada = c.prox && c.prox < hojeISO();
+      let acum = 0;
+      const hist = c.pags.map((p, i) => {
+        acum += Math.round(num(p.v) * 100);
+        const falta = c.totC - acum;
+        return `<div class="row-item" style="font-size:0.78rem;"><span>${p.d ? p.d.split('-').reverse().join('/') : 'Pagamento anterior'}: pagou <strong style="color:var(--green)">${formatarMoeda(p.v)}</strong> • ${falta > 0 ? 'faltavam ' + formatarMoeda(falta / 100) : 'quitou a dívida'}</span><button class="btn-mini" style="background:#334155; color:#fca5a5;" title="Estornar" onclick="desfazerPagamento(${d.row}, ${i})">↩</button></div>`;
+      }).join('');
       el.innerHTML += `
         <div class="section-card">
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div><strong>👤 ${esc(nome)}</strong><br><small style="color:var(--muted)">${esc(desc)} • ${esc(fone) || 'sem contato'}</small></div>
-            <span class="badge ${quit ? 'badge-ok' : (atrasada ? 'badge-pend' : '')}">${quit ? 'Quitado' : (atrasada ? 'Atrasada' : 'Em dia')}</span>
+            <div><strong>👤 ${esc(c.nome)}</strong><br><small style="color:var(--muted)">${esc(c.desc)} • ${esc(c.fone) || 'sem contato'}</small></div>
+            <span class="badge ${c.quit ? 'badge-ok' : (atrasada ? 'badge-pend' : '')}">${c.quit ? 'Quitado' : (atrasada ? 'Atrasada' : (c.pagoC > 0 ? 'Parcial' : 'Em dia'))}</span>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:8px; color:var(--muted);">
-            <span>Parcelas: <strong style="color:var(--text)">${pagas}/${n}</strong> de ${formatarMoeda(vp)}</span>
-            <span>Em aberto: <strong style="color:var(--amber)">${formatarMoeda(aberto)}</strong></span>
+            <span>Total ${formatarMoeda(c.totC / 100)} • pago <strong style="color:var(--green)">${formatarMoeda(c.pagoC / 100)}</strong> • parcela <strong style="color:var(--text)">${c.quit ? c.n : c.atual}/${c.n}</strong></span>
+            <span>Em aberto: <strong style="color:var(--amber)">${formatarMoeda(c.restC / 100)}</strong></span>
           </div>
-          <div class="progress-bg" style="background:var(--bg);"><div class="progress-fill" style="width:${pagas / n * 100}%; background:var(--green);"></div></div>
-          ${quit ? '' : `<small style="color:var(--muted)">Próx. vencimento: ${prox.split('-').reverse().join('/')}</small>
+          <div class="progress-bg" style="background:var(--bg);"><div class="progress-fill" style="width:${c.totC ? Math.min(100, c.pagoC / c.totC * 100) : 0}%; background:var(--green);"></div></div>
+          ${hist ? `<div style="margin:8px 0;">${hist}</div>` : ''}
+          ${c.quit ? `<button class="btn-mini" style="background:#334155; color:#fca5a5; margin-top:8px;" onclick="deletarLinha('Devedores', ${d.row})">Excluir</button>` : `<small style="color:var(--muted)">Próx. vencimento: ${c.prox.split('-').reverse().join('/')} • saldo da parcela: ${formatarMoeda(c.restParcC / 100)}</small>
           <div class="msg-cobranca">${esc(msg)}</div>
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            ${fone ? `<a class="btn-mini" style="background:#25D366; color:#fff; text-decoration:none;" target="_blank" rel="noopener noreferrer" href="https://wa.me/${foneBR(fone)}?text=${encodeURIComponent(msg)}">💬 Cobrar no WhatsApp</a>` : ''}
+            ${c.fone ? `<a class="btn-mini" style="background:#25D366; color:#fff; text-decoration:none;" target="_blank" rel="noopener noreferrer" href="https://wa.me/${foneBR(c.fone)}?text=${encodeURIComponent(msg)}">💬 Cobrar no WhatsApp</a>` : ''}
             <button class="btn-mini" style="background:#334155; color:#fff;" onclick="copiarCobranca(${d.row})">Copiar texto</button>
-            <button class="btn-mini" style="background:var(--green); color:#fff;" onclick="abrirModalReceber(${d.row})">✔ Recebi parcela</button>
+            <button class="btn-mini" style="background:var(--green); color:#fff;" onclick="abrirModalReceber(${d.row})">✔ Registrar pagamento</button>
             <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Devedores', ${d.row})">✕</button>
           </div>`}
-          ${quit ? `<button class="btn-mini" style="background:#334155; color:#fca5a5; margin-top:8px;" onclick="deletarLinha('Devedores', ${d.row})">Excluir</button>` : ''}
         </div>`;
     });
     document.getElementById('resumoDevedores').innerHTML = db.devedores.length ?
-      `<div class="mini-stat" style="margin-bottom:12px;"><span>Total a receber de devedores</span><strong style="color:var(--amber)">${formatarMoeda(totalAberto)}</strong></div>` : '';
+      `<div class="mini-stat" style="margin-bottom:12px;"><span>Total a receber de devedores</span><strong style="color:var(--amber)">${formatarMoeda(totalAbertoC / 100)}</strong></div>` : '';
   }
   async function copiarCobranca(row) {
     const d = db.devedores.find(x => x.row === row);
@@ -3044,40 +3200,59 @@
     if (!d) return;
     if (!db.contas.length) return mostrarToast("Cadastre uma conta antes de registrar recebimentos!", true);
     recRow = row;
-    const n = Math.max(1, parseInt(d.cols[5], 10) || 1), pagas = parseInt(d.cols[7], 10) || 0;
-    document.getElementById('recInfo').innerText = `${d.cols[1]} — ${d.cols[3]} (parcela ${Math.min(pagas + 1, n)}/${n})`;
-    document.getElementById('recValor').value = r2((num(d.cols[4]) || 0) / n);
+    const c = calcDev(d);
+    document.getElementById('recInfo').innerText = `${c.nome} — ${c.desc} (parcela ${c.atual}/${c.n}). Em aberto: ${formatarMoeda(c.restC / 100)}`;
+    document.getElementById('recValor').value = String(c.restParcC / 100).replace('.', ',');
     document.getElementById('recData').value = hojeISO();
-    document.getElementById('recConta').innerHTML = db.contas.map(c => `<option value="${esc(c.cols[1])}">${esc(c.cols[1])}</option>`).join('');
+    document.getElementById('recConta').innerHTML = db.contas.map(x => `<option value="${esc(x.cols[1])}">${esc(x.cols[1])}</option>`).join('');
     avisoRecebimento();
     document.getElementById('modalReceber').classList.remove('hidden');
   }
   function avisoRecebimento() {
     const d = db.devedores.find(x => x.row === recRow);
     if (!d) return;
-    const n = Math.max(1, parseInt(d.cols[5], 10) || 1);
-    const falta = r2(r2(num(d.cols[4]) / n) - num(document.getElementById('recValor').value));
-    document.getElementById('recAviso').innerText = falta > 0.009 ? `Faltam ${formatarMoeda(falta)} — será criado um novo saldo devedor com esse valor.` : '';
+    const c = calcDev(d), v = Math.round(num(document.getElementById('recValor').value) * 100);
+    document.getElementById('recAviso').innerText = v > c.restC ? 'Valor maior que o saldo em aberto.' : (c.restC - v > 0 ? `Depois deste pagamento ainda faltarão ${formatarMoeda((c.restC - v) / 100)} (a dívida continua neste mesmo card).` : 'Este pagamento quita a dívida.');
   }
+  let _recBusy = false;
   async function confirmarRecebimento() {
+    if (_recBusy) return;
     const d = db.devedores.find(x => x.row === recRow);
-    const valor = num(document.getElementById('recValor').value);
-    const data = document.getElementById('recData').value;
-    const conta = document.getElementById('recConta').value;
+    const valor = r2(num(document.getElementById('recValor').value));
+    const data = document.getElementById('recData').value, conta = document.getElementById('recConta').value;
     if (!d || !valor || !data || !conta) return mostrarToast("Informe valor, data e conta!", true);
+    const c = calcDev(d);
+    if (Math.round(valor * 100) > c.restC) return mostrarToast("O valor é maior que o saldo em aberto!", true);
     if (!checarLimiteOffline([[`${Date.now()}-1`]])) return;
-    const n = Math.max(1, parseInt(d.cols[5], 10) || 1), pagas = parseInt(d.cols[7], 10) || 0;
-    const catReceita = (db.categorias.find(c => c.cols[1] === 'receita' && /cobran/i.test(c.cols[2])) || db.categorias.find(c => c.cols[1] === 'receita') || { cols: [0, 0, 'Sem Categoria'] }).cols[2];
-    fecharModal('modalReceber');
+    _recBusy = true;
+    try {
+      const catReceita = (db.categorias.find(x => x.cols[1] === 'receita' && /cobran/i.test(x.cols[2])) || db.categorias.find(x => x.cols[1] === 'receita') || { cols: [0, 0, 'Sem Categoria'] }).cols[2];
+      fecharModal('modalReceber');
+      document.getElementById('loading').classList.remove('hidden');
+      const id = `${Date.now()}-1`;
+      await adicionarLinhas("Lancamentos", [[id, 'receita', `Recebido de ${c.nome}: ${c.desc}`, valor, data, data.substring(0, 7), catReceita, conta, '', 'Efetivado', '1/1', c.fone || '', '', '', '', c.nome]]);
+      const d2 = db.devedores.find(x => String(x.cols[0]) === String(d.cols[0]));
+      if (!d2) return;
+      const pags = [...calcDev(d2).pags, { d: data, v: valor, c: conta, l: id }];
+      d2.cols[9] = JSON.stringify(pags);
+      await atualizarCelula("Devedores", d2.row, "J", 9, d2.cols[9]);
+      await atualizarCelula("Devedores", d2.row, "H", 7, calcDev(d2).pc);
+      mostrarToast(calcDev(d2).quit ? "Dívida quitada!" : `Pagamento registrado. Faltam ${formatarMoeda(calcDev(d2).restC / 100)}.`);
+      await carregarTodosDados();
+    } finally { _recBusy = false; }
+  }
+  async function desfazerPagamento(row, i) {
+    const d = db.devedores.find(x => x.row === row);
+    if (!d) return;
+    if (!(await abrirConfirmacao("↩ Estornar pagamento", "Remove este pagamento da cobrança e o lançamento de receita correspondente. Continuar?", "Estornar", "var(--red)"))) return;
     document.getElementById('loading').classList.remove('hidden');
-    await atualizarCelula("Devedores", d.row, "H", 7, pagas + 1);
-    await removerSync((d.cols[8] || '').split(';')[pagas]);
-    await adicionarLinhas("Lancamentos", [[`${Date.now()}-1`, 'receita', `Recebido de ${d.cols[1]}: ${d.cols[3]} (${Math.min(pagas + 1, n)}/${n})`, r2(valor), data, data.substring(0, 7), catReceita, conta, '', 'Efetivado', '1/1', d.cols[2] || '', '']]);
-    const falta = r2(r2(num(d.cols[4]) / n) - valor);
-    if (falta > 0.009) {
-      await adicionarLinhas("Devedores", [[Date.now().toString(), d.cols[1], d.cols[2] || '', `Saldo restante: ${d.cols[3]} (parcela ${Math.min(pagas + 1, n)}/${n})`, falta, 1, data, 0, '']]);
-      mostrarToast(`Recebido! Novo saldo devedor de ${formatarMoeda(falta)} criado.`);
-    } else mostrarToast("Recebimento lançado na conta!");
+    const pags = calcDev(d).pags, p = pags.splice(i, 1)[0];
+    if (p && p.l) { const lc = db.lancamentos.find(x => String(x.cols[0]) === String(p.l)); if (lc) { await removerSync(lc.cols[12]); await persistencia.excluirRows("Lancamentos", [lc.row]); } }
+    d.cols[9] = JSON.stringify(pags);
+    await atualizarCelula("Devedores", d.row, "J", 9, d.cols[9]);
+    await atualizarCelula("Devedores", d.row, "H", 7, calcDev(d).pc);
+    mostrarToast("Pagamento estornado.");
+    await carregarTodosDados();
   }
 
   function preencherRpItem(sel) {
@@ -3218,6 +3393,7 @@
               <span class="badge ${isPend ? 'badge-pend' : 'badge-ok'}">${esc(status)}</span>
               ${syncId ? '<span class="badge badge-cal" title="Sincronizado com Agenda/Tasks">📅</span>' : ''}
               ${l.cols[14] ? `<span class="badge" style="background:var(--blue-soft); color:var(--blue);">👤 ${esc(l.cols[14])}</span>` : ''}
+              ${l.cols[15] && l.cols[15] !== 'Geral' ? `<span class="badge" style="background:var(--purple-soft); color:var(--purple);">📍 ${esc(l.cols[15])}</span>` : ''}
             </p>
             ${itensTxHtml(l.cols[13])}
           </div>
@@ -3297,6 +3473,7 @@
     const selDest = document.getElementById('txContaDestino');
     const selCartao = document.getElementById('txCartao');
     selConta.innerHTML = ''; selDest.innerHTML = ''; selCartao.innerHTML = '';
+    document.getElementById('txCentro').innerHTML = optsCentro();
 
     db.contas.forEach(c => {
       selConta.innerHTML += `<option value="${esc(c.cols[1])}">${esc(c.cols[1])}</option>`;
@@ -3306,6 +3483,8 @@
       selCartao.innerHTML += `<option value="${esc(c.cols[1])}">${esc(c.cols[1])}</option>`;
     });
   }
+
+  function optsCentro() { return ['Geral', ...db.pessoas.map(p => p.cols[1])].map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join(''); }
 
   function abrirModalLancamento() {
     editandoRow = null;
@@ -3350,6 +3529,7 @@
     if (tipo !== 'transferencia') setSelect('txCategoria', cat);
     if (tipo === 'cartao') setSelect('txCartao', conta); else setSelect('txConta', conta);
     if (dest) setSelect('txContaDestino', dest);
+    setSelect('txCentro', item.cols[15] || 'Geral');
     document.getElementById('txStatus').value = status === 'Pago' ? 'Efetivado' : status;
     document.getElementById('txFone').value = fone || '';
     document.getElementById('txCriarAgendaTask').checked = !modoOffline && !!item.cols[12];
@@ -3386,6 +3566,7 @@
     }
 
     document.getElementById('boxCategoria').classList.toggle('hidden', tipo === 'transferencia');
+    document.getElementById('boxCentro').classList.toggle('hidden', tipo === 'transferencia');
     document.getElementById('boxContaOrigem').classList.toggle('hidden', tipo === 'cartao');
     document.getElementById('boxContaDestino').classList.toggle('hidden', tipo !== 'transferencia');
     document.getElementById('boxCartao').classList.toggle('hidden', tipo !== 'cartao');
@@ -3417,7 +3598,14 @@
     return getChaveMes(new Date(ano, mesBase, 1));
   }
 
+  let _salvandoTx = false;
   async function salvarLancamento(continuar = false) {
+    if (_salvandoTx) return;
+    _salvandoTx = true;
+    try { return await _salvarLancamentoImpl(continuar); } finally { _salvandoTx = false; }
+  }
+  async function _salvarLancamentoImpl(continuar = false) {
+    const centro = document.getElementById('txCentro').value || 'Geral';
     const desc = document.getElementById('txDesc').value.trim();
     const valorTotal = num(document.getElementById('txValor').value);
     const data = document.getElementById('txData').value;
@@ -3467,11 +3655,11 @@
       const novaLinha = [
         antigo[0], tipoTxAtual, desc, Number(valorTotal.toFixed(2)),
         data, mesFatura, tipoTxAtual === 'transferencia' ? 'Transferência' : cat,
-        origem, dest, statusFinal, antigo[10] || '1/1', fone, syncIdFinal, antigo[13] || ''
+        origem, dest, statusFinal, antigo[10] || '1/1', fone, syncIdFinal, antigo[13] || '', antigo[14] || usuarioAtual(), centro
       ];
       const itemAtual = db.lancamentos.find(x => x.row === rowParaEditar);
       const extras = selecionarPorEscopo(itemAtual, escopoEdit).filter(o => o.row !== rowParaEditar).map(o => {
-        const c = [...o.cols]; while (c.length < 14) c.push('');
+        const c = [...o.cols]; while (c.length < 16) c.push(''); c[15] = centro;
         const tipoAntes = c[1];
         c[1] = tipoTxAtual; c[2] = desc; c[3] = Number(valorTotal.toFixed(2)); c[6] = novaLinha[6]; c[7] = origem; c[8] = dest; c[11] = fone;
         if (tipoAntes !== tipoTxAtual) {
@@ -3515,7 +3703,7 @@
       linhas.push([
         `${idBase}-${i + 1}`, tipoTxAtual, desc, Number(valorParcela.toFixed(2)),
         dataParcela, mesFatura, tipoTxAtual === 'transferencia' ? 'Transferência' : cat,
-        origem, dest, statusItem, infoParcela, fone, syncId
+        origem, dest, statusItem, infoParcela, fone, syncId, '', '', centro
       ]);
     }
 
