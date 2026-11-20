@@ -2,12 +2,12 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#090e1a">
   <meta name="mobile-web-app-capable" content="yes">
   <title>AppFinance</title>
   <link id="manifest-link" rel="manifest">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogle()"></script>
   <style>
     :root {
       --bg: #090e1a;
@@ -368,7 +368,7 @@
       border-top: 0 solid var(--border);
     }
     .cat-accordion.open .cat-details {
-      max-height: 1200px;
+      max-height: 4000px;
       border-top-width: 1px;
     }
 
@@ -585,6 +585,11 @@
     .side-sair{margin-top:6px;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);border-radius:999px;padding:3px 10px;font-size:.7rem;font-weight:600;cursor:pointer}
     .side-sair:hover{background:rgba(239,68,68,.28)}
     .sidebar-footer{margin-top:auto;border-top:1px solid var(--border);padding-top:12px;font-size:.7rem;color:var(--muted);line-height:1.6}
+
+    /* v9: toast de erro, foco visível e inputs sem zoom automático no iOS */
+    #toast.erro{background:var(--red)}
+    button:focus-visible,.sub-tab:focus-visible,.pill:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+    @media (max-width:899px){input,select,.search-box{font-size:16px}}
   </style>
 </head>
 <body>
@@ -1168,7 +1173,7 @@
 </div>
 
 <script>
-  const CLIENT_ID = "484331620797-l3t41s8o6lh4ufv815nj99bhud5n9tku.apps.googleusercontent.com";
+  const CLIENT_ID = "484331620797-5eva98kl1vhk31jnl6m83ofpr6425ro2.apps.googleusercontent.com";
   const SCOPES = [
     "https://www.googleapis.com/auth/drive.file",
     "https://www.googleapis.com/auth/calendar.events",
@@ -1179,6 +1184,8 @@
   ].join(" ");
 
   let tokenClient;
+  let _tokenResolver = null, _tokenPromise = null, _loadSeq = 0;
+  const catsAbertas = new Set(); // categorias expandidas no dashboard
   let accessToken = localStorage.getItem("mfp_gdrive_token") || "";
   let spreadsheetId = localStorage.getItem("mfp_gdrive_sheet_id") || "";
   let modoOffline = localStorage.getItem("mfp_offline_mode") === "true";
@@ -1204,23 +1211,32 @@
   };
 
   // Versão do app — somar +1 a cada atualização
-  const APP_VERSION = 8;
-  const APP_RELEASE = "17/11/2026";
+  const APP_VERSION = 9;
+  const APP_RELEASE = "18/11/2026";
 
   // PWA Manifest
   const manifestData = {
-    name: "AppFinance", short_name: "AppFinance", start_url: ".", display: "standalone",
+    name: "AppFinance", short_name: "AppFinance", start_url: location.href.split('#')[0].split('?')[0], display: "standalone",
     background_color: "#090e1a", theme_color: "#090e1a",
     icons: [{
       src: "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#1e293b"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="240" fill="#10b981" font-family="sans-serif" font-weight="bold">R$</text></svg>'),
       sizes: "512x512", type: "image/svg+xml"
     }]
   };
-  document.getElementById('manifest-link').setAttribute('href', 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifestData)));
+  try {
+    // Blob em vez de data: URI — o Chrome ignora manifests data: (start_url relativa não resolve)
+    const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+    document.getElementById('manifest-link').setAttribute('href', URL.createObjectURL(manifestBlob));
+  } catch (e) { console.warn(e); }
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); deferredPrompt = e;
     document.getElementById('btnInstall').style.display = 'inline-block';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    document.getElementById('btnInstall').style.display = 'none';
   });
 
   async function instalarApp() {
@@ -1228,38 +1244,65 @@
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
     deferredPrompt = null;
+    document.getElementById('btnInstall').style.display = 'none';
   }
+
+  // ----- Google Identity Services (login e renovação do token) -----
+  function initGoogle() {
+    if (tokenClient || typeof google === "undefined" || !google.accounts || !google.accounts.oauth2) return;
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if (resp.error) {
+          if (_tokenResolver) _tokenResolver.reject(new Error(resp.error));
+          else document.getElementById('statusLogin').innerText = "Erro no login: " + resp.error;
+          return;
+        }
+        modoOffline = false;
+        localStorage.setItem("mfp_offline_mode", "false");
+        accessToken = resp.access_token;
+        localStorage.setItem("mfp_gdrive_token", accessToken);
+        if (_tokenResolver) { _tokenResolver.resolve(); return; } // renovação do token em segundo plano
+        if (spreadsheetId) iniciarAppLogado(); else await prepararEstruturaDrive();
+      },
+      error_callback: (err) => {
+        const msg = (err && err.type) || "erro";
+        if (_tokenResolver) _tokenResolver.reject(new Error(msg));
+        else document.getElementById('statusLogin').innerText = "Login cancelado ou bloqueado (" + msg + ").";
+      }
+    });
+  }
+
+  function renovarToken() {
+    if (_tokenPromise) return _tokenPromise;
+    _tokenPromise = new Promise((resolve, reject) => {
+      initGoogle();
+      if (!tokenClient) return reject(new Error("Biblioteca do Google indisponível"));
+      const t = setTimeout(() => reject(new Error("Tempo esgotado ao renovar a sessão")), 30000);
+      _tokenResolver = { resolve: () => { clearTimeout(t); resolve(); }, reject: (e) => { clearTimeout(t); reject(e); } };
+      tokenClient.requestAccessToken({ prompt: '' });
+    }).finally(() => { _tokenPromise = null; _tokenResolver = null; });
+    return _tokenPromise;
+  }
+
+  // Qualquer erro não tratado vira aviso na tela (e some o "Sincronizando...")
+  window.addEventListener('unhandledrejection', (e) => {
+    document.getElementById('loading').classList.add('hidden');
+    console.error(e.reason);
+    if (e.reason && e.reason.sessaoExpirada) return sessaoExpirada();
+    mostrarToast("⚠️ " + ((e.reason && e.reason.message) || "Erro inesperado"), true);
+  });
 
   window.onload = () => {
     atualizarLabelMes();
     carregarPreferenciasLocal();
-
-    if (typeof google !== "undefined" && google.accounts) {
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: async (resp) => {
-          if (resp.error) {
-            document.getElementById('statusLogin').innerText = "Erro no login: " + resp.error;
-            return;
-          }
-          modoOffline = false;
-          localStorage.setItem("mfp_offline_mode", "false");
-          accessToken = resp.access_token;
-          localStorage.setItem("mfp_gdrive_token", accessToken);
-          await prepararEstruturaDrive();
-        }
-      });
-    }
-
-    if (modoOffline) {
-      iniciarAppLogado();
-    } else if (accessToken && spreadsheetId) {
-      iniciarAppLogado();
-    }
+    initGoogle();
+    if (modoOffline || (accessToken && spreadsheetId)) iniciarAppLogado();
   };
 
   function fazerLoginGoogle() {
+    initGoogle();
     if (!tokenClient) {
       alert("A biblioteca do Google ainda não carregou ou você está sem internet. Você pode usar o Modo Local Offline.");
       return;
@@ -1268,33 +1311,42 @@
     tokenClient.requestAccessToken({ prompt: 'consent' });
   }
 
+  function dbLocalInicial() {
+    return {
+      contas: [
+        { row: 2, cols: ["1", "Carteira", "Carteira", "0"] },
+        { row: 3, cols: ["2", "Conta Corrente", "Conta Corrente", "0"] }
+      ],
+      cartoes: [
+        { row: 2, cols: ["1", "Cartão Principal", "Mastercard", "linear-gradient(135deg, #6d28d9, #4c1d95)", "3000", "5", "12", "Conta Corrente"] }
+      ],
+      categorias: [
+        { row: 2, cols: ["1", "despesa", "Alimentação"] },
+        { row: 3, cols: ["2", "despesa", "Moradia & Contas"] },
+        { row: 4, cols: ["3", "despesa", "Transporte"] },
+        { row: 5, cols: ["4", "despesa", "Lazer"] },
+        { row: 6, cols: ["5", "despesa", "Saúde"] },
+        { row: 7, cols: ["6", "despesa", "Educação"] },
+        { row: 8, cols: ["7", "despesa", "Cartão de Crédito"] },
+        { row: 9, cols: ["8", "receita", "Salário"] },
+        { row: 10, cols: ["9", "receita", "Renda Extra / Cobranças"] },
+        { row: 11, cols: ["10", "receita", "Investimentos"] }
+      ],
+      lancamentos: [],
+      orcamentos: []
+    };
+  }
+  // Cria o banco local se não existir (ou se o navegador o apagou)
+  function garantirDbLocal() {
+    try { if (JSON.parse(localStorage.getItem("mfp_local_db") || "null")) return; } catch (e) {}
+    localStorage.setItem("mfp_local_db", JSON.stringify(dbLocalInicial()));
+  }
+
   function entrarModoLocal() {
     if (localStorage.getItem("mfp_offline_locked") === "true") return alert("🔒 O limite da versão gratuita (3 transações sem conta) já foi atingido. Entre com sua conta Google para continuar.");
     modoOffline = true;
     localStorage.setItem("mfp_offline_mode", "true");
-    if (!localStorage.getItem("mfp_local_db")) {
-      const dbInicial = {
-        contas: [
-          { row: 2, cols: ["1", "Carteira", "Carteira", "0"] },
-          { row: 3, cols: ["2", "Conta Corrente", "Conta Corrente", "0"] }
-        ],
-        cartoes: [
-          { row: 2, cols: ["1", "Cartão Principal", "Mastercard", "linear-gradient(135deg, #6d28d9, #4c1d95)", "3000", "5", "12", "Conta Corrente"] }
-        ],
-        categorias: [
-          { row: 2, cols: ["1", "despesa", "Alimentação"] },
-          { row: 3, cols: ["2", "despesa", "Moradia & Contas"] },
-          { row: 4, cols: ["3", "despesa", "Transporte"] },
-          { row: 5, cols: ["4", "despesa", "Lazer"] },
-          { row: 6, cols: ["5", "despesa", "Saúde"] },
-          { row: 7, cols: ["6", "receita", "Salário"] },
-          { row: 8, cols: ["7", "receita", "Renda Extra"] }
-        ],
-        lancamentos: [],
-        orcamentos: []
-      };
-      localStorage.setItem("mfp_local_db", JSON.stringify(dbInicial));
-    }
+    garantirDbLocal();
     iniciarAppLogado();
   }
 
@@ -1310,7 +1362,7 @@
     document.getElementById('telaLogin').classList.remove('hidden');
   }
 
-  async function fetchGoogle(url, method = "GET", body = null) {
+  async function fetchGoogle(url, method = "GET", body = null, jaRenovou = false) {
     const opts = {
       method,
       headers: { "Authorization": "Bearer " + accessToken, "Content-Type": "application/json" }
@@ -1318,10 +1370,31 @@
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(url, opts);
     if (res.status === 401) {
-      tokenClient.requestAccessToken({ prompt: '' });
-      throw new Error("Sessão expirada, renovando token...");
+      const erro = () => { const e = new Error("Sessão expirada. Entre novamente com o Google."); e.sessaoExpirada = true; return e; };
+      if (jaRenovou) throw erro();
+      try { await renovarToken(); } catch (err) { throw erro(); }
+      return fetchGoogle(url, method, body, true);
     }
     return res;
+  }
+
+  // Igual ao fetchGoogle, mas lança erro se a gravação falhar (evita "salvar" sem salvar)
+  async function escreverGoogle(url, method, body) {
+    const res = await fetchGoogle(url, method, body);
+    if (!res.ok) {
+      let det = '';
+      try { det = (await res.json()).error.message; } catch (e) {}
+      throw new Error("Falha ao gravar no Google" + (det ? ": " + det : " (" + res.status + ")"));
+    }
+    return res;
+  }
+
+  function sessaoExpirada() {
+    localStorage.removeItem("mfp_gdrive_token");
+    accessToken = "";
+    document.getElementById('appPrincipal').classList.add('hidden');
+    document.getElementById('telaLogin').classList.remove('hidden');
+    document.getElementById('statusLogin').innerText = "Sua sessão expirou. Entre novamente para continuar.";
   }
 
   // Criação Automática do Banco de Dados no Google Drive + Sheets
@@ -1331,7 +1404,8 @@
 
     try {
       const q = encodeURIComponent("name = 'Minhas Financas DB v2' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false");
-      const searchRes = await fetchGoogle(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+      const searchRes = await fetchGoogle(`https://www.googleapis.com/drive/v3/files?q=${q}&orderBy=createdTime%20desc&fields=files(id,name)`);
+      if (!searchRes.ok) throw new Error("O Drive respondeu " + searchRes.status);
       const searchData = await searchRes.json();
 
       if (searchData.files && searchData.files.length > 0) {
@@ -1342,14 +1416,14 @@
       }
 
       statusEl.innerText = "Criando pasta 'Minhas Finanças Pro' no Google Drive...";
-      const folderRes = await fetchGoogle("https://www.googleapis.com/drive/v3/files", "POST", {
+      const folderRes = await escreverGoogle("https://www.googleapis.com/drive/v3/files", "POST", {
         name: "Minhas Finanças Pro",
         mimeType: "application/vnd.google-apps.folder"
       });
       const folder = await folderRes.json();
 
       statusEl.innerText = "Criando tabelas (Contas, Cartões, Lançamentos, Metas)...";
-      const sheetRes = await fetchGoogle("https://sheets.googleapis.com/v4/spreadsheets", "POST", {
+      const sheetRes = await escreverGoogle("https://sheets.googleapis.com/v4/spreadsheets", "POST", {
         properties: { title: "Minhas Financas DB v2" },
         sheets: [
           { properties: { title: "Contas" } },
@@ -1360,12 +1434,12 @@
         ]
       });
       const sheet = await sheetRes.json();
-      spreadsheetId = sheet.spreadsheetId;
-      localStorage.setItem("mfp_gdrive_sheet_id", spreadsheetId);
+      const novoId = sheet.spreadsheetId;
 
-      await fetchGoogle(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?addParents=${folder.id}&removeParents=root`, "PATCH");
+      try { await escreverGoogle(`https://www.googleapis.com/drive/v3/files/${novoId}?addParents=${folder.id}&removeParents=root`, "PATCH"); }
+      catch (e) { if (e.sessaoExpirada) throw e; console.warn("Não foi possível mover a planilha para a pasta:", e); }
 
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
+      await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${novoId}/values:batchUpdate`, "POST", {
         valueInputOption: "RAW",
         data: [
           { range: "Contas!A1:D3", values: [
@@ -1373,9 +1447,9 @@
             ["1", "Carteira", "Carteira", "0"],
             ["2", "Conta Corrente", "Conta Corrente", "0"]
           ]},
-          { range: "Cartoes!A1:H2", values: [
-            ["ID", "Nome", "Bandeira", "Cor", "Limite", "Fechamento", "Vencimento", "ContaPadrao"],
-            ["1", "Cartão Principal", "Mastercard", "linear-gradient(135deg, #6d28d9, #4c1d95)", "3000", "5", "12", "Conta Corrente"]
+          { range: "Cartoes!A1:I2", values: [
+            ["ID", "Nome", "Bandeira", "Cor", "Limite", "Fechamento", "Vencimento", "ContaPadrao", "Lembrete"],
+            ["1", "Cartão Principal", "Mastercard", "linear-gradient(135deg, #6d28d9, #4c1d95)", "3000", "5", "12", "Conta Corrente", ""]
           ]},
           { range: "Categorias!A1:C11", values: [
             ["ID", "Tipo", "Nome"],
@@ -1390,8 +1464,8 @@
             ["9", "receita", "Renda Extra / Cobranças"],
             ["10", "receita", "Investimentos"]
           ]},
-          { range: "Lancamentos!A1:M1", values: [
-            ["ID", "Tipo", "Descricao", "Valor", "Data", "MesFatura", "Categoria", "ContaOuCartao", "ContaDestino", "Status", "Parcela", "Telefone", "GoogleSyncId"]
+          { range: "Lancamentos!A1:O1", values: [
+            ["ID", "Tipo", "Descricao", "Valor", "Data", "MesFatura", "Categoria", "ContaOuCartao", "ContaDestino", "Status", "Parcela", "Telefone", "GoogleSyncId", "Itens", "Usuario"]
           ]},
           { range: "Orcamentos!A1:C1", values: [
             ["ID", "Categoria", "Limite"]
@@ -1399,9 +1473,12 @@
         ]
       });
 
+      spreadsheetId = novoId;
+      localStorage.setItem("mfp_gdrive_sheet_id", spreadsheetId);
       iniciarAppLogado();
     } catch (err) {
       statusEl.innerText = "Erro ao configurar Drive: " + err.message;
+      mostrarToast("⚠️ " + err.message, true);
     }
   }
 
@@ -1420,7 +1497,9 @@
       infoCon.style.color = "var(--amber)";
     } else {
       badge.innerText = "GOOGLE SYNC";
+      badge.style.background = ""; badge.style.color = "";
       infoCon.innerText = "Conectado ao Google Drive, Agenda e Tasks";
+      infoCon.style.color = "var(--green)";
     }
 
     carregarTodosDados();
@@ -1432,12 +1511,15 @@
   }
 
   async function carregarTodosDados() {
+    const seq = ++_loadSeq; // descarta respostas antigas se houver cargas simultâneas
     const loading = document.getElementById('loading');
     loading.classList.remove('hidden');
     try {
+      let novo;
       if (modoOffline) {
+        garantirDbLocal();
         const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
-        db = {
+        novo = {
           contas: localData.contas || [],
           cartoes: localData.cartoes || [],
           categorias: localData.categorias || [],
@@ -1450,38 +1532,38 @@
         };
       } else {
         const metaRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`);
+        if (!metaRes.ok) throw new Error(`Não foi possível abrir a planilha (${metaRes.status}). Verifique o acesso.`);
         const meta = await metaRes.json();
-        meta.sheets.forEach(s => { sheetIdsMap[s.properties.title] = s.properties.sheetId; });
+        const ids = {};
+        meta.sheets.forEach(s => { ids[s.properties.title] = s.properties.sheetId; });
+        sheetIdsMap = ids; // zera o mapa: evita IDs de abas da planilha anterior (conta compartilhada)
         await garantirAbas();
 
         const ranges = "ranges=Contas!A2:D&ranges=Cartoes!A2:I&ranges=Categorias!A2:C&ranges=Lancamentos!A2:O&ranges=Orcamentos!A2:C&ranges=Metas!A2:E&ranges=Devedores!A2:I&ranges=ItensRapidos!A2:D&ranges=Listas!A2:G";
         const valRes = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
+        if (!valRes.ok) throw new Error(`Falha ao ler a planilha (${valRes.status}).`);
         const valData = await valRes.json();
-
-        db.contas = (valData.valueRanges[0].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-        db.cartoes = (valData.valueRanges[1].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-        db.categorias = (valData.valueRanges[2].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-        db.lancamentos = (valData.valueRanges[3].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-        db.orcamentos = (valData.valueRanges[4].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-        db.metas = (valData.valueRanges[5].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-        db.devedores = (valData.valueRanges[6].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-        db.itens = (valData.valueRanges[7].values || []).map((r, i) => ({ row: i + 2, cols: r }));
-        db.listas = ((valData.valueRanges[8] || {}).values || []).map((r, i) => ({ row: i + 2, cols: r }));
+        const lin = i => ((((valData.valueRanges || [])[i]) || {}).values || []).map((r, k) => ({ row: k + 2, cols: r }));
+        novo = { contas: lin(0), cartoes: lin(1), categorias: lin(2), lancamentos: lin(3), orcamentos: lin(4), metas: lin(5), devedores: lin(6), itens: lin(7), listas: lin(8) };
       }
+      if (seq !== _loadSeq) return;
+      db = novo;
       sanitizarDb();
       localStorage.setItem('mfp_last_sync', new Date().toISOString());
       renderizarTudo();
     } catch (e) {
       console.error(e);
+      if (e.sessaoExpirada) sessaoExpirada();
+      else mostrarToast("⚠️ Não foi possível sincronizar: " + e.message, true);
     } finally {
-      loading.classList.add('hidden');
+      if (seq === _loadSeq) loading.classList.add('hidden');
     }
   }
 
   // Integração com Google Calendar (Agenda) e Google Tasks
   async function criarEventoAgendaETask(titulo, valor, dataStr, tipo) {
     if (modoOffline || !accessToken) return "";
-    const hora = document.getElementById('cfgHoraLembrete').value || "09:00";
+    const hora = horaLembrete();
     const prefixo = tipo === "receita" ? "💰 Receber:" : "💸 Pagar:";
     const summary = `${prefixo} ${titulo} (${formatarMoeda(valor)})`;
     const description = `Lançamento gerado pelo AppFinance.\nValor: ${formatarMoeda(valor)}\nTipo: ${tipo.toUpperCase()}`;
@@ -1493,8 +1575,7 @@
 
     try {
       const startDateTime = `${dataStr}T${hora}:00`;
-      const endHour = String(Math.min(23, parseInt(hora.split(':')[0]) + 1)).padStart(2, '0');
-      const endDateTime = `${dataStr}T${endHour}:${hora.split(':')[1]}:00`;
+      const endDateTime = `${dataStr}T${horaFim(hora)}:00`;
 
       if (modo === "agenda" || modo === "ambos") {
       const calRes = await fetchGoogle("https://www.googleapis.com/calendar/v3/calendars/primary/events", "POST", {
@@ -1528,6 +1609,7 @@
       }
       }
     } catch (err) {
+      if (err.sessaoExpirada) throw err;
       console.error("Erro ao sincronizar Agenda/Tasks:", err);
     }
 
@@ -1547,19 +1629,39 @@
   }
   function r2(x) { return Math.round(num(x) * 100) / 100; }
   function integ() { const v = localStorage.getItem("mfp_integracao"); return (!v || v === "nenhum") ? "agenda" : v; }
-  function modoSync() { return integ(); }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+  function horaLembrete() { return (document.getElementById('cfgHoraLembrete').value || localStorage.getItem("mfp_hora_lembrete") || "09:00"); }
+  // Hora final do evento = +1h; se passar das 23h, termina 23:59 (início = fim é rejeitado pela Agenda)
+  function horaFim(h) {
+    const [hh, mm] = h.split(':'), n = Math.min(23, (parseInt(hh) || 0) + 1);
+    return n === parseInt(hh) ? '23:59' : `${String(n).padStart(2, '0')}:${mm || '00'}`;
+  }
+  function setSelect(id, valor) {
+    const el = document.getElementById(id);
+    if (valor && ![...el.options].some(o => o.value === valor)) el.add(new Option(valor + ' (removido)', valor));
+    el.value = valor;
+  }
   function dataISO(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
   function hojeISO() { return dataISO(new Date()); }
   function sanitizarDb() {
-    Object.values(db).forEach(tab => tab.forEach(r => { r.cols = r.cols.map(c => String(c).replace(/</g, '&lt;').replace(/>/g, '&gt;')); }));
+    // Os dados ficam "crus" no db; o escape de HTML é feito ao montar a tela (função esc()).
     const dt = v => /^\d{2}\/\d{2}\/\d{4}$/.test(v || '') ? v.split('/').reverse().join('-') : v;
     db.lancamentos.forEach(r => { r.cols[4] = dt(r.cols[4]); });
     db.devedores.forEach(r => { r.cols[6] = dt(r.cols[6]); });
     db.metas.forEach(r => { r.cols[4] = dt(r.cols[4]); });
   }
   async function garantirAbas() {
-    if (!localStorage.getItem('mfp_hdrNO' + spreadsheetId)) {
-      try { await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!N1:O1?valueInputOption=RAW`, "PUT", { values: [["Itens", "Usuario"]] }); localStorage.setItem('mfp_hdrNO' + spreadsheetId, '1'); } catch (e) {}
+    if (!localStorage.getItem('mfp_hdr2' + spreadsheetId)) {
+      try {
+        await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
+          valueInputOption: "RAW",
+          data: [
+            { range: "Lancamentos!N1:O1", values: [["Itens", "Usuario"]] },
+            { range: "Cartoes!I1", values: [["Lembrete"]] }
+          ]
+        });
+        localStorage.setItem('mfp_hdr2' + spreadsheetId, '1');
+      } catch (e) { if (e.sessaoExpirada) throw e; console.warn(e); }
     }
     const abas = [
       ["Metas", ["ID", "Nome", "Alvo", "Guardado", "Prazo"]],
@@ -1569,10 +1671,10 @@
     ];
     for (const [nome, cab] of abas) {
       if (sheetIdsMap[nome] !== undefined) continue;
-      const r = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, "POST", { requests: [{ addSheet: { properties: { title: nome } } }] });
+      const r = await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, "POST", { requests: [{ addSheet: { properties: { title: nome } } }] });
       const j = await r.json();
       sheetIdsMap[nome] = j.replies[0].addSheet.properties.sheetId;
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${nome}!A1:${String.fromCharCode(64 + cab.length)}1?valueInputOption=RAW`, "PUT", { values: [cab] });
+      await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${nome}!A1:${String.fromCharCode(64 + cab.length)}1?valueInputOption=RAW`, "PUT", { values: [cab] });
     }
   }
   async function removerSync(syncId) {
@@ -1592,8 +1694,24 @@
       if (it) it.cols[idx] = valor;
       localStorage.setItem("mfp_local_db", JSON.stringify(ld));
     } else {
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!${col}${row}?valueInputOption=RAW`, "PUT", { values: [[valor]] });
+      await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!${col}${row}?valueInputOption=RAW`, "PUT", { values: [[valor]] });
     }
+  }
+  const ABA_DB = { Contas: 'contas', Cartoes: 'cartoes', Categorias: 'categorias', Lancamentos: 'lancamentos', Orcamentos: 'orcamentos', Metas: 'metas', Devedores: 'devedores', ItensRapidos: 'itens', Listas: 'listas' };
+  // Antes de excluir linhas, confere se o ID de cada linha ainda é o mesmo na planilha
+  // (outra pessoa/aparelho pode ter inserido ou apagado linhas e deslocado a numeração).
+  async function linhasConferem(aba, rows) {
+    if (modoOffline) return true;
+    const tab = db[ABA_DB[aba]] || [];
+    const ranges = rows.map(r => `ranges=${aba}!A${r}`).join('&');
+    const res = await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${ranges}`);
+    if (!res.ok) return false;
+    const j = await res.json();
+    return rows.every((r, i) => {
+      const rec = tab.find(x => x.row === r);
+      const v = (((j.valueRanges || [])[i] || {}).values || [[]])[0][0];
+      return rec && String(rec.cols[0]) === String(v == null ? '' : v);
+    });
   }
 
   // Navegação Temporal
@@ -1606,7 +1724,7 @@
   }
 
   function alterarMes(delta) {
-    mesAtual.setMonth(mesAtual.getMonth() + delta);
+    mesAtual = new Date(mesAtual.getFullYear(), mesAtual.getMonth() + delta, 1); // dia 1: evita pular mês (ex.: 31/out + 1)
     atualizarLabelMes();
     renderizarTudo();
   }
@@ -1621,16 +1739,19 @@
     return num(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  function mostrarToast(msg) {
+  let _toastT;
+  function mostrarToast(msg, erro = false) {
     const t = document.getElementById('toast');
-    t.innerText = msg; t.style.display = 'block';
-    setTimeout(() => { t.style.display = 'none'; }, 2400);
+    t.innerText = msg; t.classList.toggle('erro', !!erro); t.style.display = 'block';
+    clearTimeout(_toastT);
+    _toastT = setTimeout(() => { t.style.display = 'none'; }, erro ? 5000 : 2400);
   }
 
   // Acordeão de Categorias
   function toggleCategoriaCard(elHeader) {
     const card = elHeader.parentElement;
     card.classList.toggle('open');
+    if (card.classList.contains('open')) catsAbertas.add(card.dataset.cat); else catsAbertas.delete(card.dataset.cat);
   }
 
   // Renderização Geral
@@ -1709,9 +1830,12 @@
           despesasPendMes += val;
           pendentesLista.push(l);
         }
-        if (!gastosAgrupadosCat[nomeCat]) gastosAgrupadosCat[nomeCat] = { total: 0, itens: [] };
-        gastosAgrupadosCat[nomeCat].total += val;
-        gastosAgrupadosCat[nomeCat].itens.push(l);
+        // Pagamento de fatura não entra por categoria: as compras do cartão já aparecem nas suas categorias
+        if (!(desc || '').startsWith('Fatura ')) {
+          if (!gastosAgrupadosCat[nomeCat]) gastosAgrupadosCat[nomeCat] = { total: 0, itens: [] };
+          gastosAgrupadosCat[nomeCat].total += val;
+          gastosAgrupadosCat[nomeCat].itens.push(l);
+        }
       }
 
       if (tipo === "cartao" && mesFat === chaveMesSel) {
@@ -1779,15 +1903,15 @@
         const dataBr = data ? data.split('-').reverse().join('/') : '';
         const isPend = status === "Pendente";
         const iconeOrigem = tipo === "cartao" ? "💳" : "🏦";
-        const tagParcela = parcela && parcela !== "1/1" ? ` • ${parcela}` : "";
+        const tagParcela = parcela && parcela !== "1/1" ? ` • ${esc(parcela)}` : "";
 
         return `
           <div class="cat-expense-row">
             <div style="flex:1; padding-right:8px;">
-              <strong style="color:var(--text); display:block;">${desc}</strong>
+              <strong style="color:var(--text); display:block;">${esc(desc)}</strong>
               <span style="color:var(--muted); font-size:0.73rem;">
-                ${dataBr} • ${iconeOrigem} ${origem}${tagParcela} •
-                <span style="color:${isPend ? 'var(--amber)' : 'var(--green)'}; font-weight:600;">${status}</span>
+                ${dataBr} • ${iconeOrigem} ${esc(origem)}${tagParcela} •
+                <span style="color:${isPend ? 'var(--amber)' : 'var(--green)'}; font-weight:600;">${esc(status)}</span>
               </span>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
@@ -1798,10 +1922,10 @@
       }).join('');
 
       dashCats.innerHTML += `
-        <div class="cat-accordion">
+        <div class="cat-accordion${catsAbertas.has(cat) ? ' open' : ''}" data-cat="${esc(cat)}">
           <div class="cat-header" onclick="toggleCategoriaCard(this)">
             <div class="cat-header-top">
-              <span><strong>${cat}</strong> <small style="color:var(--muted);">(${dadosCat.itens.length} ${dadosCat.itens.length === 1 ? 'item' : 'itens'} • ${pct}%)</small></span>
+              <span><strong>${esc(cat)}</strong> <small style="color:var(--muted);">(${dadosCat.itens.length} ${dadosCat.itens.length === 1 ? 'item' : 'itens'} • ${pct}%)</small></span>
               <span><strong style="color:var(--text);">${formatarMoeda(dadosCat.total)}</strong> <span class="cat-chevron">▼</span></span>
             </div>
             <div class="progress-bg" style="background:var(--bg); margin-top:4px;">
@@ -1824,8 +1948,8 @@
       dashPend.innerHTML += `
         <div class="row-item" style="cursor:pointer" onclick="abrirVisao('pend:${tipo}')">
           <div>
-            <strong style="font-size:0.86rem;">${desc}</strong><br>
-            <small style="color:var(--muted);">${dataBr} • ${cat} (${conta})</small>
+            <strong style="font-size:0.86rem;">${esc(desc)}</strong><br>
+            <small style="color:var(--muted);">${dataBr} • ${esc(cat)} (${esc(conta)})</small>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <strong style="font-size:0.86rem; color:${tipo === 'receita' ? 'var(--green)' : 'var(--red)'}">${formatarMoeda(val)}</strong>
@@ -1846,14 +1970,14 @@
       dashContas.innerHTML += `
         <div class="row-item">
           <div>
-            <span><span class="dot" style="background:var(--blue)"></span><strong>${nome}</strong></span>
-            <small style="color:var(--muted); display:block; margin-left:18px; font-size:0.72rem;">${tipo}</small>
+            <span><span class="dot" style="background:var(--blue)"></span><strong>${esc(nome)}</strong></span>
+            <small style="color:var(--muted); display:block; margin-left:18px; font-size:0.72rem;">${esc(tipo)}</small>
           </div>
           <strong style="color:${saldo >= 0 ? 'var(--text)' : 'var(--red)'}">${formatarMoeda(saldo)}</strong>
         </div>`;
       cadContas.innerHTML += `
         <div class="row-item">
-          <div><strong>${nome}</strong> (${tipo})<br><small style="color:var(--muted)">Saldo Inicial: ${formatarMoeda(c.cols[3])} • Atual: ${formatarMoeda(saldo)}</small></div>
+          <div><strong>${esc(nome)}</strong> (${esc(tipo)})<br><small style="color:var(--muted)">Saldo Inicial: ${formatarMoeda(c.cols[3])} • Atual: ${formatarMoeda(saldo)}</small></div>
           <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Contas', ${c.row})">Excluir</button>
         </div>`;
     });
@@ -1873,7 +1997,7 @@
       dashCartoes.innerHTML += `
         <div class="row-item" style="display:block;">
           <div style="display:flex; justify-content:space-between;">
-            <strong>💳 ${nome} <small style="color:var(--muted)">(${info.bandeira})</small></strong>
+            <strong>💳 ${esc(nome)} <small style="color:var(--muted)">(${esc(info.bandeira)})</small></strong>
             <span style="color:var(--purple); font-weight:700;">Fatura: ${formatarMoeda(info.faturaMes)}</span>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.74rem; color:var(--muted); margin-top:3px;">
@@ -1889,22 +2013,22 @@
       let htmlItensFat = info.itens.map(item => `
         <div class="row-item" style="font-size:0.82rem;">
           <div>
-            <strong>${item.cols[2]}</strong> <small style="color:var(--muted)">(${item.cols[10] || '1/1'})</small><br>
-            <small style="color:var(--muted)">${item.cols[4].split('-').reverse().join('/')} • ${item.cols[6]}</small>
+            <strong>${esc(item.cols[2])}</strong> <small style="color:var(--muted)">(${esc(item.cols[10] || '1/1')})</small><br>
+            <small style="color:var(--muted)">${(item.cols[4] || '').split('-').reverse().join('/')} • ${esc(item.cols[6])}</small>
           </div>
           <div style="text-align:right;">
             <strong>${formatarMoeda(item.cols[3])}</strong><br>
-            <small style="color:${item.cols[9] === 'Pago' ? 'var(--green)' : 'var(--amber)'}">${item.cols[9]}</small>
+            <small style="color:${item.cols[9] === 'Pago' ? 'var(--green)' : 'var(--amber)'}">${esc(item.cols[9])}</small>
           </div>
         </div>
       `).join('');
 
       detCartoes.innerHTML += `
         <div>
-          <div class="credit-card-ui" style="background:${info.cor};">
+          <div class="credit-card-ui" style="background:${esc(info.cor)};">
             <div class="cc-header">
-              <strong style="font-size:1.05rem;">💳 ${nome}</strong>
-              <span class="cc-flag">${info.bandeira}</span>
+              <strong style="font-size:1.05rem;">💳 ${esc(nome)}</strong>
+              <span class="cc-flag">${esc(info.bandeira)}</span>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:flex-end;">
               <div>
@@ -1925,7 +2049,7 @@
           </div>
           <div class="section-card" style="margin-top:-6px;">
             <button class="btn-primary" style="background:${c.cols[8] ? '#334155' : 'var(--blue)'}; margin-top:0; margin-bottom:10px;" onclick="alternarLembreteFatura(${c.row})">${c.cols[8] ? '🔕 Desativar lembrete da fatura (Agenda)' : '🔔 Ativar lembrete da fatura no Google Agenda'}</button>
-            ${valorAberto > 0 ? `<button class="btn-primary" style="background:var(--green); margin-top:0; margin-bottom:10px;" onclick="pagarFaturaCartao('${nome}', ${valorAberto}, '${info.contaPadrao}')">✔ Pagar Fatura (${formatarMoeda(valorAberto)})</button>` : '<p style="color:var(--green); font-size:0.8rem; margin:0 0 8px;">✔ Fatura quitada ou sem lançamentos em aberto.</p>'}
+            ${valorAberto > 0 ? `<button class="btn-primary" style="background:var(--green); margin-top:0; margin-bottom:10px;" onclick="pagarFaturaCartao(${c.row})">✔ Pagar Fatura (${formatarMoeda(valorAberto)})</button>` : '<p style="color:var(--green); font-size:0.8rem; margin:0 0 8px;">✔ Fatura quitada ou sem lançamentos em aberto.</p>'}
             ${htmlItensFat || '<p style="color:var(--muted); font-size:0.8rem; margin:0;">Nenhuma compra nesta fatura.</p>'}
           </div>
         </div>`;
@@ -1933,7 +2057,7 @@
       cadCartoes.innerHTML += `
         <div class="row-item">
           <div>
-            <strong>${nome}</strong> (${info.bandeira})<br>
+            <strong>${esc(nome)}</strong> (${esc(info.bandeira)})<br>
             <small style="color:var(--muted)">Limite: ${formatarMoeda(info.limite)} | Fecha: ${info.fech} | Venc: ${info.venc}</small>
           </div>
           <div style="display:flex; align-items:center; gap:6px;">
@@ -1956,7 +2080,7 @@
       listaOrc.innerHTML += `
         <div class="section-card">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong>🎯 ${cat}</strong>
+            <strong>🎯 ${esc(cat)}</strong>
             <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Orcamentos', ${o.row})">Excluir</button>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:6px; color:var(--muted);">
@@ -2014,7 +2138,7 @@
       el.innerHTML += `
         <div class="section-card">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong>🐷 ${nome}</strong>
+            <strong>🐷 ${esc(nome)}</strong>
             <div style="display:flex; gap:4px;">
               <button class="btn-mini" style="background:var(--green); color:#fff;" onclick="depositarMeta(${m.row})">+ Guardar</button>
               <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Metas', ${m.row})">✕</button>
@@ -2041,8 +2165,11 @@
 
   async function depositarMeta(row) {
     const m = db.metas.find(x => x.row === row);
-    const v = num((prompt("Quanto deseja guardar nesta meta? (use negativo para retirar)", "100") || "").replace(',', '.'));
-    if (!m || isNaN(v)) return;
+    if (!m) return;
+    const resp = prompt("Quanto deseja guardar nesta meta? (use negativo para retirar)", "100");
+    if (resp === null) return;
+    const v = num(resp);
+    if (!v) return;
     const novo = Math.max(0, (num(m.cols[3]) || 0) + v);
     document.getElementById('loading').classList.remove('hidden');
     await atualizarCelula("Metas", row, "D", 3, novo);
@@ -2064,7 +2191,10 @@
         }
       } catch (e) {}
     }
-    if (!nome) nome = (prompt("Como devemos te chamar?") || "").trim();
+    if (!nome && !sessionStorage.getItem('mfp_nome_perguntado')) {
+      sessionStorage.setItem('mfp_nome_perguntado', '1');
+      nome = (prompt("Como devemos te chamar?") || "").trim();
+    }
     if (nome) localStorage.setItem("mfp_user_name", nome);
     mostrarNome();
   }
@@ -2112,15 +2242,15 @@
     if (!raw) return '';
     let a; try { a = JSON.parse(raw); } catch (e) { return ''; }
     if (!Array.isArray(a) || !a.length) return '';
-    return '<div class="itens-tx">' + a.map(i => `• ${i[0]} quant=${fmtQ(i[1])} <span style="opacity:.7">(${formatarMoeda(num(i[1]) * num(i[2]))})</span>`).join('<br>') + '</div>';
+    return '<div class="itens-tx">' + a.map(i => `• ${fmtQ(i[1])}× ${esc(i[0])} <span style="opacity:.7">(${formatarMoeda(num(i[1]) * num(i[2]))})</span>`).join('<br>') + '</div>';
   }
   function abrirModalListaNova(editRow, voltar) {
     listaEditRow = editRow || null; listaEditVoltar = !!voltar;
     const l = listaEditRow ? db.listas.find(x => x.row === listaEditRow) : null;
     document.getElementById('lnTitulo').innerText = l ? '✏️ Editar Lista' : '🛒 Nova Lista de Compras';
     document.getElementById('lnBtn').innerText = l ? 'Salvar alterações' : 'Criar e adicionar itens';
-    document.getElementById('lnCat').innerHTML = db.categorias.filter(c => c.cols[1] === 'despesa').map(c => `<option value="${c.cols[2]}">${c.cols[2]}</option>`).join('');
-    document.getElementById('lnConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    document.getElementById('lnCat').innerHTML = db.categorias.filter(c => c.cols[1] === 'despesa').map(c => `<option value="${esc(c.cols[2])}">${esc(c.cols[2])}</option>`).join('');
+    document.getElementById('lnConta').innerHTML = db.contas.map(c => `<option value="${esc(c.cols[1])}">${esc(c.cols[1])}</option>`).join('');
     document.getElementById('lnNome').value = l ? l.cols[1] : '';
     if (l) { document.getElementById('lnCat').value = l.cols[2]; document.getElementById('lnConta').value = l.cols[3]; }
     document.getElementById('modalListaNova').classList.remove('hidden');
@@ -2194,7 +2324,7 @@
     document.getElementById('ldItens').innerHTML = itens.length === 0 ? '<p style="color:var(--muted); font-size:0.82rem;">Nenhum item ainda. Adicione abaixo.</p>' :
       itens.map((i, k) => `
         <div class="row-item">
-          <div><strong>${i[0]}</strong><br><small style="color:var(--muted)">quant=${fmtQ(i[1])} × ${formatarMoeda(i[2])}</small></div>
+          <div><strong>${esc(i[0])}</strong><br><small style="color:var(--muted)">${fmtQ(i[1])} × ${formatarMoeda(i[2])}</small></div>
           <div style="display:flex; align-items:center; gap:8px;"><strong>${formatarMoeda(num(i[1]) * num(i[2]))}</strong>
             <button class="btn-mini" style="background:#334155; color:#fff;" onclick="editarItemLista(${k})">✏️</button>
             <button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="removerItemLista(${k})">✕</button></div>
@@ -2254,7 +2384,7 @@
       ab.innerHTML += `
         <div class="section-card" style="cursor:pointer;" onclick="abrirLista(${l.row})">
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div><strong>🛒 ${l.cols[1]}</strong><br><small style="color:var(--muted)">${l.cols[2]} • ${l.cols[3]} • ${n} ${n === 1 ? 'item' : 'itens'}</small></div>
+            <div><strong>🛒 ${esc(l.cols[1])}</strong><br><small style="color:var(--muted)">${esc(l.cols[2])} • ${esc(l.cols[3])} • ${n} ${n === 1 ? 'item' : 'itens'}</small></div>
             <strong style="color:var(--red)">${formatarMoeda(totalLista(l))}</strong>
           </div>
           <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;" onclick="event.stopPropagation()">
@@ -2267,7 +2397,7 @@
     });
     document.getElementById('listaComprasHist').innerHTML = fim.length === 0 ? '' :
       '<div class="section-card"><div class="section-title"><span>✔ Compras efetivadas</span></div>' +
-      fim.slice(-8).reverse().map(l => `<div class="row-item"><span>${l.cols[1]} <small style="color:var(--muted)">(${(l.cols[6] || '').split('-').reverse().join('/')})</small></span><div style="display:flex; align-items:center; gap:6px;"><strong>${formatarMoeda(totalLista(l))}</strong><button class="btn-mini" style="background:#334155; color:#fff;" onclick="duplicarLista(${l.row})">📄 Repetir</button><button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Listas', ${l.row})">✕</button></div></div>`).join('') + '</div>';
+      fim.slice(-8).reverse().map(l => `<div class="row-item"><span>${esc(l.cols[1])} <small style="color:var(--muted)">(${(l.cols[6] || '').split('-').reverse().join('/')})</small></span><div style="display:flex; align-items:center; gap:6px;"><strong>${formatarMoeda(totalLista(l))}</strong><button class="btn-mini" style="background:#334155; color:#fff;" onclick="duplicarLista(${l.row})">📄 Repetir</button><button class="btn-mini" style="background:#334155; color:#fca5a5;" onclick="deletarLinha('Listas', ${l.row})">✕</button></div></div>`).join('') + '</div>';
   }
 
   // ----- Lembrete mensal da fatura (Google Agenda) -----
@@ -2286,9 +2416,9 @@
         const hoje = new Date();
         let dt = new Date(hoje.getFullYear(), hoje.getMonth(), dia);
         if (dataISO(dt) < hojeISO()) dt = new Date(hoje.getFullYear(), hoje.getMonth() + 1, dia);
-        const hora = localStorage.getItem("mfp_hora_lembrete") || "09:00";
+        const hora = horaLembrete();
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Sao_Paulo";
-        const fim = String(Math.min(23, parseInt(hora.split(':')[0]) + 1)).padStart(2, '0') + ':' + hora.split(':')[1];
+        const fim = horaFim(hora);
         const r = await fetchGoogle("https://www.googleapis.com/calendar/v3/calendars/primary/events", "POST", {
           summary: `💳 Vence a fatura do ${c.cols[1]}`,
           description: "Lembrete mensal criado pelo AppFinance. Abra o app para ver o valor da fatura.",
@@ -2302,7 +2432,7 @@
         await atualizarCelula("Cartoes", row, "I", 8, "CAL:" + j.id);
         mostrarToast("Lembrete mensal da fatura criado na Agenda!");
       }
-    } catch (e) { alert("Não foi possível alterar o lembrete no Google Agenda."); }
+    } catch (e) { if (e.sessaoExpirada) throw e; alert("Não foi possível alterar o lembrete no Google Agenda."); }
     await carregarTodosDados();
   }
 
@@ -2345,8 +2475,8 @@
   function gradienteCor(hex) {
     const h = /^#[0-9a-f]{6}$/i.test(hex) ? hex : '#6d28d9';
     const n = parseInt(h.slice(1), 16), f = 0.55;
-    const esc = '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(x => Math.round(x * f).toString(16).padStart(2, '0')).join('');
-    return `linear-gradient(135deg, ${h}, ${esc})`;
+    const escuro = '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(x => Math.round(x * f).toString(16).padStart(2, '0')).join('');
+    return `linear-gradient(135deg, ${h}, ${escuro})`;
   }
   async function mudarCorCartao(row, hex) {
     document.getElementById('loading').classList.remove('hidden');
@@ -2424,7 +2554,7 @@
       if ((t === 'despesa' && !(l.cols[2] || '').startsWith('Fatura ')) || t === 'cartao') des[u] = (des[u] || 0) + v;
     });
     el.innerHTML = '<div class="section-card"><div class="section-title"><span>👥 Por usuário (mês)</span></div>' +
-      us.map(u => `<div class="row-item"><strong>👤 ${u}</strong><span style="font-size:0.8rem;"><span style="color:var(--green)">+ ${formatarMoeda(rec[u] || 0)}</span> &nbsp; <span style="color:var(--red)">− ${formatarMoeda(des[u] || 0)}</span></span></div>`).join('') + '</div>';
+      us.map(u => `<div class="row-item"><strong>👤 ${esc(u)}</strong><span style="font-size:0.8rem;"><span style="color:var(--green)">+ ${formatarMoeda(rec[u] || 0)}</span> &nbsp; <span style="color:var(--red)">− ${formatarMoeda(des[u] || 0)}</span></span></div>`).join('') + '</div>';
   }
 
   // ----- Visões do extrato (cards do topo e pendências) -----
@@ -2450,9 +2580,9 @@
     const dbr = l => (l.cols[4] || '').split('-').reverse().join('/');
     const soma = a => a.reduce((t, l) => t + val(l), 0);
     const porData = (a, b) => (a.cols[4] || '').localeCompare(b.cols[4] || '');
-    const usr = l => l.cols[14] ? ` <span class="badge" style="background:var(--blue-soft); color:var(--blue);">👤 ${l.cols[14]}</span>` : '';
+    const usr = l => l.cols[14] ? ` <span class="badge" style="background:var(--blue-soft); color:var(--blue);">👤 ${esc(l.cols[14])}</span>` : '';
     const topo = (t, x, cor) => `<div class="section-card" style="text-align:center;"><small style="color:var(--muted)">${t}</small><div style="font-size:1.7rem; font-weight:800; color:${cor};">${formatarMoeda(x)}</div></div>`;
-    const linha = (l, sinal, cor) => `<div class="row-item"><div><strong style="font-size:0.86rem;">${l.cols[2]}</strong>${usr(l)}<br><small style="color:var(--muted)">${dbr(l)} • ${l.cols[6] || ''} (${l.cols[7] || ''})</small></div><strong style="color:${cor}; white-space:nowrap;">${sinal} ${formatarMoeda(val(l))}</strong></div>`;
+    const linha = (l, sinal, cor) => `<div class="row-item"><div><strong style="font-size:0.86rem;">${esc(l.cols[2])}</strong>${usr(l)}<br><small style="color:var(--muted)">${dbr(l)} • ${esc(l.cols[6] || '')} (${esc(l.cols[7] || '')})</small></div><strong style="color:${cor}; white-space:nowrap;">${sinal} ${formatarMoeda(val(l))}</strong></div>`;
     const vazio = '<p style="text-align:center; color:var(--muted); padding:24px;">Nenhum lançamento encontrado.</p>';
     const recPagas = L.filter(l => l.cols[1] === 'receita' && l.cols[9] === 'Efetivado').sort(porData);
     const despPagas = L.filter(l => l.cols[1] === 'despesa' && l.cols[9] === 'Efetivado').sort(porData);
@@ -2461,7 +2591,7 @@
       const A = db.lancamentos.filter(l => l.cols[9] === 'Pendente' && (l.cols[4] || '') < hoje && ['despesa', 'receita'].includes(l.cols[1])).sort(porData);
       const D = A.filter(l => l.cols[1] === 'despesa'), Rc = A.filter(l => l.cols[1] === 'receita');
       const dias = l => Math.max(1, Math.round((new Date(hoje) - new Date(l.cols[4])) / 86400000));
-      const lp = (l, cor, sinal) => `<div class="row-item"><div><strong style="font-size:0.86rem;">${l.cols[2]}</strong>${usr(l)}<br><small style="color:var(--muted)">${dbr(l)} • venceu há ${dias(l)} dia(s) • ${l.cols[6] || ''} (${l.cols[7] || ''})</small></div><div style="display:flex; align-items:center; gap:8px;"><strong style="color:${cor}; white-space:nowrap;">${sinal} ${formatarMoeda(val(l))}</strong><button class="btn-mini" style="background:var(--green); color:#fff;" onclick="efetivarLancamento(${l.row})">✔</button></div></div>`;
+      const lp = (l, cor, sinal) => `<div class="row-item"><div><strong style="font-size:0.86rem;">${esc(l.cols[2])}</strong>${usr(l)}<br><small style="color:var(--muted)">${dbr(l)} • venceu há ${dias(l)} dia(s) • ${esc(l.cols[6] || '')} (${esc(l.cols[7] || '')})</small></div><div style="display:flex; align-items:center; gap:8px;"><strong style="color:${cor}; white-space:nowrap;">${sinal} ${formatarMoeda(val(l))}</strong><button class="btn-mini" style="background:var(--green); color:#fff;" onclick="efetivarLancamento(${l.row})">✔</button></div></div>`;
       if (!A.length) return '<p style="text-align:center; color:var(--muted); padding:24px;">Nenhum lançamento vencido. 🎉</p>';
       return topo('Total de despesas vencidas', soma(D), 'var(--red)') +
         (D.length ? `<div class="section-card"><div class="section-title"><span>Despesas pendentes (${D.length})</span></div>${D.map(l => lp(l, 'var(--red)', '−')).join('')}</div>` : '') +
@@ -2482,7 +2612,7 @@
       const recs = L.filter(l => l.cols[1] === 'receita').sort(porData);
       const gastos = L.filter(l => (l.cols[1] === 'despesa' && !(l.cols[2] || '').startsWith('Fatura ')) || l.cols[1] === 'cartao').sort(porData);
       const pago = l => ['Efetivado', 'Pago'].includes(l.cols[9]);
-      const lin = l => `<div class="row-item"><span><i style="display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px; background:${pago(l) ? 'var(--green)' : 'var(--amber)'}"></i>${l.cols[2]}</span><strong>${formatarMoeda(val(l))}</strong></div>`;
+      const lin = l => `<div class="row-item"><span><i style="display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px; background:${pago(l) ? 'var(--green)' : 'var(--amber)'}"></i>${esc(l.cols[2])}</span><strong>${formatarMoeda(val(l))}</strong></div>`;
       const tr = soma(recs), tg = soma(gastos);
       return topo('Receitas − Gastos previstos do mês', tr - tg, tr - tg >= 0 ? 'var(--blue)' : 'var(--red)') +
         `<small style="color:var(--muted)"><span style="color:var(--green)">●</span> pago/recebido &nbsp; <span style="color:var(--amber)">●</span> pendente</small>` +
@@ -2494,12 +2624,13 @@
 
   // ----- Devedores -----
   function vencParcela(iso, k) {
-    const [a, m, d] = iso.split('-').map(Number);
+    const [a, m, d] = (iso || hojeISO()).split('-').map(Number);
     const dt = new Date(a, m - 1 + k, 1);
     dt.setDate(Math.min(d, new Date(a, m + k, 0).getDate()));
     return dataISO(dt);
   }
-  function foneBR(f) { const l = (f || '').replace(/\D/g, ''); return l.startsWith('55') ? l : '55' + l; }
+  // Já tem DDI só se vier com 12+ dígitos (um celular com DDD 55 tem 11 e ainda precisa do prefixo)
+  function foneBR(f) { const l = (f || '').replace(/\D/g, ''); return (l.length >= 12 && l.startsWith('55')) ? l : '55' + l; }
   function msgCobranca(d) {
     const [id, nome, fone, desc, totS, parcS, venc, pagasS] = d.cols;
     const tot = num(totS) || 0, n = Math.max(1, parseInt(parcS) || 1), pagas = parseInt(pagasS) || 0;
@@ -2550,7 +2681,7 @@
       el.innerHTML += `
         <div class="section-card">
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div><strong>👤 ${nome}</strong><br><small style="color:var(--muted)">${desc} • ${fone || 'sem contato'}</small></div>
+            <div><strong>👤 ${esc(nome)}</strong><br><small style="color:var(--muted)">${esc(desc)} • ${esc(fone) || 'sem contato'}</small></div>
             <span class="badge ${quit ? 'badge-ok' : (atrasada ? 'badge-pend' : '')}">${quit ? 'Quitado' : (atrasada ? 'Atrasada' : 'Em dia')}</span>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-top:8px; color:var(--muted);">
@@ -2559,7 +2690,7 @@
           </div>
           <div class="progress-bg" style="background:var(--bg);"><div class="progress-fill" style="width:${pagas / n * 100}%; background:var(--green);"></div></div>
           ${quit ? '' : `<small style="color:var(--muted)">Próx. vencimento: ${prox.split('-').reverse().join('/')}</small>
-          <div class="msg-cobranca">${msg}</div>
+          <div class="msg-cobranca">${esc(msg)}</div>
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             ${fone ? `<a class="btn-mini" style="background:#25D366; color:#fff; text-decoration:none;" target="_blank" href="https://wa.me/${foneBR(fone)}?text=${encodeURIComponent(msg)}">💬 Cobrar no WhatsApp</a>` : ''}
             <button class="btn-mini" style="background:#334155; color:#fff;" onclick="copiarCobranca(${d.row})">Copiar texto</button>
@@ -2580,13 +2711,14 @@
   let recRow = null;
   function abrirModalReceber(row) {
     const d = db.devedores.find(x => x.row === row);
+    if (!d) return;
     if (!db.contas.length) return alert("Cadastre uma conta antes de registrar recebimentos!");
     recRow = row;
     const n = Math.max(1, parseInt(d.cols[5]) || 1), pagas = parseInt(d.cols[7]) || 0;
     document.getElementById('recInfo').innerText = `${d.cols[1]} — ${d.cols[3]} (parcela ${Math.min(pagas + 1, n)}/${n})`;
     document.getElementById('recValor').value = r2((num(d.cols[4]) || 0) / n);
     document.getElementById('recData').value = hojeISO();
-    document.getElementById('recConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    document.getElementById('recConta').innerHTML = db.contas.map(c => `<option value="${esc(c.cols[1])}">${esc(c.cols[1])}</option>`).join('');
     avisoRecebimento();
     document.getElementById('modalReceber').classList.remove('hidden');
   }
@@ -2622,13 +2754,13 @@
   function preencherRpItem(sel) {
     const el = document.getElementById('rpItem');
     el.innerHTML = '<option value="">— Escolha um item —</option>' +
-      db.itens.map(i => `<option value="${i.cols[0]}">${i.cols[1]}</option>`).join('') +
+      db.itens.map(i => `<option value="${esc(i.cols[0])}">${esc(i.cols[1])}</option>`).join('') +
       '<option value="__novo__">➕ Inserir novo item...</option>';
     el.value = sel || '';
   }
   function abrirModalRapido() {
-    document.getElementById('rpCat').innerHTML = db.categorias.filter(c => c.cols[1] === 'despesa').map(c => `<option value="${c.cols[2]}">${c.cols[2]}</option>`).join('');
-    document.getElementById('rpConta').innerHTML = db.contas.map(c => `<option value="${c.cols[1]}">${c.cols[1]}</option>`).join('');
+    document.getElementById('rpCat').innerHTML = db.categorias.filter(c => c.cols[1] === 'despesa').map(c => `<option value="${esc(c.cols[2])}">${esc(c.cols[2])}</option>`).join('');
+    document.getElementById('rpConta').innerHTML = db.contas.map(c => `<option value="${esc(c.cols[1])}">${esc(c.cols[1])}</option>`).join('');
     ['rpNome', 'rpValor'].forEach(i => document.getElementById(i).value = '');
     document.getElementById('rpQtd').value = 1;
     preencherRpItem('');
@@ -2706,7 +2838,7 @@
     const selU = document.getElementById('filtroUsuario');
     const usuarios = [...new Set(db.lancamentos.map(l => l.cols[14]).filter(Boolean))];
     const atualU = selU.value;
-    selU.innerHTML = '<option value="">👥 Todos os usuários</option>' + usuarios.map(u => `<option value="${u}">${u}</option>`).join('');
+    selU.innerHTML = '<option value="">👥 Todos os usuários</option>' + usuarios.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
     selU.value = usuarios.includes(atualU) ? atualU : '';
     selU.classList.toggle('hidden', usuarios.length < 2);
     if (vis && !modoLista) { document.getElementById('extratoEspecial').innerHTML = htmlVisaoEspecial(vis); return; }
@@ -2741,8 +2873,7 @@
 
       let zapBtn = '';
       if (tipo === "receita" && isPend && fone) {
-        const foneLimpo = fone.replace(/\D/g, '');
-        const foneBr = foneLimpo.startsWith('55') ? foneLimpo : '55' + foneLimpo;
+        const foneBr = foneBR(fone);
         const msg = encodeURIComponent(`Olá! Lembrete referente a "${desc}" no valor de ${formatarMoeda(val)}, vencimento em ${dataBr}.`);
         zapBtn = `<a href="https://wa.me/${foneBr}?text=${msg}" target="_blank" class="btn-mini" style="background:#25D366; color:#fff; text-decoration:none;">Cobrar</a>`;
       }
@@ -2750,11 +2881,11 @@
       lista.innerHTML += `
         <div class="tx-card ${tipo} ${isPend ? 'pendente' : ''}">
           <div class="tx-info">
-            <h4>${desc} ${parcela && parcela !== '1/1' ? `<small style="color:var(--muted)">(${parcela})</small>` : ''}</h4>
-            <p>${dataBr} • ${cat || 'Transferência'} • <strong>${conta}</strong>${dest ? ` → ${dest}` : ''}
-              <span class="badge ${isPend ? 'badge-pend' : 'badge-ok'}">${status}</span>
+            <h4>${esc(desc)} ${parcela && parcela !== '1/1' ? `<small style="color:var(--muted)">(${esc(parcela)})</small>` : ''}</h4>
+            <p>${dataBr} • ${esc(cat || 'Transferência')} • <strong>${esc(conta)}</strong>${dest ? ` → ${esc(dest)}` : ''}
+              <span class="badge ${isPend ? 'badge-pend' : 'badge-ok'}">${esc(status)}</span>
               ${syncId ? '<span class="badge badge-cal" title="Sincronizado com Agenda/Tasks">📅</span>' : ''}
-              ${l.cols[14] ? `<span class="badge" style="background:var(--blue-soft); color:var(--blue);">👤 ${l.cols[14]}</span>` : ''}
+              ${l.cols[14] ? `<span class="badge" style="background:var(--blue-soft); color:var(--blue);">👤 ${esc(l.cols[14])}</span>` : ''}
             </p>
             ${itensTxHtml(l.cols[13])}
           </div>
@@ -2778,10 +2909,10 @@
 
     db.categorias.forEach(c => {
       const [id, tipo, nome] = c.cols;
-      if (tipo === "despesa") selOrc.innerHTML += `<option value="${nome}">${nome}</option>`;
+      if (tipo === "despesa") selOrc.innerHTML += `<option value="${esc(nome)}">${esc(nome)}</option>`;
       listaCadCats.innerHTML += `
         <div class="row-item">
-          <span><span class="dot" style="background:${tipo === 'receita' ? 'var(--green)' : 'var(--red)'}"></span>${nome} <small style="color:var(--muted)">(${tipo})</small></span>
+          <span><span class="dot" style="background:${tipo === 'receita' ? 'var(--green)' : 'var(--red)'}"></span>${esc(nome)} <small style="color:var(--muted)">(${esc(tipo)})</small></span>
           <button class="btn-mini" style="background:#334155; color:#fff;" onclick="deletarLinha('Categorias', ${c.row})">Excluir</button>
         </div>`;
     });
@@ -2799,6 +2930,7 @@
     });
     const alvo = document.getElementById(telaId);
     alvo.classList.remove('hidden');
+    window.scrollTo(0, 0);
     if (telaId === 'telaTransacoes') renderizarExtrato();
   }
 
@@ -2827,7 +2959,7 @@
     document.getElementById('ccLimite').value = '';
     const selConta = document.getElementById('ccContaPadrao');
     selConta.innerHTML = '';
-    db.contas.forEach(c => selConta.innerHTML += `<option value="${c.cols[1]}">${c.cols[1]}</option>`);
+    db.contas.forEach(c => selConta.innerHTML += `<option value="${esc(c.cols[1])}">${esc(c.cols[1])}</option>`);
     document.getElementById('modalCartao').classList.remove('hidden');
   }
 
@@ -2838,11 +2970,11 @@
     selConta.innerHTML = ''; selDest.innerHTML = ''; selCartao.innerHTML = '';
 
     db.contas.forEach(c => {
-      selConta.innerHTML += `<option value="${c.cols[1]}">${c.cols[1]}</option>`;
-      selDest.innerHTML += `<option value="${c.cols[1]}">${c.cols[1]}</option>`;
+      selConta.innerHTML += `<option value="${esc(c.cols[1])}">${esc(c.cols[1])}</option>`;
+      selDest.innerHTML += `<option value="${esc(c.cols[1])}">${esc(c.cols[1])}</option>`;
     });
     db.cartoes.forEach(c => {
-      selCartao.innerHTML += `<option value="${c.cols[1]}">${c.cols[1]}</option>`;
+      selCartao.innerHTML += `<option value="${esc(c.cols[1])}">${esc(c.cols[1])}</option>`;
     });
   }
 
@@ -2857,6 +2989,7 @@
     document.getElementById('txFone').value = '';
     document.getElementById('txRepeticao').value = 'unica';
     document.getElementById('boxParcelas').classList.add('hidden');
+    document.getElementById('txParcelas').value = 2;
     document.getElementById('txCriarAgendaTask').checked = document.getElementById('cfgAutoSyncAgenda').checked;
 
     prepararSelectsModal();
@@ -2885,13 +3018,9 @@
     document.getElementById('txDesc').value = desc;
     document.getElementById('txValor').value = String(num(val)).replace('.', ',');
     document.getElementById('txData').value = data;
-    document.getElementById('txCategoria').value = cat;
-    if (tipo === 'cartao') {
-      document.getElementById('txCartao').value = conta;
-    } else {
-      document.getElementById('txConta').value = conta;
-    }
-    if (dest) document.getElementById('txContaDestino').value = dest;
+    if (tipo !== 'transferencia') setSelect('txCategoria', cat);
+    if (tipo === 'cartao') setSelect('txCartao', conta); else setSelect('txConta', conta);
+    if (dest) setSelect('txContaDestino', dest);
     document.getElementById('txStatus').value = status === 'Pago' ? 'Efetivado' : status;
     document.getElementById('txFone').value = fone || '';
     document.getElementById('txCriarAgendaTask').checked = !modoOffline && !!item.cols[12];
@@ -2908,7 +3037,7 @@
     selCat.innerHTML = '';
     const tipoCatFiltro = tipo === 'receita' ? 'receita' : 'despesa';
     db.categorias.filter(c => c.cols[1] === tipoCatFiltro).forEach(c => {
-      selCat.innerHTML += `<option value="${c.cols[2]}">${c.cols[2]}</option>`;
+      selCat.innerHTML += `<option value="${esc(c.cols[2])}">${esc(c.cols[2])}</option>`;
     });
 
     document.getElementById('boxCategoria').classList.toggle('hidden', tipo === 'transferencia');
@@ -2957,23 +3086,8 @@
       });
       localStorage.setItem("mfp_local_db", JSON.stringify(localData));
     } else {
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!A1:append?valueInputOption=RAW`, "POST", {
+      await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${aba}!A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, "POST", {
         values: linhas
-      });
-    }
-    await carregarTodosDados();
-  }
-
-  async function atualizarLinhaLancamento(row, novaLinha) {
-    document.getElementById('loading').classList.remove('hidden');
-    if (modoOffline) {
-      const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
-      const idx = localData.lancamentos.findIndex(x => x.row === row);
-      if (idx !== -1) localData.lancamentos[idx].cols = [...novaLinha, ...localData.lancamentos[idx].cols.slice(novaLinha.length)];
-      localStorage.setItem("mfp_local_db", JSON.stringify(localData));
-    } else {
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!A${row}:N${row}?valueInputOption=RAW`, "PUT", {
-        values: [novaLinha]
       });
     }
     await carregarTodosDados();
@@ -2991,9 +3105,10 @@
     const qtdParcelas = rep === 'parcelada' ? (parseInt(document.getElementById('txParcelas').value) || 2) : (rep === 'fixa' ? 12 : 1);
     const status = tipoTxAtual === 'cartao' ? 'Aberto' : document.getElementById('txStatus').value;
     const fone = document.getElementById('txFone').value.trim();
-    const criarSync = document.getElementById('txCriarAgendaTask').checked && !modoOffline;
+    const criarSync = document.getElementById('txCriarAgendaTask').checked && !modoOffline && tipoTxAtual !== 'transferencia';
 
     if (!desc || !valorTotal || !data) return alert("Preencha descrição, valor e data!");
+    if (valorTotal <= 0) return alert("O valor deve ser maior que zero!");
     if (tipoTxAtual === 'cartao' && !cartao) return alert("Cadastre um cartão de crédito primeiro!");
     if (tipoTxAtual === 'transferencia' && conta === contaDest) return alert("Escolha contas diferentes!");
 
@@ -3033,8 +3148,13 @@
       ];
       const itemAtual = db.lancamentos.find(x => x.row === rowParaEditar);
       const extras = selecionarPorEscopo(itemAtual, escopoEdit).filter(o => o.row !== rowParaEditar).map(o => {
-        const c = [...o.cols]; while (c.length < 13) c.push('');
-        c[2] = desc; c[3] = Number(valorTotal.toFixed(2)); c[6] = novaLinha[6]; c[7] = origem; c[11] = fone;
+        const c = [...o.cols]; while (c.length < 14) c.push('');
+        const tipoAntes = c[1];
+        c[1] = tipoTxAtual; c[2] = desc; c[3] = Number(valorTotal.toFixed(2)); c[6] = novaLinha[6]; c[7] = origem; c[8] = dest; c[11] = fone;
+        if (tipoAntes !== tipoTxAtual) { // mudou o tipo: ajusta fatura e situação de cada parcela
+          c[5] = tipoTxAtual === 'cartao' ? calcularMesFatura(c[4], cartao, 0) : (c[4] || '').substring(0, 7);
+          c[9] = tipoTxAtual === 'cartao' ? 'Aberto' : (c[9] === 'Aberto' ? 'Pendente' : (c[9] === 'Pago' ? 'Efetivado' : c[9]));
+        }
         return { row: o.row, cols: c };
       });
       await atualizarLinhasLote([{ row: rowParaEditar, cols: novaLinha }, ...extras]);
@@ -3043,7 +3163,10 @@
     }
 
     // Modo Novo Lançamento
-    const valorParcela = rep === 'parcelada' ? (valorTotal / qtdParcelas) : valorTotal;
+    // Divide em centavos; a última parcela absorve a sobra (ex.: 100,00 em 3x = 33,33 + 33,33 + 33,34)
+    const centTotal = Math.round(valorTotal * 100);
+    const centBase = rep === 'parcelada' ? Math.floor(centTotal / qtdParcelas) : centTotal;
+    const centResto = rep === 'parcelada' ? centTotal - centBase * qtdParcelas : 0;
     const [ano, mes, dia] = data.split('-').map(Number);
     const linhas = [];
     const idBase = Date.now();
@@ -3058,6 +3181,7 @@
       const origem = tipoTxAtual === 'cartao' ? cartao : conta;
       const dest = tipoTxAtual === 'transferencia' ? contaDest : '';
       const tituloItem = qtdParcelas > 1 ? `${desc} (${infoParcela})` : desc;
+      const valorParcela = (centBase + (i === qtdParcelas - 1 ? centResto : 0)) / 100;
 
       let syncId = "";
       if (criarSync) {
@@ -3088,7 +3212,7 @@
       if (item) item.cols[9] = "Efetivado";
       localStorage.setItem("mfp_local_db", JSON.stringify(localData));
     } else {
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!J${row}?valueInputOption=RAW`, "PUT", {
+      await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Lancamentos!J${row}?valueInputOption=RAW`, "PUT", {
         values: [["Efetivado"]]
       });
     }
@@ -3096,7 +3220,14 @@
     await carregarTodosDados();
   }
 
-  async function pagarFaturaCartao(nomeCartao, valorFatura, contaPadrao) {
+  async function pagarFaturaCartao(row) {
+    const cartao = db.cartoes.find(c => c.row === row);
+    if (!cartao) return;
+    const nomeCartao = cartao.cols[1], contaPadrao = cartao.cols[7];
+    const chaveMesSel = getChaveMes(mesAtual);
+    const abertos = db.lancamentos.filter(l => l.cols[1] === "cartao" && l.cols[7] === nomeCartao && l.cols[5] === chaveMesSel && l.cols[9] !== "Pago");
+    const valorFatura = r2(abertos.reduce((a, l) => a + (num(l.cols[3]) || 0), 0));
+    if (!abertos.length || valorFatura <= 0) return alert("Não há valores em aberto nesta fatura.");
     if (!checarLimiteOffline([[`${Date.now()}-1`]])) return;
     if (db.contas.length === 0) return alert("Cadastre uma conta antes de pagar a fatura!");
     const nomesContas = db.contas.map((c, idx) => `${idx + 1} - ${c.cols[1]}`).join('\n');
@@ -3105,38 +3236,27 @@
     if (!escolha) return;
 
     const idxConta = parseInt(escolha) - 1;
-    const contaEscolhida = db.contas[idxConta] ? db.contas[idxConta].cols[1] : db.contas[0].cols[1];
-    const chaveMesSel = getChaveMes(mesAtual);
+    if (!db.contas[idxConta]) return alert("Número de conta inválido. Pagamento cancelado.");
+    const contaEscolhida = db.contas[idxConta].cols[1];
+    const linhasAbertas = new Set(abertos.map(l => l.row));
 
     document.getElementById('loading').classList.remove('hidden');
 
     if (modoOffline) {
       const localData = JSON.parse(localStorage.getItem("mfp_local_db") || "{}");
-      localData.lancamentos.forEach(l => {
-        if (l.cols[1] === "cartao" && l.cols[7] === nomeCartao && l.cols[5] === chaveMesSel && l.cols[9] !== "Pago") {
-          l.cols[9] = "Pago";
-        }
-      });
+      (localData.lancamentos || []).forEach(l => { if (linhasAbertas.has(l.row)) l.cols[9] = "Pago"; });
       localStorage.setItem("mfp_local_db", JSON.stringify(localData));
     } else {
-      const updates = [];
-      db.lancamentos.forEach(l => {
-        if (l.cols[1] === "cartao" && l.cols[7] === nomeCartao && l.cols[5] === chaveMesSel && l.cols[9] !== "Pago") {
-          updates.push({ range: `Lancamentos!J${l.row}`, values: [["Pago"]] });
-        }
+      await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
+        valueInputOption: "RAW",
+        data: [...linhasAbertas].map(r => ({ range: `Lancamentos!J${r}`, values: [["Pago"]] }))
       });
-      if (updates.length > 0) {
-        await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
-          valueInputOption: "RAW",
-          data: updates
-        });
-      }
     }
 
     const hoje = hojeISO();
     await adicionarLinhas("Lancamentos", [[
       Date.now().toString(), "despesa", `Fatura ${nomeCartao} (${chaveMesSel})`,
-      Number(valorFatura.toFixed(2)), hoje, chaveMesSel, "Cartão de Crédito",
+      valorFatura, hoje, chaveMesSel, "Cartão de Crédito",
       contaEscolhida, "", "Efetivado", "1/1", "", ""
     ]]);
 
@@ -3159,8 +3279,8 @@
     const bandeira = document.getElementById('ccBandeira').value;
     const cor = gradienteCor(document.getElementById('ccCor').value);
     const limite = num(document.getElementById('ccLimite').value) || 0;
-    const fech = parseInt(document.getElementById('ccFechamento').value) || 5;
-    const venc = parseInt(document.getElementById('ccVencimento').value) || 12;
+    const fech = Math.min(31, Math.max(1, parseInt(document.getElementById('ccFechamento').value) || 5));
+    const venc = Math.min(31, Math.max(1, parseInt(document.getElementById('ccVencimento').value) || 12));
     const contaPadrao = document.getElementById('ccContaPadrao').value;
 
     if (!nome || !limite) return alert("Preencha o nome e o limite total do cartão!");
@@ -3182,7 +3302,12 @@
     const cat = document.getElementById('orcCategoria').value;
     const val = num(document.getElementById('orcValor').value);
     if (!cat || !val) return alert("Selecione a categoria e o limite!");
-    await adicionarLinhas("Orcamentos", [[Date.now().toString(), cat, val]]);
+    const existente = db.orcamentos.find(o => o.cols[1] === cat);
+    if (existente) { // já existe orçamento da categoria: atualiza o limite em vez de duplicar
+      document.getElementById('loading').classList.remove('hidden');
+      await atualizarCelula("Orcamentos", existente.row, "C", 2, val);
+      await carregarTodosDados();
+    } else await adicionarLinhas("Orcamentos", [[Date.now().toString(), cat, val]]);
     document.getElementById('orcValor').value = '';
     mostrarToast("Orçamento salvo!");
   }
@@ -3192,13 +3317,20 @@
     if (aba === 'Lancamentos') {
       const it = db.lancamentos.find(x => x.row === row);
       if (it && ehParcelado(it)) {
-        const esc = await perguntarEscopo('Excluir lançamento parcelado', txtEscopoParcelas(it));
-        if (!esc) return;
-        rows = selecionarPorEscopo(it, esc).map(x => x.row);
+        const escopo = await perguntarEscopo('Excluir lançamento parcelado', txtEscopoParcelas(it));
+        if (!escopo) return;
+        rows = selecionarPorEscopo(it, escopo).map(x => x.row);
       } else if (!confirm("Excluir este registro permanentemente?")) return;
+    } else if (!confirm("Excluir este registro permanentemente?")) return;
+
+    if (!(await linhasConferem(aba, rows))) {
+      alert("Os dados foram alterados por outra pessoa ou aparelho. A lista será atualizada — confira e tente excluir novamente.");
+      return carregarTodosDados();
+    }
+
+    if (aba === 'Lancamentos') {
       for (const r of rows) { const x = db.lancamentos.find(y => y.row === r); if (x) await removerSync(x.cols[12]); }
     } else {
-      if (!confirm("Excluir este registro permanentemente?")) return;
       if (aba === 'Cartoes') { const cc = db.cartoes.find(x => x.row === row); if (cc && cc.cols[8]) await removerSync(cc.cols[8]); }
       if (aba === 'Devedores') {
         const dv = db.devedores.find(x => x.row === row);
@@ -3216,7 +3348,7 @@
       localStorage.setItem("mfp_local_db", JSON.stringify(localData));
     } else {
       const requests = [...rows].sort((a, b) => b - a).map(r => ({ deleteDimension: { range: { sheetId: sheetIdsMap[aba], dimension: "ROWS", startIndex: r - 1, endIndex: r } } }));
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, "POST", { requests });
+      await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, "POST", { requests });
     }
     mostrarToast(rows.length > 1 ? `${rows.length} registros excluídos!` : "Registro excluído!");
     await carregarTodosDados();
@@ -3270,7 +3402,7 @@
       lista.forEach(u => { const it = ld.lancamentos.find(x => x.row === u.row); if (it) it.cols = [...u.cols.slice(0, 14), ...it.cols.slice(14)]; });
       localStorage.setItem("mfp_local_db", JSON.stringify(ld));
     } else {
-      await fetchGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
+      await escreverGoogle(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, "POST", {
         valueInputOption: "RAW",
         data: lista.map(u => ({ range: `Lancamentos!A${u.row}:N${u.row}`, values: [u.cols.slice(0, 14)] }))
       });
@@ -3293,22 +3425,46 @@
   }
 
   function exportarCSV() {
-    let csv = "ID;Tipo;Descricao;Valor;Data;MesFatura;Categoria;ContaOuCartao;ContaDestino;Status;Parcela\n";
+    // Aspas duplas para campos com ; ou quebra de linha; apóstrofo evita que o Excel execute fórmulas (= + @ -)
+    const cel = v => {
+      let t = String(v == null ? '' : v);
+      if (/^[=+@\-\t\r]/.test(t) && isNaN(Number(t))) t = "'" + t;
+      return /[";\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+    };
+    let csv = "ID;Tipo;Descricao;Valor;Data;MesFatura;Categoria;ContaOuCartao;ContaDestino;Status;Parcela;Usuario\n";
     db.lancamentos.forEach(l => {
-      csv += l.cols.slice(0, 11).join(";") + "\n";
+      csv += [...l.cols.slice(0, 11), l.cols[14] || ''].map(cel).join(";") + "\n";
     });
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `AppFinance_${getChaveMes(mesAtual)}.csv`;
+    link.download = `AppFinance_lancamentos_${hojeISO()}.csv`;
     link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 5000);
   }
 
-  function resetarBancoDados() {
-    if (!confirm("Isso desvinculará a planilha atual para criar uma nova estrutura limpa. Continuar?")) return;
-    localStorage.removeItem("mfp_gdrive_sheet_id");
-    localStorage.removeItem("mfp_local_db");
-    location.reload();
+  async function resetarBancoDados() {
+    if (modoOffline) {
+      if (!confirm("Isso apagará TODOS os dados locais deste aparelho e recriará a estrutura inicial. Continuar?")) return;
+      localStorage.removeItem("mfp_local_db");
+      garantirDbLocal();
+      mostrarToast("Estrutura local recriada!");
+      return carregarTodosDados();
+    }
+    if (!confirm("Será criada uma NOVA planilha vazia no seu Google Drive. A planilha atual continuará no Drive (renomeada como \"antiga\"), mas deixará de ser usada pelo app. Continuar?")) return;
+    const antigo = spreadsheetId;
+    document.getElementById('loading').classList.remove('hidden');
+    try {
+      try { await fetchGoogle(`https://www.googleapis.com/drive/v3/files/${antigo}`, "PATCH", { name: `Minhas Financas DB v2 (antiga ${hojeISO()})` }); }
+      catch (e) { if (e.sessaoExpirada) throw e; }
+      localStorage.removeItem("mfp_gdrive_sheet_id");
+      localStorage.removeItem("mfp_own_sheet_id");
+      spreadsheetId = "";
+      await prepararEstruturaDrive();
+    } finally {
+      if (!spreadsheetId && antigo) { spreadsheetId = antigo; localStorage.setItem("mfp_gdrive_sheet_id", antigo); }
+      document.getElementById('loading').classList.add('hidden');
+    }
   }
   aplicarBloqueioLogin();
 </script>
